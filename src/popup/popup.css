@@ -1,0 +1,72 @@
+.popup-container {
+  height: 600px;
+  width: 400px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.popup {
+  border-radius: 20px;
+  background-color: #2e1d57;
+  height: 100%;
+  width: 100%;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+button {
+  background-color: #a93185;
+  color: white;
+  border-radius: 8px;
+  display: block;
+  padding: 10px 20px;
+  margin: 10px auto;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #a931859b;
+}
+
+.loading {
+  font-size: 1.2rem;
+  margin: 86px 0;
+}
+
+.account {
+  display: flex;
+  color: black;
+  background-color: #e9e8e8;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px;
+  max-width: 650px;
+  margin: 40px auto;
+}
+
+.account .content {
+  text-align: left;
+  flex: 1 1 auto;
+}
+
+.account .content .name {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.avatar {
+  flex: 0 0 auto;
+  margin-right: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.avatar img {
+  max-width: 50px;
+  max-height: 50px;
+}
