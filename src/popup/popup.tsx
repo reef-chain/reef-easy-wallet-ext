@@ -2,7 +2,6 @@ import React from "react";
 import { useEffect, useRef, useState } from "react";
 import { Web3AuthNoModal } from "@web3auth/no-modal";
 import {
-  LOGIN_PROVIDER,
   OpenloginAdapter,
   OpenloginLoginParams,
   UX_MODE,

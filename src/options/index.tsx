@@ -5,6 +5,7 @@ import Options from "./options";
 
 function init() {
   const appContainer = document.createElement("div");
+  appContainer.className = "options-container";
   document.body.appendChild(appContainer);
   if (!appContainer) {
     throw new Error("Can not find AppContainer");

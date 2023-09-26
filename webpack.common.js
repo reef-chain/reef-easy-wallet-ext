@@ -87,7 +87,7 @@ function getHtmlPlugins(chunks) {
   return chunks.map(
     (chunk) =>
       new HtmlPlugin({
-        title: "React Extension",
+        title: "Reef Socials Wallet Chrome Extension",
         filename: `${chunk}.html`,
         chunks: [chunk],
       })
