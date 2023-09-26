@@ -9,10 +9,7 @@ const autoprefixer = require("autoprefixer");
 module.exports = {
   entry: {
     popup: path.resolve("src/popup/index.tsx"),
-    options: path.resolve("src/options/index.tsx"),
     background: path.resolve("src/background/background.ts"),
-    contentScript: path.resolve("src/contentScript/contentScript.ts"),
-    newTab: path.resolve("src/tabs/index.tsx"),
   },
   module: {
     rules: [
@@ -64,7 +61,11 @@ module.exports = {
       process: "process/browser",
       Buffer: ["buffer", "Buffer"],
     }),
-    ...getHtmlPlugins(["popup", "options", "newTab"]),
+    new HtmlPlugin({
+      title: "Reef Socials Wallet Chrome Extension",
+      filename: "popup.html",
+      chunks: ["popup"],
+    }),
   ],
   resolve: {
     extensions: [".tsx", ".js", ".ts"],
@@ -76,20 +77,4 @@ module.exports = {
     filename: "[name].js",
     path: path.join(__dirname, "dist"),
   },
-  optimization: {
-    splitChunks: {
-      chunks: "all",
-    },
-  },
 };
-
-function getHtmlPlugins(chunks) {
-  return chunks.map(
-    (chunk) =>
-      new HtmlPlugin({
-        title: "Reef Socials Wallet Chrome Extension",
-        filename: `${chunk}.html`,
-        chunks: [chunk],
-      })
-  );
-}
