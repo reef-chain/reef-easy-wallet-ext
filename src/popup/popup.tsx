@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Web3AuthNoModal } from "@web3auth/no-modal";
 import {
@@ -32,21 +32,34 @@ const Popup = () => {
   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
   const [web3authProvider, setWeb3authProvider] =
     useState<SafeEventEmitterProvider | null>(null);
-  const [loggedIn, setLoggedIn] = useState(false);
   // const [reefAccount, setReefAccount] = useState<ReefAccount | null>(null);
   const [reefAccount, setReefAccount] = useState<any | null>(null);
   const [reefAccountLoading, setReefAccountLoading] = useState(false);
   const reefAccountRef = useRef(reefAccount);
+  const queryParams = new URLSearchParams(window.location.search);
+  const loginProvider = queryParams.get("loginProvider");
+  console.log("loginProvider =", loginProvider);
 
   useEffect(() => {
     initWeb3Auth();
   }, []);
 
   useEffect(() => {
-    if (web3auth && web3authProvider && loggedIn && !reefAccount) {
+    if (web3auth?.connected && web3authProvider && !reefAccount) {
       getReefAccount();
     }
-  }, [web3auth, web3authProvider, loggedIn]);
+  }, [web3auth, web3authProvider]);
+
+  const isPopup = useMemo(() => {
+    return window.innerWidth <= 400;
+  }, []);
+
+  const openFullPage = (loginProvider?: string) => {
+    const url = `${chrome.runtime.getURL(
+      loginProvider ? `index.html?loginProvider=${loginProvider}` : "index.html"
+    )}`;
+    void chrome.tabs.create({ url });
+  };
 
   const initWeb3Auth = async () => {
     try {
@@ -78,7 +91,10 @@ const Popup = () => {
         adapterSettings: {
           clientId: CLIENT_ID,
           network: WEB3_AUTH_NETWORK,
-          uxMode: UX_MODE.POPUP, // UX_MODE.POPUP or UX_MODE.REDIRECT
+          uxMode: UX_MODE.POPUP,
+          // uxMode: UX_MODE.REDIRECT,
+          // redirectUrl:
+          //   "chrome-extension://ggmkeplalbadblhbbkcchekkfmmnoiln/index.html",
           whiteLabel: {
             appName: "Reef Web3Auth Wallet",
             appUrl: "https://reef.io/",
@@ -101,29 +117,36 @@ const Popup = () => {
       if (web3auth.connectedAdapterName && web3auth.provider) {
         setWeb3authProvider(web3auth.provider);
       }
-      if (web3auth.connected) {
-        console.log("connected");
-        setLoggedIn(true);
-      } else {
-        console.log("not connected");
-        setLoggedIn(false);
+      if (!web3auth.connected && loginProvider) {
+        login(loginProvider, web3auth);
       }
     } catch (err: any) {
       console.error(err);
     }
   };
 
-  const login = async (loginProvider: string) => {
+  const login = async (loginProvider: string, web3auth: Web3AuthNoModal) => {
+    if (LOGIN_PROVIDERS.indexOf(loginProvider) === -1) {
+      alert("Invalid login provider");
+      return;
+    }
+
     if (!web3auth) {
       alert("web3auth not initialized yet");
       return;
     }
+
+    if (isPopup) openFullPage(loginProvider);
+
     const web3authProvider = await web3auth.connectTo<OpenloginLoginParams>(
       WALLET_ADAPTERS.OPENLOGIN,
       { loginProvider }
     );
+    if (!web3authProvider) {
+      alert("web3authProvider not initialized yet");
+      return;
+    }
     setWeb3authProvider(web3authProvider);
-    setLoggedIn(true);
   };
 
   const logout = async () => {
@@ -133,7 +156,6 @@ const Popup = () => {
     }
     await web3auth.logout();
     setWeb3authProvider(null);
-    setLoggedIn(false);
     setReefAccount(null);
     reefAccountRef.current = null;
     unsubBalance();
@@ -267,14 +289,15 @@ const Popup = () => {
   return (
     <div className="popup">
       <h1>Reef Web3Auth Wallet</h1>
-      {web3auth && !loggedIn && (
+      {isPopup && <button onClick={() => openFullPage()}>Full page</button>}
+      {web3auth && !web3auth.connected && (
         <>
           <h2>Login</h2>
           {LOGIN_PROVIDERS.map((provider) => (
             <button
               className="group"
               key={provider}
-              onClick={() => login(provider)}
+              onClick={() => login(provider, web3auth)}
             >
               <img
                 className="group-hover:hidden h-6"
@@ -288,7 +311,7 @@ const Popup = () => {
           ))}
         </>
       )}
-      {loggedIn && (
+      {web3auth?.connected && (
         <>
           {reefAccountLoading && !reefAccount && (
             <div className="loading">Loading account...</div>

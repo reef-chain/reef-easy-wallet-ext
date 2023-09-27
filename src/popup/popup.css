@@ -2,8 +2,7 @@
   height: 600px;
   width: 400px;
   padding: 10px;
-  display: flex;
-  flex-direction: column;
+  margin: auto;
 }
 
 .popup {

@@ -63,7 +63,7 @@ module.exports = {
     }),
     new HtmlPlugin({
       title: "Reef Socials Wallet Chrome Extension",
-      filename: "popup.html",
+      filename: "index.html",
       chunks: ["popup"],
     }),
   ],
