@@ -10,6 +10,8 @@ module.exports = {
   entry: {
     popup: path.resolve("src/popup/index.tsx"),
     background: path.resolve("src/background/background.ts"),
+    content: path.resolve("src/content/content.ts"),
+    page: path.resolve("src/content/page.ts"),
   },
   module: {
     rules: [
@@ -43,6 +45,20 @@ module.exports = {
         type: "assets/resource",
         test: /\.(png|jpg|jpeg|gif|woff|woff2|tff|eot|svg)$/,
       },
+      {
+        test: /\.json$/,
+        loader: "json-loader",
+      },
+      {
+        test: /\.m?js/,
+        type: "javascript/auto",
+      },
+      {
+        test: /\.m?js/,
+        resolve: {
+          fullySpecified: false,
+        },
+      },
     ],
   },
   plugins: [
@@ -68,9 +84,16 @@ module.exports = {
     }),
   ],
   resolve: {
-    extensions: [".tsx", ".js", ".ts"],
+    extensions: [".tsx", ".js", ".ts", ".cjs", ".mjs"],
     fallback: {
       crypto: false,
+      stream: false,
+      url: false,
+      assert: false,
+      http: false,
+      https: false,
+      os: false,
+      zlib: false,
     },
   },
   output: {

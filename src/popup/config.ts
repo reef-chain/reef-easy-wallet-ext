@@ -1,5 +1,9 @@
 import { LOGIN_PROVIDER, OPENLOGIN_NETWORK } from "@web3auth/openlogin-adapter";
 
+export const EXTENSION_NAME = "reef-socials";
+export const EXTENSION_VERSION = "0.1.0";
+export const EXTENSION_INJECTED_EVENT = "reef-socials-injected";
+
 export const CLIENT_ID =
   "BBzp629e5yHSqgUaIPpRVbD3vq1JnFpeqGmO_fPngDLHCrY72waMSMVsOe5v30Duuzb_pwYRMYYSxwgmV3fJtJU";
 export const WEB3_AUTH_NETWORK = OPENLOGIN_NETWORK.SAPPHIRE_DEVNET;

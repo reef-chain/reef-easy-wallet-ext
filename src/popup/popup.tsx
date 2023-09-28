@@ -38,7 +38,8 @@ const Popup = () => {
   const reefAccountRef = useRef(reefAccount);
   const queryParams = new URLSearchParams(window.location.search);
   const loginProvider = queryParams.get("loginProvider");
-  console.log("loginProvider =", loginProvider);
+
+  const test = async () => {};
 
   useEffect(() => {
     initWeb3Auth();
@@ -289,6 +290,7 @@ const Popup = () => {
   return (
     <div className="popup">
       <h1>Reef Web3Auth Wallet</h1>
+      {/* <button onClick={() => test()}>TEST</button> */}
       {isPopup && <button onClick={() => openFullPage()}>Full page</button>}
       {web3auth && !web3auth.connected && (
         <>
