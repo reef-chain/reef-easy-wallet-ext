@@ -9,7 +9,7 @@ const autoprefixer = require("autoprefixer");
 module.exports = {
   entry: {
     popup: path.resolve("src/popup/index.tsx"),
-    background: path.resolve("src/background/background.ts"),
+    service_worker: path.resolve("src/background/service_worker.ts"),
     content: path.resolve("src/content/content.ts"),
     page: path.resolve("src/content/page.ts"),
   },

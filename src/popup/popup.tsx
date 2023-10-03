@@ -15,7 +15,7 @@ import {
 import { CommonPrivateKeyProvider } from "@web3auth/base-provider";
 // import { ethers } from 'ethers';
 // import Account from './Account';
-// import RPC from "./rpc";
+import RPC from "../util/rpc";
 import {
   CLIENT_ID,
   LOGIN_PROVIDERS,
@@ -27,6 +27,7 @@ import {
 } from "./config";
 // import { ReefAccount, captureError } from './util';
 import "./popup.css";
+import { getKeyPair, initKeyring, saveKeyPair } from "./keyring";
 
 const Popup = () => {
   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
@@ -39,9 +40,14 @@ const Popup = () => {
   const queryParams = new URLSearchParams(window.location.search);
   const loginProvider = queryParams.get("loginProvider");
 
-  const test = async () => {};
+  const test = async () => {
+    saveKeyPair(web3authProvider);
+    const pair = getKeyPair();
+    console.log(pair);
+  };
 
   useEffect(() => {
+    // initKeyring();
     initWeb3Auth();
   }, []);
 
@@ -290,7 +296,7 @@ const Popup = () => {
   return (
     <div className="popup">
       <h1>Reef Web3Auth Wallet</h1>
-      {/* <button onClick={() => test()}>TEST</button> */}
+      <button onClick={() => test()}>TEST</button>
       {isPopup && <button onClick={() => openFullPage()}>Full page</button>}
       {web3auth && !web3auth.connected && (
         <>

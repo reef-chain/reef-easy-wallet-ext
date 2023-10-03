@@ -1,91 +1,64 @@
+// Copyright 2019-2021 @polkadot/extension authors & contributors
+// SPDX-License-Identifier: Apache-2.0
+
+import type {
+  RequestSignatures,
+  TransportRequestMessage,
+} from "../extension-base/background/types";
+import type { Message } from "../extension-base/types";
+
+import { PORT_CONTENT } from "../extension-base/defaults";
+import {
+  enable,
+  handleResponse,
+  redirectIfPhishing,
+} from "../extension-base/page";
 import {
   injectExtension,
   REEF_EXTENSION_IDENT,
   REEF_INJECTED_EVENT,
   startInjection,
 } from "@reef-defi/extension-inject";
-import Injected from "@reef-defi/extension-base/page/Injected";
-import SendRequest from "@reef-defi/extension-base/page";
-import {
-  EXTENSION_INJECTED_EVENT,
-  EXTENSION_NAME,
-  EXTENSION_VERSION,
-} from "../popup/config";
-import Accounts from "@reef-defi/extension-base/page/Accounts";
-import Metadata from "@reef-defi/extension-base/page/Metadata";
-import {
-  InjectedAccount,
-  InjectedMetadataKnown,
-  ReefInjectedProvider,
-  ReefInjectedSigner,
-  Unsubcall,
-} from "@reef-defi/extension-inject/types";
-import PostMessageProvider from "@reef-defi/extension-base/page/PostMessageProvider";
-import SigningKey from "@reef-defi/extension-base/page/Signer";
 
 startInjection(REEF_EXTENSION_IDENT);
 
-function enable(originName: string): Promise<Injected> {
-  const accounts: Accounts = {
-    get: (anyType?: boolean): Promise<InjectedAccount[]> => {
-      return new Promise((resolve, reject) => {
-        resolve([]);
-        reject(new Error("Error in get()"));
-      });
-    },
-    subscribe: (cb: (accounts: InjectedAccount[]) => unknown): Unsubcall => {
-      let unsubs = false;
-      return (): void => {
-        unsubs = true;
-      };
-    },
-  };
+// setup a response listener (events created by the loader for extension responses)
+window.addEventListener("message", ({ data, source }: Message): void => {
+  // only allow messages from our window, by the loader
+  if (source !== window || data.origin !== PORT_CONTENT) {
+    return;
+  }
 
-  const metadata: Metadata = {
-    get: (): Promise<InjectedMetadataKnown[]> => {
-      return new Promise((resolve, reject) => {
-        resolve([]);
-        reject(new Error("Error in get()"));
-      });
-    },
-    provide: (definition: unknown): Promise<boolean> => {
-      return new Promise((resolve, reject) => {
-        resolve(true);
-        reject(new Error("Error in provide()"));
-      });
-    },
-  };
+  console.log("page window msg listener=", data);
 
-  let provider: PostMessageProvider;
-  let signer: SigningKey;
+  if (data.id) {
+    handleResponse(data as TransportRequestMessage<keyof RequestSignatures>);
+  } else {
+    console.error("Missing id for response.");
+  }
+});
 
-  let reefProvider: ReefInjectedProvider;
-  let reefSigner: ReefInjectedSigner;
-
-  const reefInjected: Injected = {
-    accounts,
-    metadata,
-    provider,
-    signer,
-    reefProvider,
-    reefSigner,
-  };
-
-  return new Promise((resolve, reject) => {
-    resolve(reefInjected);
-    reject(new Error("Error in enable()"));
+redirectIfPhishing()
+  .then((gotRedirected) => {
+    if (!gotRedirected) {
+      inject();
+    }
+  })
+  .catch((e) => {
+    console.warn(
+      `Unable to determine if the site is in the phishing list: ${
+        (e as Error).message
+      }`
+    );
+    inject();
   });
-}
 
 function inject() {
   injectExtension(enable, {
-    name: EXTENSION_NAME,
-    version: EXTENSION_VERSION,
+    name: REEF_EXTENSION_IDENT,
+    version: process.env.PKG_VERSION as string,
   });
-  const event = new Event(REEF_INJECTED_EVENT); // EXTENSION_INJECTED_EVENT
+  const event = new Event(REEF_INJECTED_EVENT);
 
   document.dispatchEvent(event);
 }
-
-// TODO redirectIfPhishing
-inject();
