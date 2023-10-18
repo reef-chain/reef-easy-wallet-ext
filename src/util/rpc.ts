@@ -1,9 +1,9 @@
 import type { SafeEventEmitterProvider } from "@web3auth/base";
-import {
-  TestAccountSigningKey,
-  Signer,
-  Provider as ReefEvmProvider,
-} from "@reef-defi/evm-provider";
+// import {
+//   TestAccountSigningKey,
+//   Signer,
+//   Provider as ReefEvmProvider,
+// } from "@reef-defi/evm-provider";
 // import {
 //   buildPayload,
 //   sendSignedTransaction,
@@ -15,7 +15,7 @@ import { Keyring as KeyringUI } from "@polkadot/ui-keyring";
 import { stringToU8a, u8aToHex } from "@polkadot/util";
 import { TypeRegistry } from "@polkadot/types";
 import type { SignerPayloadJSON } from "@polkadot/types/types";
-import { Contract, ethers, PopulatedTransaction } from "ethers";
+// import { Contract, ethers, PopulatedTransaction } from "ethers";
 import { RPC_URL } from "../popup/config";
 
 export default class ReefRpc {
@@ -25,18 +25,18 @@ export default class ReefRpc {
     this.web3authProvider = web3authProvider;
   }
 
-  getProvider = async (): Promise<ReefEvmProvider> => {
-    try {
-      const provider = new ReefEvmProvider({
-        provider: new WsProvider(RPC_URL),
-      });
-      await provider.api.isReady;
-      return provider;
-    } catch (e) {
-      console.log("Provider API error:", e);
-      throw e;
-    }
-  };
+  // getProvider = async (): Promise<ReefEvmProvider> => {
+  //   try {
+  //     const provider = new ReefEvmProvider({
+  //       provider: new WsProvider(RPC_URL),
+  //     });
+  //     await provider.api.isReady;
+  //     return provider;
+  //   } catch (e) {
+  //     console.log("Provider API error:", e);
+  //     throw e;
+  //   }
+  // };
 
   getKeyPair = async (): Promise<KeyringPair> => {
     await cryptoWaitReady();
@@ -53,22 +53,22 @@ export default class ReefRpc {
     return keyPair.address;
   };
 
-  getSigner = async (): Promise<Signer> => {
-    const keyPair = await this.getKeyPair();
-    const provider = await this.getProvider();
+  // getSigner = async (): Promise<Signer> => {
+  //   const keyPair = await this.getKeyPair();
+  //   const provider = await this.getProvider();
 
-    const signingKey = new TestAccountSigningKey(provider.api.registry);
-    signingKey.addKeyringPair(keyPair);
-    return new Signer(provider, keyPair.address, signingKey);
-  };
+  //   const signingKey = new TestAccountSigningKey(provider.api.registry);
+  //   signingKey.addKeyringPair(keyPair);
+  //   return new Signer(provider, keyPair.address, signingKey);
+  // };
 
-  getBalance = async (): Promise<bigint> => {
-    const address = await this.getNativeAddress();
-    const provider = await this.getProvider();
+  // getBalance = async (): Promise<bigint> => {
+  //   const address = await this.getNativeAddress();
+  //   const provider = await this.getProvider();
 
-    const data = await provider.api.query.system.account(address);
-    return BigInt(data.data.free.toString(10));
-  };
+  //   const data = await provider.api.query.system.account(address);
+  //   return BigInt(data.data.free.toString(10));
+  // };
 
   // queryEvmAddress = async (): Promise<{ evmAddress: string, isEvmClaimed: boolean }> => {
   //   const address = await this.getNativeAddress();
@@ -96,41 +96,41 @@ export default class ReefRpc {
   //   };
   // };
 
-  claimDefaultEvmAccount = async (cb: (status: any) => void): Promise<any> => {
-    const keyPair = await this.getKeyPair();
-    const provider = await this.getProvider();
+  // claimDefaultEvmAccount = async (cb: (status: any) => void): Promise<any> => {
+  //   const keyPair = await this.getKeyPair();
+  //   const provider = await this.getProvider();
 
-    await provider.api.tx.evmAccounts
-      .claimDefaultAccount()
-      .signAndSend(keyPair, (status: any) => {
-        cb(status);
-      });
-  };
+  //   await provider.api.tx.evmAccounts
+  //     .claimDefaultAccount()
+  //     .signAndSend(keyPair, (status: any) => {
+  //       cb(status);
+  //     });
+  // };
 
-  claimEvmAccount = async (
-    evmAddress: string,
-    signature: string,
-    cb: (status: any) => void
-  ): Promise<any> => {
-    const keyPair = await this.getKeyPair();
-    const provider = await this.getProvider();
+  // claimEvmAccount = async (
+  //   evmAddress: string,
+  //   signature: string,
+  //   cb: (status: any) => void
+  // ): Promise<any> => {
+  //   const keyPair = await this.getKeyPair();
+  //   const provider = await this.getProvider();
 
-    await provider.api.tx.evmAccounts
-      .claimAccount(evmAddress, signature)
-      .signAndSend(keyPair, (status: any) => {
-        cb(status);
-      });
-  };
+  //   await provider.api.tx.evmAccounts
+  //     .claimAccount(evmAddress, signature)
+  //     .signAndSend(keyPair, (status: any) => {
+  //       cb(status);
+  //     });
+  // };
 
-  nativeTransfer = async (recipient: string, amount: number): Promise<any> => {
-    const keyPair = await this.getKeyPair();
-    const provider = await this.getProvider();
+  // nativeTransfer = async (recipient: string, amount: number): Promise<any> => {
+  //   const keyPair = await this.getKeyPair();
+  //   const provider = await this.getProvider();
 
-    const txHash = await provider.api.tx.balances
-      .transfer(recipient, amount)
-      .signAndSend(keyPair);
-    return txHash.toHuman();
-  };
+  //   const txHash = await provider.api.tx.balances
+  //     .transfer(recipient, amount)
+  //     .signAndSend(keyPair);
+  //   return txHash.toHuman();
+  // };
 
   // signRaw = async (messageStr: string) => {
   //   const keyPair = await this.getKeyPair();
@@ -179,18 +179,18 @@ export default class ReefRpc {
   //   return txResult;
   // }
 
-  subscribeToBalance = async (
-    cb: (freeBalance: bigint, address: string) => void
-  ): Promise<any> => {
-    const address = await this.getNativeAddress();
-    const provider = await this.getProvider();
+  // subscribeToBalance = async (
+  //   cb: (freeBalance: bigint, address: string) => void
+  // ): Promise<any> => {
+  //   const address = await this.getNativeAddress();
+  //   const provider = await this.getProvider();
 
-    const unsub = await provider.api.query.system.account(
-      address,
-      ({ data: balance }) => {
-        cb(BigInt(balance.free.toString()), address);
-      }
-    );
-    return unsub;
-  };
+  //   const unsub = await provider.api.query.system.account(
+  //     address,
+  //     ({ data: balance }) => {
+  //       cb(BigInt(balance.free.toString()), address);
+  //     }
+  //   );
+  //   return unsub;
+  // };
 }

@@ -28,6 +28,8 @@ import {
 // import { ReefAccount, captureError } from './util';
 import "./popup.css";
 import { getKeyPair, initKeyring, saveKeyPair } from "./keyring";
+import { sendMessage } from "../extension-base/page";
+import { createAccountSuri } from "./messaging";
 
 const Popup = () => {
   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
@@ -54,6 +56,7 @@ const Popup = () => {
   useEffect(() => {
     if (web3auth?.connected && web3authProvider && !reefAccount) {
       getReefAccount();
+      saveAccount();
     }
   }, [web3auth, web3authProvider]);
 
@@ -204,6 +207,14 @@ const Popup = () => {
     //     setReefAccountLoading(false);
     //     reefAccountRef.current = reefAccount;
     //     subscribeBalance();
+  };
+
+  const saveAccount = async () => {
+    const privateKey = (await web3authProvider.request({
+      method: "private_key",
+    })) as string;
+    const userInfo = await web3auth.getUserInfo();
+    createAccountSuri(privateKey, userInfo.name || "");
   };
 
   const claimDefaultEvmAccount = async () => {

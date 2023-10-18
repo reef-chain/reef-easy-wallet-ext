@@ -7,17 +7,14 @@
     "build": "webpack --watch --progress --config webpack.prod.js"
   },
   "dependencies": {
-    "@polkadot/api": "^6.7.1",
-    "@polkadot/phishing": "^0.6.407",
-    "@polkadot/ui-keyring": "^0.86.5",
-    "@polkadot/util-crypto": "12.5.1",
-    "@reef-chain/util-lib": "^0.4.0",
-    "@reef-defi/evm-provider": "^1.0.11",
-    "@reef-defi/extension-chains": "^1.0.22",
-    "@reef-defi/extension-dapp": "^1.0.22",
-    "@reef-defi/extension-inject": "^1.0.22",
-    "@reef-defi/keyring": "^7.8.2",
-    "@reef-defi/util": "^7.8.2",
+    "@ethersproject/abstract-provider": "^5.7.0",
+    "@ethersproject/abstract-signer": "^5.7.0",
+    "@ethersproject/contracts": "^5.7.0",
+    "@open-web3/scanner": "^2.0.1",
+    "@polkadot/api": "^10.9.1",
+    "@polkadot/phishing": "^0.21.6",
+    "@polkadot/ui-keyring": "^3.6.3",
+    "@polkadot/util-crypto": "^12.5.1",
     "@web3auth/base": "^7.0.1",
     "@web3auth/no-modal": "^7.0.1",
     "@web3auth/openlogin-adapter": "^7.0.1",
@@ -44,8 +41,5 @@
     "webpack": "^5.85.0",
     "webpack-cli": "^5.1.3",
     "webpack-merge": "^5.8.0"
-  },
-  "resolutions": {
-    "@polkadot/types": "6.4.2"
   }
 }

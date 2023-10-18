@@ -18,7 +18,7 @@ import {
   REEF_EXTENSION_IDENT,
   REEF_INJECTED_EVENT,
   startInjection,
-} from "@reef-defi/extension-inject";
+} from "../extension-inject";
 
 startInjection(REEF_EXTENSION_IDENT);
 
@@ -28,8 +28,7 @@ window.addEventListener("message", ({ data, source }: Message): void => {
   if (source !== window || data.origin !== PORT_CONTENT) {
     return;
   }
-
-  console.log("page window msg listener=", data);
+  console.log("[Page receives]", data);
 
   if (data.id) {
     handleResponse(data as TransportRequestMessage<keyof RequestSignatures>);

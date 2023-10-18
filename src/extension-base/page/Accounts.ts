@@ -1,17 +1,9 @@
-// Copyright 2019-2021 @polkadot/extension authors & contributors
-// SPDX-License-Identifier: Apache-2.0
+import { InjectedAccount, Unsubcall } from "../../extension-inject/types";
+import { SendRequest } from "./types";
 
-import type {
-  InjectedAccount,
-  InjectedAccounts,
-  Unsubcall,
-} from "@reef-defi/extension-inject/types";
-import type { SendRequest } from "./types";
-
-// External to class, this.# is not private enough (yet)
 let sendRequest: SendRequest;
 
-export default class Accounts implements InjectedAccounts {
+export default class Accounts {
   constructor(_sendRequest: SendRequest) {
     sendRequest = _sendRequest;
   }

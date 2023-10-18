@@ -1,11 +1,11 @@
 import { KeyringPair } from "@polkadot/keyring/types";
 import keyring from "@polkadot/ui-keyring";
-import { cryptoWaitReady } from "@reef-defi/util-crypto";
+// import { cryptoWaitReady } from "@reef-defi/util-crypto";
 import { SafeEventEmitterProvider } from "@web3auth/base";
 
 export const initKeyring = async () => {
   try {
-    await cryptoWaitReady();
+    // await cryptoWaitReady();
     console.log("crypto initialized");
     // load all the keyring data
     keyring.loadAll({ type: "sr25519" });
