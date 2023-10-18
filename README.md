@@ -1,7 +1,3 @@
-# ARCHIVING THIS REPO
-There are issues with currently used Reef lib versions and requirement of metadata v3 to use service workers. We checked service workers work with latest @polkadot libs so when we upgrade our lib deps we can continue with this project.
-
-
 # Reef Socials Wallet Chrome Extension
 
 A Chrome extension for the Reef Chain that uses [Web3Auth](https://web3auth.io/) to create and authenticate to Reef accounts using different social media platforms.
