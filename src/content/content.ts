@@ -3,7 +3,7 @@
 
 import type { Message } from "../extension-base/types";
 
-import { PORT_CONTENT, PORT_PAGE } from "../extension-base/defaults";
+import { PORT_CONTENT, PORT_PAGE } from "../defaults";
 
 // import handlers from "./handlers";
 // import { RequestSignatures, TransportRequestMessage } from "./types";
@@ -13,8 +13,10 @@ const port = chrome.runtime.connect({ name: PORT_CONTENT });
 
 // send any messages from the extension back to the page
 port.onMessage.addListener((data): void => {
-  console.log("[Content receives port.onMessage]", data);
-  console.log("[Content sends window.postMessage]", data);
+  console.log(
+    "[Content receives port.onMessage - sends window.postMessage]",
+    data
+  );
   window.postMessage({ ...data, origin: PORT_CONTENT }, "*");
 });
 
@@ -25,25 +27,12 @@ window.addEventListener("message", ({ data, source }: Message): void => {
     return;
   }
   console.log(
-    "[Content receives window.addEventListener]",
+    "[Content receives window.addEventListener - sends port.postMessage]",
     data,
     " source=",
     source
   );
-
-  // a. Send to service worker
-  console.log("[Content sends port.postMessage]", data);
   port.postMessage(data);
-
-  // b. Handle in content script
-  // handlers(
-  //   data as TransportRequestMessage<keyof RequestSignatures>,
-  //   window.location.origin,
-  //   port
-  // ).then((response) => {
-  //   console.log("response=", response);
-  //   window.postMessage({ id: data.id, response, origin: PORT_CONTENT }, "*");
-  // });
 });
 
 // inject our data injector

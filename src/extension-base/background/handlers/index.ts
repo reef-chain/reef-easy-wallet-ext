@@ -7,9 +7,9 @@ import { assert } from "@polkadot/util";
 
 // import ReefExtension from '../../../../reef/extension-base/background/handlers/ReefExtension';
 // import { ReefTabs } from '../../../../reef/extension-base/background/handlers/ReefTabs';
-import { PORT_EXTENSION } from "../../defaults";
 import Tabs from "./Tabs";
 import Extension from "./Extension";
+import { PORT_EXTENSION } from "../../../defaults";
 // import State from './State';
 
 // const state = new State();

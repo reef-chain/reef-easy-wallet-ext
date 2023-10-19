@@ -8,9 +8,9 @@ import {
 } from "../types";
 
 import { BehaviorSubject } from "rxjs";
+import { RPC_URL } from "../../../defaults";
 
 const REEF_NETWORK_RPC_URL_KEY = "reefNetworkRpcUrl";
-const RPC_URL = "wss://rpc.reefscan.com/ws";
 
 export const networkRpcUrlSubject: BehaviorSubject<string> =
   new BehaviorSubject<string>(
@@ -46,7 +46,6 @@ export default class Extension {
   ): Promise<ResponseType<TMessageType>> {
     switch (type) {
       case "pri(accounts.create.suri)":
-        console.log("Extension.ts handle pri(accounts.create.suri)");
         return this.accountsCreateSuri(request as RequestAccountCreateSuri);
       default:
         throw new Error(
@@ -60,14 +59,6 @@ export default class Extension {
     name,
     privateKey,
   }: RequestAccountCreateSuri): boolean {
-    // const keyring = new Keyring({ ss58Format: 42, type: "sr25519" });
-    // const keyPair = keyring.addFromUri("0x" + privateKey, {
-    //   genesisHash,
-    //   name,
-    // });
-    // const pair = keyring.getPair(keyPair.address); // TODO remove
-    // console.log("pair=", pair);
-
     const createResult = keyring.addUri("0x" + privateKey);
     const pair = keyring.getPair(createResult.pair.address); // TODO remove
     console.log("pair=", pair);

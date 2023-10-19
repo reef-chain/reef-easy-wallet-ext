@@ -36,7 +36,6 @@ export class ReefSigner implements ReefInjectedSigner {
     cb: (accounts: InjectedAccount | undefined) => unknown
   ): Unsubcall {
     return this.accounts.subscribe((accounts) => {
-      console.log("subscribeSelectedAccount___accounts=", accounts);
       cb(accounts.find((a) => a.isSelected));
     });
   }
@@ -51,10 +50,8 @@ export class ReefSigner implements ReefInjectedSigner {
     cb: (reefSigner: ReefSignerResponse) => unknown,
     connectedVM: ReefVM = ReefVM.EVM
   ): Unsubcall {
-    console.log("subscribeSelectedSigner___");
     const unsubProvFn = this.injectedProvider.subscribeSelectedNetworkProvider(
       (provider) => {
-        console.log("subscribeSelectedSigner___provider=", provider);
         this.selectedProvider = provider;
         this.onSelectedSignerParamUpdate(cb, connectedVM).then(
           () => {
@@ -73,7 +70,6 @@ export class ReefSigner implements ReefInjectedSigner {
         !account ||
         account?.address !== this.selectedSignerAccount?.address
       ) {
-        console.log("subscribeSelectedSigner___account=", account);
         this.selectedSignerAccount = account;
         this.onSelectedSignerParamUpdate(cb, connectedVM).then(
           () => {
@@ -126,18 +122,6 @@ export class ReefSigner implements ReefInjectedSigner {
     cb: (reefSigner: ReefSignerResponse) => unknown,
     connectedVM: ReefVM
   ): Promise<void> {
-    console.log(
-      "onSelectedSignerParamUpdate___selectedSignerAccount",
-      this.selectedSignerAccount
-    );
-    console.log(
-      "onSelectedSignerParamUpdate___selectedProvider",
-      this.selectedProvider
-    );
-    console.log(
-      "onSelectedSignerParamUpdate___extSigningKey",
-      this.extSigningKey
-    );
     const selectedSigner = ReefSigner.createReefSigner(
       this.selectedSignerAccount,
       this.selectedProvider,

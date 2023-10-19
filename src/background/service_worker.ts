@@ -29,17 +29,6 @@ chrome.runtime.onConnect.addListener((port): void => {
     (data: TransportRequestMessage<keyof RequestSignatures>) => {
       console.log("[ServiceWorker receives]", " port=", port.name, data);
       handlers(data, port);
-
-      // sendMessageToContentScript(data, port);
-
-      // sendMessageToContentScript(data, port)
-      //   .then((response) => {
-      //     console.log("response=", response);
-      //     // port.postMessage({ id: response.id, response: response.response });
-      //   })
-      //   .catch((error: Error): void => {
-      //     console.log(`[err] ${error.message}`);
-      //   });
     }
   );
   port.onDisconnect.addListener(() =>
@@ -60,36 +49,3 @@ cryptoWaitReady()
   .catch((error): void => {
     console.error("initialization failed", error);
   });
-
-// const sendMessageToContentScript = async (
-//   data: TransportRequestMessage<keyof RequestSignatures>,
-//   port: chrome.runtime.Port
-// ) => {
-//   const [tab] = await chrome.tabs.query({
-//     active: true,
-//     lastFocusedWindow: true,
-//   });
-//   const response = await chrome.tabs.sendMessage(tab.id, { data, port });
-//   // do something with response here, not outside the function
-//   console.log("sendMessageToContentScript", response);
-//   return response;
-// };
-
-// chrome.runtime.onInstalled.addListener((details) => {
-//   if (details.reason !== "install" && details.reason !== "update") return;
-//   console.log("Background: install/update", details);
-// });
-
-// chrome.runtime.onStartup.addListener(() => {
-//   console.log("Background: startup");
-// });
-
-// chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-//   console.log("Background: onMessage", msg, sender);
-//   sendResponse("From the background Script");
-// });
-
-// chrome.runtime.onMessageExternal.addListener((msg, sender, sendResponse) => {
-//   console.log("Background: onMessageExternal", msg, sender);
-//   sendResponse("From the background Script");
-// });

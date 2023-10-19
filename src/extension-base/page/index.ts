@@ -13,7 +13,7 @@ import type {
   TransportResponseMessage,
 } from "../background/types";
 
-import { PORT_PAGE } from "../defaults";
+import { PORT_PAGE } from "../../defaults";
 
 import Injected from "./Injected";
 

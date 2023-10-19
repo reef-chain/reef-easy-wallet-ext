@@ -27,8 +27,6 @@ import {
 } from "./config";
 // import { ReefAccount, captureError } from './util';
 import "./popup.css";
-import { getKeyPair, initKeyring, saveKeyPair } from "./keyring";
-import { sendMessage } from "../extension-base/page";
 import { createAccountSuri } from "./messaging";
 
 const Popup = () => {
@@ -42,14 +40,9 @@ const Popup = () => {
   const queryParams = new URLSearchParams(window.location.search);
   const loginProvider = queryParams.get("loginProvider");
 
-  const test = async () => {
-    saveKeyPair(web3authProvider);
-    const pair = getKeyPair();
-    console.log(pair);
-  };
+  const test = async () => {};
 
   useEffect(() => {
-    // initKeyring();
     initWeb3Auth();
   }, []);
 
@@ -102,9 +95,6 @@ const Popup = () => {
           clientId: CLIENT_ID,
           network: WEB3_AUTH_NETWORK,
           uxMode: UX_MODE.POPUP,
-          // uxMode: UX_MODE.REDIRECT,
-          // redirectUrl:
-          //   "chrome-extension://ggmkeplalbadblhbbkcchekkfmmnoiln/index.html",
           whiteLabel: {
             appName: "Reef Web3Auth Wallet",
             appUrl: "https://reef.io/",

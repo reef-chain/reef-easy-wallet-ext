@@ -7,7 +7,7 @@ import {
   ResponseRpcListProviders,
   ResponseTypes,
 } from "../types";
-import { PHISHING_PAGE_REDIRECT } from "../../defaults";
+
 import { assert, isNumber } from "@polkadot/util";
 import { createSubscription, unsubscribe } from "./subscriptions";
 import {
@@ -31,6 +31,7 @@ import type {
 import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
 import { KeypairType } from "@polkadot/util-crypto/types";
 import { getSelectedAccountIndex, networkRpcUrlSubject } from "./Extension";
+import { PHISHING_PAGE_REDIRECT } from "../../../defaults";
 
 function canDerive(type?: KeypairType): boolean {
   return !!type && ["ed25519", "sr25519", "ecdsa", "ethereum"].includes(type);
@@ -167,7 +168,6 @@ export default class Tabs {
     const cb = createSubscription<"pub(accounts.subscribe)">(id, port);
     const subscription = accountsObservable.subject.subscribe(
       (accounts: SubjectInfo): void => {
-        console.log("accounts", accounts);
         return cb(transformAccounts(accounts));
       }
     );

@@ -26,7 +26,6 @@ import type { KeypairType } from "@polkadot/util-crypto/types";
 
 import { TypeRegistry } from "@polkadot/types";
 
-import { ALLOWED_PATH } from "../defaults";
 // import { AuthUrls } from "./handlers/State";
 
 type KeysWithDefinedValues<T> = {

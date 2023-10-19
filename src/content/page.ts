@@ -7,7 +7,7 @@ import type {
 } from "../extension-base/background/types";
 import type { Message } from "../extension-base/types";
 
-import { PORT_CONTENT } from "../extension-base/defaults";
+import { PORT_CONTENT, PKG_VERSION } from "../defaults";
 import {
   enable,
   handleResponse,
@@ -55,7 +55,7 @@ redirectIfPhishing()
 function inject() {
   injectExtension(enable, {
     name: REEF_EXTENSION_IDENT,
-    version: process.env.PKG_VERSION as string,
+    version: PKG_VERSION,
   });
   const event = new Event(REEF_INJECTED_EVENT);
 
