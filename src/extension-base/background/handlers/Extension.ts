@@ -2,6 +2,7 @@
 import keyring from "@polkadot/ui-keyring";
 import {
   MessageTypes,
+  RequestAccountClaimDefault,
   RequestAccountCreateSuri,
   RequestTypes,
   ResponseType,
@@ -47,6 +48,8 @@ export default class Extension {
     switch (type) {
       case "pri(accounts.create.suri)":
         return this.accountsCreateSuri(request as RequestAccountCreateSuri);
+      case "pri(accounts.claim.default)":
+        return this.accountsClaimDefault(request as RequestAccountClaimDefault);
       default:
         throw new Error(
           `Extension.ts Unable to handle message of type ${type}`
@@ -58,11 +61,14 @@ export default class Extension {
     genesisHash,
     name,
     privateKey,
-  }: RequestAccountCreateSuri): boolean {
-    const createResult = keyring.addUri("0x" + privateKey);
-    const pair = keyring.getPair(createResult.pair.address); // TODO remove
-    console.log("pair=", pair);
+  }: RequestAccountCreateSuri): string {
+    const createResult = keyring.addUri("0x" + privateKey, "test_password"); // TODO
+    return createResult.pair.address;
+  }
 
-    return true;
+  private accountsClaimDefault({
+    address,
+  }: RequestAccountClaimDefault): string {
+    return "";
   }
 }

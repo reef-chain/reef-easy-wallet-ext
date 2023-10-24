@@ -10,13 +10,13 @@ import { assert } from "@polkadot/util";
 import Tabs from "./Tabs";
 import Extension from "./Extension";
 import { PORT_EXTENSION } from "../../../defaults";
-// import State from './State';
+import State from "./State";
 
-// const state = new State();
+const state = new State();
 // const extension = new ReefExtension(state);
 // const tabs = new ReefTabs(state);
 const extension = new Extension();
-const tabs = new Tabs();
+const tabs = new Tabs(state);
 
 export default function handler<TMessageType extends MessageTypes>(
   { id, message, request }: TransportRequestMessage<TMessageType>,

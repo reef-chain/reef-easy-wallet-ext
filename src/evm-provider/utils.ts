@@ -155,12 +155,12 @@ export function isSubstrateAddress(address: string): boolean {
   return true;
 }
 
-export function isMainnet(providerOrSigner: Provider | Signer): boolean {
-  const provider = (providerOrSigner as Signer).provider
-    ? (providerOrSigner as Signer).provider
-    : (providerOrSigner as Provider);
-  return provider?.api?.genesisHash.toString() === MAINNET_GENESIS_HASH;
-}
+// export function isMainnet(providerOrSigner: Provider | Signer): boolean {
+//   const provider = (providerOrSigner as Signer).provider
+//     ? (providerOrSigner as Signer).provider
+//     : (providerOrSigner as Provider);
+//   return provider?.api?.genesisHash.toString() === MAINNET_GENESIS_HASH;
+// }
 
 // returns evm address
 export async function resolveEvmAddress(

@@ -13,7 +13,8 @@ const PORT_EXTENSION = "reef_extension";
 const PORT_PAGE = "reef_page";
 const PASSWORD_EXPIRY_MIN = 15;
 const PASSWORD_EXPIRY_MS = PASSWORD_EXPIRY_MIN * 60 * 1000;
-const RPC_URL = "wss://rpc.reefscan.com/ws";
+// const RPC_URL = "wss://rpc.reefscan.com/ws";
+const RPC_URL = "wss://rpc-testnet.reefscan.com/ws ";
 
 export {
   PKG_VERSION,

@@ -13,9 +13,8 @@ import {
   WALLET_ADAPTERS,
 } from "@web3auth/base";
 import { CommonPrivateKeyProvider } from "@web3auth/base-provider";
-// import { ethers } from 'ethers';
-// import Account from './Account';
-import RPC from "../util/rpc";
+// import Account from "./Account";
+// import RPC from "../util/rpc";
 import {
   CLIENT_ID,
   LOGIN_PROVIDERS,
@@ -25,16 +24,16 @@ import {
   RPC_URL,
   WEB3_AUTH_NETWORK,
 } from "./config";
-// import { ReefAccount, captureError } from './util';
+// import { ReefAccount, captureError } from "./util";
 import "./popup.css";
-import { createAccountSuri } from "./messaging";
+import { accountsClaimDefault, createAccountSuri } from "./messaging";
+import { ReefAccount } from "./ReefAccount";
 
 const Popup = () => {
   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
   const [web3authProvider, setWeb3authProvider] =
     useState<SafeEventEmitterProvider | null>(null);
-  // const [reefAccount, setReefAccount] = useState<ReefAccount | null>(null);
-  const [reefAccount, setReefAccount] = useState<any | null>(null);
+  const [reefAccount, setReefAccount] = useState<ReefAccount | null>(null);
   const [reefAccountLoading, setReefAccountLoading] = useState(false);
   const reefAccountRef = useRef(reefAccount);
   const queryParams = new URLSearchParams(window.location.search);
@@ -49,7 +48,7 @@ const Popup = () => {
   useEffect(() => {
     if (web3auth?.connected && web3authProvider && !reefAccount) {
       getReefAccount();
-      saveAccount();
+      // saveAccount();
     }
   }, [web3auth, web3authProvider]);
 
@@ -147,6 +146,17 @@ const Popup = () => {
       return;
     }
     setWeb3authProvider(web3authProvider);
+
+    // TODO only if not already created
+    const privateKey = (await web3authProvider.request({
+      method: "private_key",
+    })) as string;
+    const userInfo = await web3auth.getUserInfo();
+    const substrateAddress = await createAccountSuri(
+      privateKey,
+      userInfo.name || ""
+    );
+    setReefAccount(new ReefAccount(substrateAddress, userInfo.name || ""));
   };
 
   const logout = async () => {
@@ -189,25 +199,36 @@ const Popup = () => {
   };
 
   const getReefAccount = async () => {
-    //     setReefAccountLoading(true);
-    //     const user = await web3auth!.getUserInfo();
-    //     const rpc = new RPC(web3authProvider!);
-    //     const reefAccount = await rpc.getReefAccount(user.name || '');
-    //     setReefAccount(reefAccount);
-    //     setReefAccountLoading(false);
-    //     reefAccountRef.current = reefAccount;
-    //     subscribeBalance();
-  };
-
-  const saveAccount = async () => {
     const privateKey = (await web3authProvider.request({
       method: "private_key",
     })) as string;
     const userInfo = await web3auth.getUserInfo();
-    createAccountSuri(privateKey, userInfo.name || "");
+    const substrateAddress = await createAccountSuri(
+      privateKey,
+      userInfo.name || ""
+    );
+    setReefAccount(new ReefAccount(substrateAddress, userInfo.name || ""));
+
+    // setReefAccountLoading(true);
+    // const user = await web3auth!.getUserInfo();
+    // const rpc = new RPC(web3authProvider!);
+    // const reefAccount = await rpc.getReefAccount(user.name || "");
+    // setReefAccount(reefAccount);
+    // setReefAccountLoading(false);
+    // reefAccountRef.current = reefAccount;
+    // subscribeBalance();
   };
 
-  const claimDefaultEvmAccount = async () => {
+  // const saveAccount = async () => {
+  //   const privateKey = (await web3authProvider.request({
+  //     method: "private_key",
+  //   })) as string;
+  //   const userInfo = await web3auth.getUserInfo();
+  //   createAccountSuri(privateKey, userInfo.name || "");
+  // };
+
+  const claimDefaultEvmAccount = async (address: string) => {
+    accountsClaimDefault(address);
     //     if (reefAccount!.balance < ethers.utils.parseEther("5").toBigInt()) {
     //       alert("Not enough balance for claiming EVM account. Transfer at least 5 REEF to your account first.");
     //       return;
@@ -325,14 +346,16 @@ const Popup = () => {
           {reefAccountLoading && !reefAccount && (
             <div className="loading">Loading account...</div>
           )}
-          {/* { reefAccount && <Account account={reefAccount} /> } */}
+          {/* {reefAccount && <Account account={reefAccount} />} */}
           <button onClick={getUserInfo}>Get User Info</button>
           <button onClick={authenticateUser}>Get ID Token</button>
           <button onClick={nativeTransfer}>Native transfer</button>
           <button onClick={signRaw}>Sign message</button>
           {reefAccount && !reefAccount.isEvmClaimed && (
             <>
-              <button onClick={claimDefaultEvmAccount}>
+              <button
+                onClick={() => claimDefaultEvmAccount(reefAccount.address)}
+              >
                 Claim default EVM account
               </button>
               {/* <button onClick={claimEvmAccount}>Claim owned EVM account</button> */}

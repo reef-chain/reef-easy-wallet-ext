@@ -46,22 +46,22 @@ type NullKeys<T> = { [K in keyof T]: IsNull<T, K> }[keyof T];
 
 // export type SeedLengths = 12 | 24;
 
-// export interface AccountJson extends KeyringPair$Meta {
-//   address: string;
-//   genesisHash?: string | null;
-//   isExternal?: boolean;
-//   isHardware?: boolean;
-//   isHidden?: boolean;
-//   hideBalance?: any;
-//   presentation?: any;
-//   name?: string;
-//   parentAddress?: string;
-//   suri?: string;
-//   type?: KeypairType;
-//   whenCreated?: number;
-//   // REEF update
-//   isSelected?: boolean;
-// }
+export interface AccountJson extends KeyringPair$Meta {
+  address: string;
+  genesisHash?: HexString | null;
+  isExternal?: boolean;
+  isHardware?: boolean;
+  isHidden?: boolean;
+  hideBalance?: any;
+  presentation?: any;
+  name?: string;
+  parentAddress?: string;
+  suri?: string;
+  type?: KeypairType;
+  whenCreated?: number;
+  // REEF update
+  isSelected?: boolean;
+}
 
 // export type AccountWithChildren = AccountJson & {
 //   children?: AccountWithChildren[];
@@ -86,25 +86,26 @@ type NullKeys<T> = { [K in keyof T]: IsNull<T, K> }[keyof T];
 //   url: string;
 // }
 
-// export interface SigningRequest {
-//   account: AccountJson;
-//   id: string;
-//   request: RequestSign;
-//   url: string;
-// }
+export interface SigningRequest {
+  account: AccountJson;
+  id: string;
+  request: RequestSign;
+  url: string;
+}
 
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
 export interface RequestSignatures {
-  "pri(accounts.create.suri)": [RequestAccountCreateSuri, boolean];
-  "pub(authorize.tab)": [RequestAuthorizeTab, null];
-  "pub(bytes.sign)": [SignerPayloadRaw, ResponseSigning];
-  "pub(extrinsic.sign)": [SignerPayloadJSON, ResponseSigning];
+  "pri(accounts.create.suri)": [RequestAccountCreateSuri, string];
+  "pri(accounts.claim.default)": [RequestAccountClaimDefault, string];
   "pub(accounts.list)": [RequestAccountList, InjectedAccount[]];
   "pub(accounts.subscribe)": [
     RequestAccountSubscribe,
     boolean,
     InjectedAccount[]
   ];
+  "pub(authorize.tab)": [RequestAuthorizeTab, null];
+  "pub(bytes.sign)": [SignerPayloadRaw, ResponseSigning];
+  "pub(extrinsic.sign)": [SignerPayloadJSON, ResponseSigning];
   "pub(metadata.list)": [null, InjectedMetadataKnown[]];
   "pub(metadata.provide)": [MetadataDef, boolean];
   "pub(phishing.redirectIfDenied)": [null, boolean];
@@ -178,6 +179,10 @@ export interface RequestAccountCreateSuri {
   name: string;
   genesisHash?: HexString | null;
   privateKey: string;
+}
+
+export interface RequestAccountClaimDefault {
+  address: string;
 }
 
 // export interface RequestAccountCreateHardware {
@@ -379,11 +384,11 @@ export type MessageTypesWithNoSubscriptions = Exclude<
   keyof SubscriptionMessageTypes
 >;
 
-// export interface RequestSign {
-//   readonly payload: SignerPayloadJSON | SignerPayloadRaw;
+export interface RequestSign {
+  readonly payload: SignerPayloadJSON | SignerPayloadRaw;
 
-//   sign(registry: TypeRegistry, pair: KeyringPair): { signature: HexString };
-// }
+  sign(registry: TypeRegistry, pair: KeyringPair): { signature: HexString };
+}
 
 // export interface RequestJsonRestore {
 //   file: KeyringPair$Json;

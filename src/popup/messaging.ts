@@ -83,9 +83,13 @@ export function sendMessage<TMessageType extends MessageTypes>(
 export async function createAccountSuri(
   privateKey: string,
   name: string
-): Promise<boolean> {
+): Promise<string> {
   return sendMessage("pri(accounts.create.suri)", {
     privateKey,
     name,
   });
+}
+
+export async function accountsClaimDefault(address: string): Promise<string> {
+  return sendMessage("pri(accounts.claim.default)", { address });
 }
