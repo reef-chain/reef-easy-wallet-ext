@@ -96,7 +96,8 @@ export interface SigningRequest {
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
 export interface RequestSignatures {
   "pri(accounts.create.suri)": [RequestAccountCreateSuri, string];
-  "pri(accounts.claim.default)": [RequestAccountClaimDefault, string];
+  "pri(signing.requests)": [RequestSigningSubscribe, boolean, SigningRequest[]];
+  // "pri(accounts.claim.default)": [RequestAccountClaimDefault, string];
   "pub(accounts.list)": [RequestAccountList, InjectedAccount[]];
   "pub(accounts.subscribe)": [
     RequestAccountSubscribe,
@@ -295,7 +296,7 @@ export interface RequestRpcUnsubscribe {
 //   remainingTime: number;
 // }
 
-// export type RequestSigningSubscribe = null;
+export type RequestSigningSubscribe = null;
 
 // export interface RequestSeedCreate {
 //   length?: SeedLengths;

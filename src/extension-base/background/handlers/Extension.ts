@@ -6,10 +6,13 @@ import {
   RequestAccountCreateSuri,
   RequestTypes,
   ResponseType,
+  SigningRequest,
 } from "../types";
 
 import { BehaviorSubject } from "rxjs";
 import { RPC_URL } from "../../../defaults";
+import { createSubscription, unsubscribe } from "./subscriptions";
+import State from "./State";
 
 const REEF_NETWORK_RPC_URL_KEY = "reefNetworkRpcUrl";
 
@@ -39,6 +42,12 @@ export function getSelectedAccountIndex(
 }
 
 export default class Extension {
+  readonly #state: State;
+
+  constructor(state: State) {
+    this.#state = state;
+  }
+
   public async handle<TMessageType extends MessageTypes>(
     id: string,
     type: TMessageType,
@@ -48,8 +57,10 @@ export default class Extension {
     switch (type) {
       case "pri(accounts.create.suri)":
         return this.accountsCreateSuri(request as RequestAccountCreateSuri);
-      case "pri(accounts.claim.default)":
-        return this.accountsClaimDefault(request as RequestAccountClaimDefault);
+      // case "pri(accounts.claim.default)":
+      //   return this.accountsClaimDefault(request as RequestAccountClaimDefault);
+      case "pri(signing.requests)":
+        return this.signingSubscribe(id, port);
       default:
         throw new Error(
           `Extension.ts Unable to handle message of type ${type}`
@@ -66,9 +77,23 @@ export default class Extension {
     return createResult.pair.address;
   }
 
-  private accountsClaimDefault({
-    address,
-  }: RequestAccountClaimDefault): string {
-    return "";
+  private signingSubscribe(id: string, port: chrome.runtime.Port): boolean {
+    const cb = createSubscription<"pri(signing.requests)">(id, port);
+    const subscription = this.#state.signSubject.subscribe(
+      (requests: SigningRequest[]): void => cb(requests)
+    );
+
+    port.onDisconnect.addListener((): void => {
+      unsubscribe(id);
+      subscription.unsubscribe();
+    });
+
+    return true;
   }
+
+  // private accountsClaimDefault({
+  //   address,
+  // }: RequestAccountClaimDefault): string {
+  //   return "";
+  // }
 }

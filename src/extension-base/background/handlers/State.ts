@@ -366,42 +366,42 @@ export default class State {
   ): Promise<ResponseSigning> {
     const id = getId();
 
-    const payload = request.payload as SignerPayloadJSON;
-    const registry = new TypeRegistry();
-    registry.setSignedExtensions(payload.signedExtensions);
+    // const payload = request.payload as SignerPayloadJSON;
+    // const registry = new TypeRegistry();
+    // registry.setSignedExtensions(payload.signedExtensions);
 
-    // Get the metadata for the genesisHash
-    const currentMetadata = this.knownMetadata.find(
-      (meta: MetadataDef) => meta.genesisHash === payload.genesisHash
-    );
+    // // Get the metadata for the genesisHash
+    // const currentMetadata = this.knownMetadata.find(
+    //   (meta: MetadataDef) => meta.genesisHash === payload.genesisHash
+    // );
 
-    // set the registry before calling the sign function
-    registry.setSignedExtensions(
-      payload.signedExtensions,
-      currentMetadata?.userExtensions
-    );
-    const pair = keyring.getPair(account.address);
-    pair.unlock("test_password"); // TODO
-    const result = request.sign(registry, pair);
-    console.log("sign.signature=", result);
+    // // set the registry before calling the sign function
+    // registry.setSignedExtensions(
+    //   payload.signedExtensions,
+    //   currentMetadata?.userExtensions
+    // );
+    // const pair = keyring.getPair(account.address);
+    // pair.unlock("test_password"); // TODO
+    // const result = request.sign(registry, pair);
+    // console.log("sign.signature=", result);
 
-    return Promise.resolve({ id, signature: result.signature });
+    // return Promise.resolve({ id, signature: result.signature });
 
-    // return new Promise((resolve, reject): void => {
-    //   this.#signRequests[id] = {
-    //     ...this.signComplete(id, resolve, reject),
-    //     account,
-    //     id,
-    //     request,
-    //     url,
-    //   };
+    return new Promise((resolve, reject): void => {
+      this.#signRequests[id] = {
+        ...this.signComplete(id, resolve, reject),
+        account,
+        id,
+        request,
+        url,
+      };
 
-    // this.updateIconSign();
+      this.updateIconSign();
 
-    // if (url !== PORT_EXTENSION) {
-    //   this.popupOpen();
-    // }
-    // });
+      if (url !== PORT_EXTENSION) {
+        this.popupOpen();
+      }
+    });
   }
 
   // public removeAuthorization(url: string): AuthUrls {
@@ -547,7 +547,7 @@ export default class State {
 
     // eslint-disable-next-line no-void
     // void chrome.browserAction.setBadgeText({ text });
-    void chrome.browserAction.setBadgeText({ text: "SIGN" });
+    void chrome.action.setBadgeText({ text: "SIGN" });
 
     // if (shouldClose && text === "") {
     //   this.popupClose();

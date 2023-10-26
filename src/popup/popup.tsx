@@ -26,8 +26,9 @@ import {
 } from "./config";
 // import { ReefAccount, captureError } from "./util";
 import "./popup.css";
-import { accountsClaimDefault, createAccountSuri } from "./messaging";
+import { createAccountSuri, subscribeSigningRequests } from "./messaging";
 import { ReefAccount } from "./ReefAccount";
+import { SigningRequest } from "../extension-base/background/types";
 
 const Popup = () => {
   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
@@ -35,6 +36,9 @@ const Popup = () => {
     useState<SafeEventEmitterProvider | null>(null);
   const [reefAccount, setReefAccount] = useState<ReefAccount | null>(null);
   const [reefAccountLoading, setReefAccountLoading] = useState(false);
+  const [signRequests, setSignRequests] = useState<null | SigningRequest[]>(
+    null
+  );
   const reefAccountRef = useRef(reefAccount);
   const queryParams = new URLSearchParams(window.location.search);
   const loginProvider = queryParams.get("loginProvider");
@@ -43,6 +47,9 @@ const Popup = () => {
 
   useEffect(() => {
     initWeb3Auth();
+    Promise.all([subscribeSigningRequests(setSignRequests)]).catch(
+      console.error
+    );
   }, []);
 
   useEffect(() => {
@@ -228,7 +235,7 @@ const Popup = () => {
   // };
 
   const claimDefaultEvmAccount = async (address: string) => {
-    accountsClaimDefault(address);
+    // accountsClaimDefault(address);
     //     if (reefAccount!.balance < ethers.utils.parseEther("5").toBigInt()) {
     //       alert("Not enough balance for claiming EVM account. Transfer at least 5 REEF to your account first.");
     //       return;
@@ -319,6 +326,16 @@ const Popup = () => {
     <div className="popup">
       <h1>Reef Web3Auth Wallet</h1>
       <button onClick={() => test()}>TEST</button>
+      {signRequests &&
+        signRequests.length > 0 &&
+        signRequests.map((signRequest) => (
+          <div>
+            <p>Sign Request</p>
+            <p>Origin: {signRequest.account.address}</p>
+            <p>Request: {JSON.stringify(signRequest.request.payload)}</p>
+            <p>Id: {signRequest.id}</p>
+          </div>
+        ))}
       {isPopup && <button onClick={() => openFullPage()}>Full page</button>}
       {web3auth && !web3auth.connected && (
         <>

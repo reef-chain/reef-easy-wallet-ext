@@ -5,17 +5,13 @@ import type { MessageTypes, TransportRequestMessage } from "../types";
 
 import { assert } from "@polkadot/util";
 
-// import ReefExtension from '../../../../reef/extension-base/background/handlers/ReefExtension';
-// import { ReefTabs } from '../../../../reef/extension-base/background/handlers/ReefTabs';
 import Tabs from "./Tabs";
 import Extension from "./Extension";
 import { PORT_EXTENSION } from "../../../defaults";
 import State from "./State";
 
 const state = new State();
-// const extension = new ReefExtension(state);
-// const tabs = new ReefTabs(state);
-const extension = new Extension();
+const extension = new Extension(state);
 const tabs = new Tabs(state);
 
 export default function handler<TMessageType extends MessageTypes>(

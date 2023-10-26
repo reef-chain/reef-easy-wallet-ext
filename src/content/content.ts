@@ -5,9 +5,6 @@ import type { Message } from "../extension-base/types";
 
 import { PORT_CONTENT, PORT_PAGE } from "../defaults";
 
-// import handlers from "./handlers";
-// import { RequestSignatures, TransportRequestMessage } from "./types";
-
 // connect to the extension
 const port = chrome.runtime.connect({ name: PORT_CONTENT });
 

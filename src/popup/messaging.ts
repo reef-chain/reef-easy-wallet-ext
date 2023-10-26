@@ -9,6 +9,7 @@ import {
   MessageTypesWithSubscriptions,
   RequestTypes,
   ResponseTypes,
+  SigningRequest,
   SubscriptionMessageTypes,
 } from "../extension-base/background/types";
 import { Message } from "../types";
@@ -90,6 +91,14 @@ export async function createAccountSuri(
   });
 }
 
-export async function accountsClaimDefault(address: string): Promise<string> {
-  return sendMessage("pri(accounts.claim.default)", { address });
+export async function subscribeSigningRequests(
+  cb: (accounts: SigningRequest[]) => void
+): Promise<boolean> {
+  return sendMessage("pri(signing.requests)", null, (val) => {
+    cb(val);
+  });
 }
+
+// export async function accountsClaimDefault(address: string): Promise<string> {
+//   return sendMessage("pri(accounts.claim.default)", { address });
+// }
