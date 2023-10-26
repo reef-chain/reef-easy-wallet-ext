@@ -10,6 +10,7 @@
     "@ethersproject/abstract-provider": "^5.7.0",
     "@ethersproject/abstract-signer": "^5.7.0",
     "@ethersproject/contracts": "^5.7.0",
+    "@open-web3/orml-api-derive": "^2.0.1",
     "@open-web3/scanner": "^2.0.1",
     "@polkadot/api": "^10.9.1",
     "@polkadot/phishing": "^0.21.6",

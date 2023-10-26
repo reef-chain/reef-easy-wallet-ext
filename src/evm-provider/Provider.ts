@@ -37,7 +37,8 @@ import type BN from "bn.js";
 import { AbstractDataProvider } from "./DataProvider";
 import { resolveAddress, resolveEvmAddress, toBN } from "./utils";
 import "@polkadot/api-augment";
-import { options } from "../types";
+import { options } from "../reef-api/types";
+// import { options } from  "../../../WIP-reef.js/packages/api/src"
 
 const logger = new Logger("evm-provider");
 export class Provider implements AbstractProvider {

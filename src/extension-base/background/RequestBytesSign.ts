@@ -6,7 +6,6 @@ import type { HexString } from "@polkadot/util/types";
 import type { SignerPayloadRaw } from "@polkadot/types/types";
 import type { RequestSign } from "./types";
 
-// import { u8aToHex, wrapBytes } from '@reef-defi/extension-dapp/wrapBytes';
 import { u8aToHex, u8aWrapBytes } from "@polkadot/util";
 
 import { TypeRegistry } from "@polkadot/types";
