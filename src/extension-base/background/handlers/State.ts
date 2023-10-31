@@ -275,9 +275,9 @@ export default class State {
   //   return this.#metaRequests[id];
   // }
 
-  // public getSignRequest (id: string): SignRequest {
-  //   return this.#signRequests[id];
-  // }
+  public getSignRequest(id: string): SignRequest {
+    return this.#signRequests[id];
+  }
 
   // // List all providers the extension is exposing
   // public rpcListProviders (): Promise<ResponseRpcListProviders> {
@@ -365,27 +365,6 @@ export default class State {
     account: AccountJson
   ): Promise<ResponseSigning> {
     const id = getId();
-
-    // const payload = request.payload as SignerPayloadJSON;
-    // const registry = new TypeRegistry();
-    // registry.setSignedExtensions(payload.signedExtensions);
-
-    // // Get the metadata for the genesisHash
-    // const currentMetadata = this.knownMetadata.find(
-    //   (meta: MetadataDef) => meta.genesisHash === payload.genesisHash
-    // );
-
-    // // set the registry before calling the sign function
-    // registry.setSignedExtensions(
-    //   payload.signedExtensions,
-    //   currentMetadata?.userExtensions
-    // );
-    // const pair = keyring.getPair(account.address);
-    // pair.unlock("test_password"); // TODO
-    // const result = request.sign(registry, pair);
-    // console.log("sign.signature=", result);
-
-    // return Promise.resolve({ id, signature: result.signature });
 
     return new Promise((resolve, reject): void => {
       this.#signRequests[id] = {

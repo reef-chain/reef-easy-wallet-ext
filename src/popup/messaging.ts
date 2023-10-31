@@ -12,7 +12,10 @@ import {
   SigningRequest,
   SubscriptionMessageTypes,
 } from "../extension-base/background/types";
+import { metadataExpand } from "../extension-chains";
+import { Chain } from "../extension-chains/types";
 import { Message } from "../types";
+import { getSavedMeta, setSavedMeta } from "./MetadataCache";
 
 interface Handler {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -91,6 +94,34 @@ export async function createAccountSuri(
   });
 }
 
+export async function getMetadata(
+  genesisHash?: string | null,
+  isPartial = false
+): Promise<Chain | null> {
+  if (!genesisHash) {
+    return null;
+  }
+
+  let request = getSavedMeta(genesisHash);
+
+  if (!request) {
+    request = sendMessage("pri(metadata.get)", genesisHash || null);
+    setSavedMeta(genesisHash, request);
+  }
+
+  const def = await request;
+
+  if (def) {
+    return metadataExpand(def, isPartial);
+  }
+
+  return null;
+}
+
+export async function approveSign(id: string): Promise<boolean> {
+  return sendMessage("pri(signing.approve)", { id });
+}
+
 export async function subscribeSigningRequests(
   cb: (accounts: SigningRequest[]) => void
 ): Promise<boolean> {
@@ -98,7 +129,3 @@ export async function subscribeSigningRequests(
     cb(val);
   });
 }
-
-// export async function accountsClaimDefault(address: string): Promise<string> {
-//   return sendMessage("pri(accounts.claim.default)", { address });
-// }

@@ -49,8 +49,6 @@ type NullKeys<T> = { [K in keyof T]: IsNull<T, K> }[keyof T];
 export interface AccountJson extends KeyringPair$Meta {
   address: string;
   genesisHash?: HexString | null;
-  isExternal?: boolean;
-  isHardware?: boolean;
   isHidden?: boolean;
   hideBalance?: any;
   presentation?: any;
@@ -96,8 +94,9 @@ export interface SigningRequest {
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
 export interface RequestSignatures {
   "pri(accounts.create.suri)": [RequestAccountCreateSuri, string];
+  "pri(signing.approve)": [RequestSigningApprove, boolean];
   "pri(signing.requests)": [RequestSigningSubscribe, boolean, SigningRequest[]];
-  // "pri(accounts.claim.default)": [RequestAccountClaimDefault, string];
+  "pri(metadata.get)": [string | null, MetadataDef | null];
   "pub(accounts.list)": [RequestAccountList, InjectedAccount[]];
   "pub(accounts.subscribe)": [
     RequestAccountSubscribe,
@@ -180,10 +179,6 @@ export interface RequestAccountCreateSuri {
   name: string;
   genesisHash?: HexString | null;
   privateKey: string;
-}
-
-export interface RequestAccountClaimDefault {
-  address: string;
 }
 
 // export interface RequestAccountCreateHardware {
@@ -272,16 +267,9 @@ export interface RequestRpcUnsubscribe {
   type: string;
 }
 
-// export interface RequestSigningApprovePassword {
-//   id: string;
-//   password?: string;
-//   savePass: boolean;
-// }
-
-// export interface RequestSigningApproveSignature {
-//   id: string;
-//   signature: HexString;
-// }
+export interface RequestSigningApprove {
+  id: string;
+}
 
 // export interface RequestSigningCancel {
 //   id: string;

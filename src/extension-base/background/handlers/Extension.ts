@@ -1,9 +1,14 @@
-// import { Keyring } from "@polkadot/api";
+import type {
+  SignerPayloadJSON,
+  SignerPayloadRaw,
+} from "@polkadot/types/types";
 import keyring from "@polkadot/ui-keyring";
+import { assert } from "@polkadot/util";
+import { TypeRegistry } from "@polkadot/types";
 import {
   MessageTypes,
-  RequestAccountClaimDefault,
   RequestAccountCreateSuri,
+  RequestSigningApprove,
   RequestTypes,
   ResponseType,
   SigningRequest,
@@ -13,8 +18,18 @@ import { BehaviorSubject } from "rxjs";
 import { RPC_URL } from "../../../defaults";
 import { createSubscription, unsubscribe } from "./subscriptions";
 import State from "./State";
+import { MetadataDef } from "../../../extension-inject/types";
 
 const REEF_NETWORK_RPC_URL_KEY = "reefNetworkRpcUrl";
+
+// a global registry to use internally
+const registry = new TypeRegistry();
+
+function isJsonPayload(
+  value: SignerPayloadJSON | SignerPayloadRaw
+): value is SignerPayloadJSON {
+  return (value as SignerPayloadJSON).genesisHash !== undefined;
+}
 
 export const networkRpcUrlSubject: BehaviorSubject<string> =
   new BehaviorSubject<string>(
@@ -57,8 +72,10 @@ export default class Extension {
     switch (type) {
       case "pri(accounts.create.suri)":
         return this.accountsCreateSuri(request as RequestAccountCreateSuri);
-      // case "pri(accounts.claim.default)":
-      //   return this.accountsClaimDefault(request as RequestAccountClaimDefault);
+      case "pri(signing.approve)":
+        return this.signingApprove(request as RequestSigningApprove);
+      case "pri(metadata.get)":
+        return this.metadataGet(request as string);
       case "pri(signing.requests)":
         return this.signingSubscribe(id, port);
       default:
@@ -73,8 +90,64 @@ export default class Extension {
     name,
     privateKey,
   }: RequestAccountCreateSuri): string {
-    const createResult = keyring.addUri("0x" + privateKey, "test_password"); // TODO
+    const createResult = keyring.addUri("0x" + privateKey, "no_password"); // TODO
+    createResult.pair.unlock("no_password"); // TODO
     return createResult.pair.address;
+  }
+
+  private metadataGet(genesisHash: string | null): MetadataDef | null {
+    return (
+      this.#state.knownMetadata.find(
+        (result) => result.genesisHash === genesisHash
+      ) || null
+    );
+  }
+
+  private signingApprove({ id }: RequestSigningApprove): boolean {
+    const queued = this.#state.getSignRequest(id);
+
+    assert(queued, "Unable to find request");
+
+    const { reject, request, resolve } = queued;
+    const pair = keyring.getPair(queued.account.address);
+
+    if (!pair) {
+      reject(new Error("Unable to find pair"));
+
+      return false;
+    }
+
+    if (pair.isLocked) {
+      pair.unlock("no_password"); // TODO
+    }
+
+    const { payload } = request;
+
+    if (isJsonPayload(payload)) {
+      // Get the metadata for the genesisHash
+      const currentMetadata = this.#state.knownMetadata.find(
+        (meta: MetadataDef) => meta.genesisHash === payload.genesisHash
+      );
+
+      // set the registry before calling the sign function
+      registry.setSignedExtensions(
+        payload.signedExtensions,
+        currentMetadata?.userExtensions
+      );
+
+      if (currentMetadata) {
+        registry.register(currentMetadata?.types);
+      }
+    }
+
+    const result = request.sign(registry, pair);
+
+    resolve({
+      id,
+      ...result,
+    });
+
+    return true;
   }
 
   private signingSubscribe(id: string, port: chrome.runtime.Port): boolean {
@@ -90,10 +163,4 @@ export default class Extension {
 
     return true;
   }
-
-  // private accountsClaimDefault({
-  //   address,
-  // }: RequestAccountClaimDefault): string {
-  //   return "";
-  // }
 }

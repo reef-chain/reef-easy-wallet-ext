@@ -8,7 +8,7 @@ import {
 } from "../../extension-inject/types";
 import { ReefProvider } from "./ReefProvider";
 import Accounts from "./Accounts";
-import { Provider, Signer as ReefVMSigner } from "../../evm-provider";
+import { Provider, Signer as ReefVMSigner } from "@reef-chain/evm-provider";
 import SigningKey from "../page/Signer";
 
 export class ReefSigner implements ReefInjectedSigner {

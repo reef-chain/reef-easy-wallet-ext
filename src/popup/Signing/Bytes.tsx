@@ -20,14 +20,16 @@ function Bytes({ bytes, className, url }: Props): React.ReactElement<Props> {
     <table className={className}>
       <tbody>
         <tr>
-          <td className="label">{t<string>("from")}</td>
+          <td className="label">From</td>
           <td className="data">{url}</td>
         </tr>
         <tr>
-          <td className="label">{t<string>("bytes")}</td>
+          <td className="label">Bytes</td>
           <td className="data">{text}</td>
         </tr>
       </tbody>
     </table>
   );
 }
+
+export default React.memo(Bytes);

@@ -1,7 +1,7 @@
-import { Provider } from "../../evm-provider/Provider";
+import { Provider } from "@reef-chain/evm-provider";
+import { WsProvider } from "@polkadot/api";
 import { ReefInjectedProvider, Unsubcall } from "../../extension-inject/types";
 import { SendRequest } from "./types";
-import { WsProvider } from "@polkadot/api";
 
 type ProviderRpc = { rpcUrl: string; provider: Provider };
 

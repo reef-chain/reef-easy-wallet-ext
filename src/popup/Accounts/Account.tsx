@@ -1,6 +1,6 @@
 import React from "react";
-// import Identicon from "@polkadot/react-identicon";
-import { toReefAmount } from "./util";
+import Identicon from "@polkadot/react-identicon";
+import { toReefAmount } from "../util";
 import { ReefAccount } from "./ReefAccount";
 
 interface Account {
@@ -11,7 +11,7 @@ interface Account {
 const Account = ({ account, onClick }: Account): JSX.Element => (
   <div onClick={onClick} className="account">
     <div className="avatar">
-      {/* <Identicon value={account.address} size={44} theme="substrate" /> */}
+      <Identicon value={account.address} size={44} theme="substrate" />
     </div>
     <div className="content">
       <div className="name">{account.name}</div>

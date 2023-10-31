@@ -14,7 +14,6 @@ import {
 } from "@web3auth/base";
 import { CommonPrivateKeyProvider } from "@web3auth/base-provider";
 // import Account from "./Account";
-// import RPC from "../util/rpc";
 import {
   CLIENT_ID,
   LOGIN_PROVIDERS,
@@ -24,11 +23,14 @@ import {
   RPC_URL,
   WEB3_AUTH_NETWORK,
 } from "./config";
-// import { ReefAccount, captureError } from "./util";
 import "./popup.css";
 import { createAccountSuri, subscribeSigningRequests } from "./messaging";
-import { ReefAccount } from "./ReefAccount";
+import { ReefAccount } from "./Accounts/ReefAccount";
 import { SigningRequest } from "../extension-base/background/types";
+import Request from "./Signing/Request";
+import Account from "./Accounts/Account";
+import Signer from "../extension-base/page/Signer";
+import Signing from "./Signing";
 
 const Popup = () => {
   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
@@ -175,34 +177,6 @@ const Popup = () => {
     setWeb3authProvider(null);
     setReefAccount(null);
     reefAccountRef.current = null;
-    unsubBalance();
-  };
-
-  const authenticateUser = async () => {
-    const idToken = await web3auth!.authenticateUser();
-    console.log(idToken);
-    alert("ID Token: " + idToken.idToken);
-  };
-
-  const getUserInfo = async () => {
-    const user = await web3auth!.getUserInfo();
-    console.log(user);
-    alert("User Info: " + JSON.stringify(user));
-  };
-
-  const nativeTransfer = async () => {
-    //     const rpc = new RPC(web3authProvider!);
-    //     const txHash = await rpc.nativeTransfer(
-    //       "5EnY9eFwEDcEJ62dJWrTXhTucJ4pzGym4WZ2xcDKiT3eJecP",
-    //       1000
-    //     );
-    //     alert("Transaction Hash: " + txHash);
-  };
-
-  const signRaw = async () => {
-    //     const rpc = new RPC(web3authProvider!);
-    //     const signature = await rpc.signRaw("Hello World");
-    //     alert("Signature: " + signature);
   };
 
   const getReefAccount = async () => {
@@ -215,128 +189,19 @@ const Popup = () => {
       userInfo.name || ""
     );
     setReefAccount(new ReefAccount(substrateAddress, userInfo.name || ""));
-
-    // setReefAccountLoading(true);
-    // const user = await web3auth!.getUserInfo();
-    // const rpc = new RPC(web3authProvider!);
-    // const reefAccount = await rpc.getReefAccount(user.name || "");
-    // setReefAccount(reefAccount);
-    // setReefAccountLoading(false);
-    // reefAccountRef.current = reefAccount;
-    // subscribeBalance();
   };
-
-  // const saveAccount = async () => {
-  //   const privateKey = (await web3authProvider.request({
-  //     method: "private_key",
-  //   })) as string;
-  //   const userInfo = await web3auth.getUserInfo();
-  //   createAccountSuri(privateKey, userInfo.name || "");
-  // };
 
   const claimDefaultEvmAccount = async (address: string) => {
-    // accountsClaimDefault(address);
-    //     if (reefAccount!.balance < ethers.utils.parseEther("5").toBigInt()) {
-    //       alert("Not enough balance for claiming EVM account. Transfer at least 5 REEF to your account first.");
-    //       return;
-    //     }
-    //     const rpc = new RPC(web3authProvider!);
-    //     rpc.claimDefaultEvmAccount(handleClaimEvmAccountStatus);
-  };
-
-  const claimEvmAccount = async () => {
-    //     if (reefAccount!.balance < ethers.utils.parseEther("5").toBigInt()) {
-    //       alert("Not enough balance for claiming EVM account. Transfer at least 5 REEF to your account first.");
-    //       return;
-    //     }
-    //     // Set evm address and evm signature provided by the user
-    //     const evmAddress = "";
-    //     const signature = "";
-    //     const rpc = new RPC(web3authProvider!);
-    //     rpc.claimEvmAccount(evmAddress, signature, handleClaimEvmAccountStatus);
-  };
-
-  const handleClaimEvmAccountStatus = (status: any) => {
-    //     console.log("status =", status)
-    //     const err = captureError(status.events);
-    //     if (err) {
-    //       console.log("binding error", err);
-    //       alert("Error while claiming EVM account");
-    //     }
-    //     if (status.dispatchError) {
-    //       console.log("binding dispatch error", status.dispatchError.toString());
-    //       alert("Error while claiming EVM account");
-    //     }
-    //     if (status.status.isInBlock) {
-    //       console.log("Included at block hash", status.status.asInBlock.toHex());
-    //       const rpc = new RPC(web3authProvider!);
-    //       rpc.queryEvmAddress()
-    //         .then(({ evmAddress, isEvmClaimed }) => {
-    //           reefAccountRef.current = {
-    //             ...reefAccountRef.current!,
-    //             evmAddress,
-    //             isEvmClaimed,
-    //           };
-    //           setReefAccount({
-    //             ...reefAccountRef.current!,
-    //             evmAddress,
-    //             isEvmClaimed,
-    //           });
-    //         }).catch((err) => {
-    //           console.log("queryEvmAddress error", err);
-    //           alert("Error while claiming EVM account");
-    //         });
-    //     }
-    //     if (status.status.isFinalized) {
-    //       console.log("Finalized block hash", status.status.asFinalized.toHex());
-    //     }
-  };
-
-  let unsubBalance = () => {};
-
-  const subscribeBalance = async (): Promise<void> => {
-    //     const rpc = new RPC(web3authProvider!);
-    //     unsubBalance = await rpc.subscribeToBalance(async (balFree: bigint, address: string) => {
-    //       if (reefAccountRef.current?.address === address) {
-    //         reefAccountRef.current = {
-    //           ...reefAccountRef.current,
-    //           balance: balFree,
-    //         };
-    //         setReefAccount({
-    //           ...reefAccountRef.current,
-    //           balance: balFree,
-    //         });
-    //       }
-    //     });
-  };
-
-  const evmTransaction = async () => {
-    // const rpc = new RPC(web3authProvider!);
-    // try {
-    //   const res = await rpc.evmTransaction();
-    //   console.log(res);
-    //   alert("Transaction Hash: " + res.hash);
-    // } catch (err) {
-    //   console.log(err);
-    //   alert(`Error: ${err}`);
-    // }
+    alert("TODO");
   };
 
   return (
     <div className="popup">
-      <h1>Reef Web3Auth Wallet</h1>
-      <button onClick={() => test()}>TEST</button>
-      {signRequests &&
-        signRequests.length > 0 &&
-        signRequests.map((signRequest) => (
-          <div>
-            <p>Sign Request</p>
-            <p>Origin: {signRequest.account.address}</p>
-            <p>Request: {JSON.stringify(signRequest.request.payload)}</p>
-            <p>Id: {signRequest.id}</p>
-          </div>
-        ))}
+      {/* <button onClick={() => test()}>TEST</button> */}
+
       {isPopup && <button onClick={() => openFullPage()}>Full page</button>}
+
+      {/* Not connected */}
       {web3auth && !web3auth.connected && (
         <>
           <h2>Login</h2>
@@ -358,32 +223,38 @@ const Popup = () => {
           ))}
         </>
       )}
+
+      {/* Connected */}
       {web3auth?.connected && (
         <>
           {reefAccountLoading && !reefAccount && (
             <div className="loading">Loading account...</div>
           )}
-          {/* {reefAccount && <Account account={reefAccount} />} */}
-          <button onClick={getUserInfo}>Get User Info</button>
-          <button onClick={authenticateUser}>Get ID Token</button>
-          <button onClick={nativeTransfer}>Native transfer</button>
-          <button onClick={signRaw}>Sign message</button>
-          {reefAccount && !reefAccount.isEvmClaimed && (
+          {reefAccount && <Account account={reefAccount} />}
+
+          {!!signRequests?.length ? (
+            // Pending signing requests
+            Signing(signRequests)
+          ) : (
+            // No pending signing requests
             <>
-              <button
-                onClick={() => claimDefaultEvmAccount(reefAccount.address)}
-              >
-                Claim default EVM account
-              </button>
-              {/* <button onClick={claimEvmAccount}>Claim owned EVM account</button> */}
+              {reefAccount && !reefAccount.isEvmClaimed && (
+                <>
+                  <button
+                    onClick={() => claimDefaultEvmAccount(reefAccount.address)}
+                  >
+                    Claim default EVM account
+                  </button>
+                </>
+              )}
+              {reefAccount?.isEvmClaimed && (
+                <>
+                  {/* <button onClick={evmTransaction}>EVM transaction</button> */}
+                </>
+              )}
+              <button onClick={logout}>Logout</button>
             </>
           )}
-          {reefAccount?.isEvmClaimed && (
-            <>
-              <button onClick={evmTransaction}>EVM transaction</button>
-            </>
-          )}
-          <button onClick={logout}>Logout</button>
         </>
       )}
     </div>

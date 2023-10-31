@@ -1,18 +1,18 @@
 // Copyright 2019-2021 @polkadot/extension-ui authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import type { Chain } from "@reef-defi/extension-chains/types";
+import React, { useMemo, useRef } from "react";
 import type {
   Call,
   ExtrinsicEra,
   ExtrinsicPayload,
 } from "@polkadot/types/interfaces";
 import type { AnyJson, SignerPayloadJSON } from "@polkadot/types/types";
-
 import { bnToBn, formatNumber } from "@polkadot/util";
 import BN from "bn.js";
-import { TFunction } from "i18next";
-import React, { useMemo, useRef } from "react";
+
+import { Chain } from "../../extension-chains/types";
+import useMetadata from "../hooks/useMetadata";
 
 interface Decoded {
   args: AnyJson | null;
@@ -65,13 +65,12 @@ function decodeMethod(data: string, chain: Chain, specVersion: BN): Decoded {
 
 function renderMethod(
   data: string,
-  { args, method }: Decoded,
-  t: TFunction
+  { args, method }: Decoded
 ): React.ReactNode {
   if (!args || !method) {
     return (
       <tr>
-        <td className="label">{t<string>("method data")}</td>
+        <td className="label">Method data</td>
         <td className="data">{data}</td>
       </tr>
     );
@@ -80,7 +79,7 @@ function renderMethod(
   return (
     <>
       <tr>
-        <td className="label">{t<string>("method")}</td>
+        <td className="label">Method</td>
         <td className="data">
           <details>
             <summary>
@@ -95,7 +94,7 @@ function renderMethod(
       </tr>
       {method.meta && (
         <tr>
-          <td className="label">{t<string>("info")}</td>
+          <td className="label">Info</td>
           <td className="data">
             <details>
               <summary>
@@ -109,44 +108,67 @@ function renderMethod(
   );
 }
 
-function mortalityAsString(
-  era: ExtrinsicEra,
-  hexBlockNumber: string,
-  t: TFunction
-): string {
+function mortalityAsString(era: ExtrinsicEra, hexBlockNumber: string): string {
   if (era.isImmortalEra) {
-    return t<string>("immortal");
+    return "immortal";
   }
 
   const blockNumber = bnToBn(hexBlockNumber);
   const mortal = era.asMortalEra;
 
-  return t<string>("mortal, valid from {{birth}} to {{death}}", {
-    replace: {
-      birth: formatNumber(mortal.birth(blockNumber)),
-      death: formatNumber(mortal.death(blockNumber)),
-    },
-  });
+  return `mortal, valid from ${formatNumber(
+    mortal.birth(blockNumber)
+  )} to ${formatNumber(mortal.death(blockNumber))}`;
 }
 
 function Extrinsic({
-  className,
   payload: { era, nonce, tip },
   request: { blockNumber, genesisHash, method, specVersion: hexSpec },
   url,
 }: Props): React.ReactElement<Props> {
-  // const { t } = useTranslation();
-  // const chain = useMetadata(genesisHash);
-  // const specVersion = useRef(bnToBn(hexSpec)).current;
-  // const decoded = useMemo(
-  //   () =>
-  //     chain && chain.hasMetadata
-  //       ? decodeMethod(method, chain, specVersion)
-  //       : { args: null, method: null },
-  //   [method, chain, specVersion]
-  // );
+  const chain = useMetadata(genesisHash);
+  const specVersion = useRef(bnToBn(hexSpec)).current;
+  const decoded = useMemo(
+    () =>
+      chain && chain.hasMetadata
+        ? decodeMethod(method, chain, specVersion)
+        : { args: null, method: null },
+    [method, chain, specVersion]
+  );
 
-  return <></>;
+  return (
+    <table>
+      <tbody>
+        <tr>
+          <td className="label">From</td>
+          <td className="data">{url}</td>
+        </tr>
+        <tr>
+          <td className="label">{chain ? "Chain" : "Genesis"}</td>
+          <td className="data">{chain ? chain.name : genesisHash}</td>
+        </tr>
+        <tr>
+          <td className="label">Version</td>
+          <td className="data">{specVersion.toNumber()}</td>
+        </tr>
+        <tr>
+          <td className="label">Nonce</td>
+          <td className="data">{formatNumber(nonce)}</td>
+        </tr>
+        {!tip.isEmpty && (
+          <tr>
+            <td className="label">Tip</td>
+            <td className="data">{formatNumber(tip)}</td>
+          </tr>
+        )}
+        {renderMethod(method, decoded)}
+        <tr>
+          <td className="label">Lifetime</td>
+          <td className="data">{mortalityAsString(era, blockNumber)}</td>
+        </tr>
+      </tbody>
+    </table>
+  );
 }
 
 export default React.memo(Extrinsic);

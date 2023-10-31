@@ -1,16 +1,7 @@
 import { blake2AsU8a, decodeAddress } from "@polkadot/util-crypto";
 import { u8aConcat, u8aEq, u8aToHex } from "@polkadot/util";
-import { FrameSystemEventRecord as Event } from "@polkadot/types/lookup";
 import { getAddress } from "@ethersproject/address";
 import { formatFixed } from "@ethersproject/bignumber";
-
-export interface ReefAccount {
-  name: string;
-  balance: bigint;
-  address: string;
-  evmAddress: string;
-  isEvmClaimed: boolean;
-}
 
 export const computeDefaultEvmAddress = (address: string): string => {
   const publicKey = decodeAddress(address);
@@ -32,33 +23,7 @@ export const toAddressShortDisplay = (address: string, size = 19): string => {
     : `${address.slice(0, size - 5)}...${address.slice(address.length - 5)}`;
 };
 
-export const captureError = (events: Event[]): string | undefined => {
-  for (const event of events) {
-    const eventCompression = `${event.event.section.toString()}.${event.event.method.toString()}`;
-    if (eventCompression === "evm.ExecutedFailed") {
-      const eventData = event.event.data.toJSON() as any[];
-      let message = eventData[eventData.length - 2];
-      if (typeof message === "string" || message instanceof String) {
-        message = hexToAscii(message.substring(138));
-      } else {
-        message = JSON.stringify(message);
-      }
-      return message;
-    }
-  }
-  return undefined;
-};
-
 export const toReefAmount = (amount: BigInt, decimals = 2): string => {
-  const reefUnits = formatFixed(amount.toString(), 18);
+  const reefUnits = formatFixed(amount ? amount.toString() : "0", 18);
   return parseFloat(reefUnits).toFixed(decimals);
-};
-
-const hexToAscii = (str1: string): string => {
-  const hex = str1.toString();
-  let str = "";
-  for (let n = 0; n < hex.length; n += 2) {
-    str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
-  }
-  return str;
 };

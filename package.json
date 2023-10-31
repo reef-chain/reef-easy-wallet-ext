@@ -7,15 +7,14 @@
     "build": "webpack --watch --progress --config webpack.prod.js"
   },
   "dependencies": {
-    "@ethersproject/abstract-provider": "^5.7.0",
-    "@ethersproject/abstract-signer": "^5.7.0",
-    "@ethersproject/contracts": "^5.7.0",
     "@open-web3/orml-api-derive": "^2.0.1",
     "@open-web3/scanner": "^2.0.1",
     "@polkadot/api": "^10.9.1",
     "@polkadot/phishing": "^0.21.6",
+    "@polkadot/react-identicon": "^3.6.3",
     "@polkadot/ui-keyring": "^3.6.3",
     "@polkadot/util-crypto": "^12.5.1",
+    "@reef-chain/evm-provider": "^2.0.0-alpha6",
     "@web3auth/base": "^7.0.1",
     "@web3auth/no-modal": "^7.0.1",
     "@web3auth/openlogin-adapter": "^7.0.1",
