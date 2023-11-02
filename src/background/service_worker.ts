@@ -9,7 +9,7 @@ import type {
 } from "../extension-base/background/types";
 
 import handlers from "../extension-base/background/handlers";
-import { PORT_CONTENT, PORT_EXTENSION } from "../defaults";
+import { PORT_CONTENT, PORT_EXTENSION } from "../extension-base/defaults";
 import { cryptoWaitReady } from "@polkadot/util-crypto";
 import { assert } from "@polkadot/util";
 

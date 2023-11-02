@@ -30,7 +30,7 @@ import type {
 import { BehaviorSubject } from "rxjs";
 
 import settings from "@polkadot/ui-settings";
-import { PORT_EXTENSION } from "../../../defaults";
+import { PORT_EXTENSION } from "../../defaults";
 
 import { TypeRegistry } from "@polkadot/types";
 import { SignerPayloadJSON } from "@polkadot/types/types";

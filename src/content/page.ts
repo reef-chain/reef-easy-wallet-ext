@@ -7,7 +7,7 @@ import type {
 } from "../extension-base/background/types";
 import type { Message } from "../extension-base/types";
 
-import { PORT_CONTENT, PKG_VERSION } from "../defaults";
+import { PORT_CONTENT, PKG_VERSION } from "../extension-base/defaults";
 import {
   enable,
   handleResponse,

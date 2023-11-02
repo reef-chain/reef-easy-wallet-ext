@@ -2,8 +2,9 @@ import { Provider } from "@reef-chain/evm-provider";
 import { WsProvider } from "@polkadot/api";
 import { ReefInjectedProvider, Unsubcall } from "../../extension-inject/types";
 import { SendRequest } from "./types";
+import { AvailableNetwork, reefNetworks } from "../../config";
 
-type ProviderRpc = { rpcUrl: string; provider: Provider };
+type ProviderRpc = { networkId: AvailableNetwork; provider: Provider };
 
 async function initProvider(providerUrl: string) {
   const newProvider = new Provider({
@@ -23,7 +24,7 @@ export class ReefProvider implements ReefInjectedProvider {
 
   private selectedNetworkProvider: ProviderRpc | undefined;
 
-  private creatingNewProviderRpcUrl: string | null = null;
+  private creatingNewProviderId: AvailableNetwork | null = null;
 
   private providerCbArr: {
     cb: (provider: Provider) => void;
@@ -35,23 +36,23 @@ export class ReefProvider implements ReefInjectedProvider {
   constructor(_sendRequest: SendRequest) {
     this.sendRequest = _sendRequest;
 
-    this.subscribeSelectedNetwork(async (rpcUrl) => {
+    this.subscribeSelectedNetwork(async (networkId: AvailableNetwork) => {
       if (!this.providerCbArr.length) {
         return;
       }
 
-      if (this.creatingNewProviderRpcUrl === rpcUrl) {
+      if (this.creatingNewProviderId === networkId) {
         return;
       }
 
-      if (this.selectedNetworkProvider?.rpcUrl !== rpcUrl) {
-        this.creatingNewProviderRpcUrl = rpcUrl;
+      if (this.selectedNetworkProvider?.networkId !== networkId) {
+        this.creatingNewProviderId = networkId;
         await this.selectedNetworkProvider?.provider.api.disconnect();
 
-        const provider = await initProvider(rpcUrl);
+        const provider = await initProvider(reefNetworks[networkId].rpcUrl);
 
         this.selectedNetworkProvider = {
-          rpcUrl,
+          networkId,
           provider,
         };
         this.providerCbArr?.forEach((cbObj) =>
@@ -59,7 +60,7 @@ export class ReefProvider implements ReefInjectedProvider {
             ? cbObj.cb(this.selectedNetworkProvider.provider)
             : null
         );
-        this.creatingNewProviderRpcUrl = null;
+        this.creatingNewProviderId = null;
       }
     });
   }
@@ -77,7 +78,7 @@ export class ReefProvider implements ReefInjectedProvider {
 
     this.providerCbArr.push({ cb, subsIdent: subsIdent });
 
-    if (!this.creatingNewProviderRpcUrl && this.selectedNetworkProvider) {
+    if (!this.creatingNewProviderId && this.selectedNetworkProvider) {
       cb(this.selectedNetworkProvider.provider);
     }
 

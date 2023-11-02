@@ -19,11 +19,30 @@ export const LOGIN_PROVIDERS: string[] = [
   LOGIN_PROVIDER.TWITCH,
 ];
 
-// TESTNET
-export const RPC_URL = "wss://rpc-testnet.reefscan.com/ws";
-export const REEF_NETWORK = "Reef Testnet (Scuba)";
-export const REEFSCAN_URL = "https://testnet.reefscan.com";
-// MAINNET
-// export const RPC_URL = "wss://rpc.reefscan.info/ws";
-// export const REEF_NETWORK = "Reef Mainnet";
-// export const REEFSCAN_URL = "https://reefscan.com";
+export type AvailableNetwork = "mainnet" | "testnet";
+
+export type ReefNetwork = {
+  id: AvailableNetwork;
+  name: string;
+  rpcUrl: string;
+  reefScanUrl: string;
+};
+
+const ReefMainnet: ReefNetwork = {
+  id: "mainnet",
+  name: "Reef Mainnet",
+  rpcUrl: "wss://rpc.reefscan.com/ws",
+  reefScanUrl: "https://reefscan.com",
+};
+
+const ReefTestnet: ReefNetwork = {
+  id: "testnet",
+  name: "Reef Scuba (testnet)",
+  rpcUrl: "wss://rpc-testnet.reefscan.com/ws",
+  reefScanUrl: "https://testnet.reefscan.com",
+};
+
+export const reefNetworks: Record<AvailableNetwork, ReefNetwork> = {
+  ["mainnet"]: ReefMainnet,
+  ["testnet"]: ReefTestnet,
+};

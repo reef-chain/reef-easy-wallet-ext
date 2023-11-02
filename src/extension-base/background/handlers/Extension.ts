@@ -5,25 +5,60 @@ import type {
 import keyring from "@polkadot/ui-keyring";
 import { assert } from "@polkadot/util";
 import { TypeRegistry } from "@polkadot/types";
+import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
+
+import { BehaviorSubject } from "rxjs";
+
 import {
+  AccountJson,
   MessageTypes,
   RequestAccountCreateSuri,
+  RequestAccountSelect,
+  RequestNetworkSelect,
   RequestSigningApprove,
   RequestTypes,
   ResponseType,
   SigningRequest,
 } from "../types";
-
-import { BehaviorSubject } from "rxjs";
-import { RPC_URL } from "../../../defaults";
 import { createSubscription, unsubscribe } from "./subscriptions";
 import State from "./State";
-import { MetadataDef } from "../../../extension-inject/types";
+import { InjectedAccount, MetadataDef } from "../../../extension-inject/types";
+import { SubjectInfo } from "@polkadot/ui-keyring/observable/types";
+import { AvailableNetwork, reefNetworks } from "../../../config";
 
-const REEF_NETWORK_RPC_URL_KEY = "reefNetworkRpcUrl";
+const REEF_NETWORK_KEY = "selectedReefNetwork";
 
 // a global registry to use internally
 const registry = new TypeRegistry();
+
+export function setSelectedAccount<T extends AccountJson | InjectedAccount>(
+  accountsJson: T[],
+  index: number | undefined
+): T[] {
+  if (accountsJson.length && index != null) {
+    accountsJson.forEach((a, i) => {
+      a.isSelected = i === index;
+    });
+  }
+
+  return accountsJson;
+}
+
+export function transformAccounts(accounts: SubjectInfo): AccountJson[] {
+  const singleAddresses = Object.values(accounts);
+  const accountsJson = singleAddresses.map(
+    ({ json: { address, meta }, type }): AccountJson => ({
+      address,
+      ...meta,
+      type,
+    })
+  );
+  const selIndex = getSelectedAccountIndex(
+    singleAddresses.map((sa) => sa.json)
+  );
+
+  return setSelectedAccount(accountsJson, selIndex);
+}
 
 function isJsonPayload(
   value: SignerPayloadJSON | SignerPayloadRaw
@@ -31,10 +66,10 @@ function isJsonPayload(
   return (value as SignerPayloadJSON).genesisHash !== undefined;
 }
 
-export const networkRpcUrlSubject: BehaviorSubject<string> =
-  new BehaviorSubject<string>(
-    // localStorage.getItem(REEF_NETWORK_RPC_URL_KEY) || RPC_URL // TODO
-    RPC_URL
+export const networkRpcUrlSubject: BehaviorSubject<AvailableNetwork> =
+  new BehaviorSubject<AvailableNetwork>(
+    // localStorage.getItem(REEF_NETWORK_KEY) || 'mainnet' // TODO
+    "testnet"
   );
 
 export function getSelectedAccountIndex(
@@ -70,12 +105,20 @@ export default class Extension {
     port: chrome.runtime.Port
   ): Promise<ResponseType<TMessageType>> {
     switch (type) {
-      case "pri(accounts.create.suri)":
-        return this.accountsCreateSuri(request as RequestAccountCreateSuri);
-      case "pri(signing.approve)":
-        return this.signingApprove(request as RequestSigningApprove);
       case "pri(metadata.get)":
         return this.metadataGet(request as string);
+      case "pri(accounts.create.suri)":
+        return this.accountsCreateSuri(request as RequestAccountCreateSuri);
+      case "pri(accounts.subscribe)":
+        return this.accountsSubscribe(id, port);
+      case "pri(accounts.select)":
+        return this.accountsSelect(request as RequestAccountSelect);
+      case "pri(network.select)":
+        return this.networkSelect(request as RequestNetworkSelect);
+      case "pri(network.subscribe)":
+        return this.networkSubscribe(id, port);
+      case "pri(signing.approve)":
+        return this.signingApprove(request as RequestSigningApprove);
       case "pri(signing.requests)":
         return this.signingSubscribe(id, port);
       default:
@@ -91,7 +134,12 @@ export default class Extension {
     privateKey,
   }: RequestAccountCreateSuri): string {
     const createResult = keyring.addUri("0x" + privateKey, "no_password"); // TODO
-    createResult.pair.unlock("no_password"); // TODO
+    const pair = createResult.pair;
+    pair.unlock("no_password"); // TODO
+    keyring.saveAccountMeta(pair, {
+      ...pair.meta,
+      _isSelectedTs: new Date().getTime(),
+    });
     return createResult.pair.address;
   }
 
@@ -101,6 +149,54 @@ export default class Extension {
         (result) => result.genesisHash === genesisHash
       ) || null
     );
+  }
+
+  protected accountsSubscribe(id: string, port: chrome.runtime.Port): boolean {
+    const cb = createSubscription<"pri(accounts.subscribe)">(id, port);
+    const subscription = accountsObservable.subject.subscribe(
+      (accounts: SubjectInfo): void => cb(transformAccounts(accounts))
+    );
+
+    port.onDisconnect.addListener((): void => {
+      unsubscribe(id);
+      subscription.unsubscribe();
+    });
+
+    return true;
+  }
+
+  private accountsSelect({ address }: RequestAccountSelect): boolean {
+    const newSelectPair = keyring.getPair(address);
+
+    assert(newSelectPair, "Unable to find pair");
+    // using timestamp since subject emits on every meta change - so can't unselect old without event
+    keyring.saveAccountMeta(newSelectPair, {
+      ...newSelectPair.meta,
+      _isSelectedTs: new Date().getTime(),
+    });
+
+    // accountsObservable.subject.next(accountsObservable.subject.getValue());
+    return true;
+  }
+
+  private networkSelect({ networkId }: RequestNetworkSelect) {
+    localStorage.setItem(REEF_NETWORK_KEY, networkId);
+    networkRpcUrlSubject.next(networkId);
+    return true;
+  }
+
+  private networkSubscribe(id: string, port: chrome.runtime.Port): boolean {
+    const cb = createSubscription<"pri(network.subscribe)">(id, port);
+    const subscription = networkRpcUrlSubject.subscribe(
+      (network: AvailableNetwork): void => cb(network)
+    );
+
+    port.onDisconnect.addListener((): void => {
+      unsubscribe(id);
+      subscription.unsubscribe();
+    });
+
+    return true;
   }
 
   private signingApprove({ id }: RequestSigningApprove): boolean {

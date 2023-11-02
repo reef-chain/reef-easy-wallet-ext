@@ -36,10 +36,11 @@ import type {
 import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
 import { KeypairType } from "@polkadot/util-crypto/types";
 import { getSelectedAccountIndex, networkRpcUrlSubject } from "./Extension";
-import { PHISHING_PAGE_REDIRECT } from "../../../defaults";
+import { PHISHING_PAGE_REDIRECT } from "../../defaults";
 import keyring from "@polkadot/ui-keyring";
 import RequestExtrinsicSign from "../RequestExtrinsicSign";
 import State from "./State";
+import { AvailableNetwork } from "../../../config";
 
 function canDerive(type?: KeypairType): boolean {
   return !!type && ["ed25519", "sr25519", "ecdsa", "ethereum"].includes(type);
@@ -158,7 +159,7 @@ export default class Tabs {
   private networkSubscribe(id: string, port: chrome.runtime.Port): boolean {
     const cb = createSubscription<"pub(network.subscribe)">(id, port);
     const subscription = networkRpcUrlSubject.subscribe(
-      (rpcUrl: string): void => cb(rpcUrl)
+      (networkId: AvailableNetwork): void => cb(networkId)
     );
 
     port.onDisconnect.addListener((): void => {

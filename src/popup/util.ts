@@ -2,6 +2,7 @@ import { blake2AsU8a, decodeAddress } from "@polkadot/util-crypto";
 import { u8aConcat, u8aEq, u8aToHex } from "@polkadot/util";
 import { getAddress } from "@ethersproject/address";
 import { formatFixed } from "@ethersproject/bignumber";
+import { Provider } from "@reef-chain/evm-provider";
 
 export const computeDefaultEvmAddress = (address: string): string => {
   const publicKey = decodeAddress(address);

@@ -3,7 +3,7 @@
 
 import type { Message } from "../extension-base/types";
 
-import { PORT_CONTENT, PORT_PAGE } from "../defaults";
+import { PORT_CONTENT, PORT_PAGE } from "../extension-base/defaults";
 
 // connect to the extension
 const port = chrome.runtime.connect({ name: PORT_CONTENT });

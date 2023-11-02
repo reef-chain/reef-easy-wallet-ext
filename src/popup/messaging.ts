@@ -1,8 +1,9 @@
 // Copyright 2019-2021 @polkadot/extension-ui authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { PORT_EXTENSION } from "../defaults";
+import { PORT_EXTENSION } from "../extension-base/defaults";
 import {
+  AccountJson,
   MessageTypes,
   MessageTypesWithNoSubscriptions,
   MessageTypesWithNullRequest,
@@ -14,8 +15,9 @@ import {
 } from "../extension-base/background/types";
 import { metadataExpand } from "../extension-chains";
 import { Chain } from "../extension-chains/types";
-import { Message } from "../types";
+import { Message } from "../extension-base/types";
 import { getSavedMeta, setSavedMeta } from "./MetadataCache";
+import { AvailableNetwork } from "../config";
 
 interface Handler {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -84,15 +86,7 @@ export function sendMessage<TMessageType extends MessageTypes>(
   });
 }
 
-export async function createAccountSuri(
-  privateKey: string,
-  name: string
-): Promise<string> {
-  return sendMessage("pri(accounts.create.suri)", {
-    privateKey,
-    name,
-  });
-}
+// Metadata
 
 export async function getMetadata(
   genesisHash?: string | null,
@@ -117,6 +111,52 @@ export async function getMetadata(
 
   return null;
 }
+
+// Accounts
+
+export async function createAccountSuri(
+  privateKey: string,
+  name: string
+): Promise<string> {
+  return sendMessage("pri(accounts.create.suri)", {
+    privateKey,
+    name,
+  });
+}
+
+export async function subscribeAccounts(
+  cb: (accounts: AccountJson[]) => void
+): Promise<boolean> {
+  return sendMessage("pri(accounts.subscribe)", null, cb);
+}
+
+export async function selectAccount(address: string): Promise<boolean> {
+  return sendMessage("pri(accounts.select)", { address });
+}
+
+export async function subscribeSelectedAccount(
+  cb: (selected: AccountJson | undefined) => void
+): Promise<boolean> {
+  return subscribeAccounts((accounts) => {
+    cb(accounts.find((a) => a.isSelected));
+  });
+}
+
+// Network
+
+export async function selectNetwork(
+  networkId: AvailableNetwork
+): Promise<boolean> {
+  return sendMessage("pri(network.select)", { networkId });
+}
+
+export async function subscribeNetwork(
+  cb: (network: AvailableNetwork) => void
+): Promise<boolean> {
+  return sendMessage("pri(network.subscribe)", null, cb);
+}
+
+// Signing
 
 export async function approveSign(id: string): Promise<boolean> {
   return sendMessage("pri(signing.approve)", { id });

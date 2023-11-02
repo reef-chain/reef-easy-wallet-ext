@@ -7,7 +7,7 @@ import { assert } from "@polkadot/util";
 
 import Tabs from "./Tabs";
 import Extension from "./Extension";
-import { PORT_EXTENSION } from "../../../defaults";
+import { PORT_EXTENSION } from "../../defaults";
 import State from "./State";
 
 const state = new State();

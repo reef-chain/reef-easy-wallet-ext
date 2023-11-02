@@ -25,6 +25,7 @@ import {
 import type { KeypairType } from "@polkadot/util-crypto/types";
 
 import { TypeRegistry } from "@polkadot/types";
+import { AvailableNetwork } from "../../config";
 
 // import { AuthUrls } from "./handlers/State";
 
@@ -44,8 +45,6 @@ type IsNull<T, K extends keyof T> = {
 
 type NullKeys<T> = { [K in keyof T]: IsNull<T, K> }[keyof T];
 
-// export type SeedLengths = 12 | 24;
-
 export interface AccountJson extends KeyringPair$Meta {
   address: string;
   genesisHash?: HexString | null;
@@ -57,7 +56,6 @@ export interface AccountJson extends KeyringPair$Meta {
   suri?: string;
   type?: KeypairType;
   whenCreated?: number;
-  // REEF update
   isSelected?: boolean;
 }
 
@@ -93,10 +91,16 @@ export interface SigningRequest {
 
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
 export interface RequestSignatures {
+  // private/internal requests, i.e. from a popup
+  "pri(metadata.get)": [string | null, MetadataDef | null];
   "pri(accounts.create.suri)": [RequestAccountCreateSuri, string];
+  "pri(accounts.select)": [RequestAccountSelect, boolean];
+  "pri(accounts.subscribe)": [RequestAccountSubscribe, boolean, AccountJson[]];
+  "pri(network.subscribe)": [RequestNetworkSubscribe, boolean, string];
+  "pri(network.select)": [RequestNetworkSelect, boolean];
   "pri(signing.approve)": [RequestSigningApprove, boolean];
   "pri(signing.requests)": [RequestSigningSubscribe, boolean, SigningRequest[]];
-  "pri(metadata.get)": [string | null, MetadataDef | null];
+  // public/external requests, i.e. from a page
   "pub(accounts.list)": [RequestAccountList, InjectedAccount[]];
   "pub(accounts.subscribe)": [
     RequestAccountSubscribe,
@@ -130,18 +134,17 @@ export type MessageTypesWithNullRequest = NullKeys<RequestTypes>;
 export interface TransportRequestMessage<TMessageType extends MessageTypes> {
   id: string;
   message: TMessageType;
-  origin: "reef_page" | "reef_extension";
+  origin: "reef_ew_page" | "reef_ew_extension";
   request: RequestTypes[TMessageType];
 }
-// // REEF update
-// export interface RequestAccountSelect {
-//   address: string;
-// }
 
-// // REEF update
-// export interface RequestNetworkSelect {
-//   rpcUrl: string;
-// }
+export interface RequestAccountSelect {
+  address: string;
+}
+
+export interface RequestNetworkSelect {
+  networkId: AvailableNetwork;
+}
 
 export interface RequestAuthorizeTab {
   origin: string;
@@ -392,8 +395,6 @@ export interface RequestSign {
 // export interface ResponseJsonRestore {
 //   error: string | null;
 // }
-
-// export type AllowedPath = (typeof ALLOWED_PATH)[number];
 
 // export interface ResponseJsonGetAccountInfo {
 //   address: string;
