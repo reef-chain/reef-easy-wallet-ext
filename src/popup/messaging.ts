@@ -116,11 +116,17 @@ export async function getMetadata(
 
 export async function createAccountSuri(
   privateKey: string,
-  name: string
+  name: string,
+  loginProvider: string,
+  verifierId: string,
+  icon?: string
 ): Promise<string> {
   return sendMessage("pri(accounts.create.suri)", {
     privateKey,
     name,
+    loginProvider,
+    verifierId,
+    icon,
   });
 }
 

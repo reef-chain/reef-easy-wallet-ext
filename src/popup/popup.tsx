@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Web3AuthNoModal } from "@web3auth/no-modal";
 import {
   OpenloginAdapter,
@@ -9,7 +9,6 @@ import {
 import {
   CHAIN_NAMESPACES,
   CustomChainConfig,
-  SafeEventEmitterProvider,
   WALLET_ADAPTERS,
 } from "@web3auth/base";
 import { CommonPrivateKeyProvider } from "@web3auth/base-provider";
@@ -26,78 +25,93 @@ import "./popup.css";
 import {
   createAccountSuri,
   selectAccount,
+  selectNetwork,
   subscribeAccounts,
   subscribeNetwork,
   subscribeSigningRequests,
 } from "./messaging";
-// import { ReefAccount } from "./Accounts/ReefAccount";
-// import Account from "./Accounts/Account";
 import {
   AccountJson,
   SigningRequest,
 } from "../extension-base/background/types";
-import Request from "./Signing/Request";
-import Signer from "../extension-base/page/Signer";
 import Signing from "./Signing";
 import { Provider } from "@reef-chain/evm-provider";
 import { WsProvider } from "@polkadot/api";
 import Account from "./Accounts/Account";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCirclePlus,
+  faCircleXmark,
+  faExpand,
+  faShuffle,
+} from "@fortawesome/free-solid-svg-icons";
+
+const enum State {
+  ACCOUNTS,
+  SIGNING,
+  LOGIN,
+}
 
 const Popup = () => {
   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
-  const [web3authProvider, setWeb3authProvider] =
-    useState<SafeEventEmitterProvider | null>(null);
+  const [state, setState] = useState<State>(State.ACCOUNTS);
   const [accounts, setAccounts] = useState<null | AccountJson[]>(null);
   const [selectedAccount, setSelectedAccount] = useState<null | AccountJson>(
     null
   );
-  // const [reefAccount, setReefAccount] = useState<ReefAccount | null>(null);
-  // const [reefAccountLoading, setReefAccountLoading] = useState(false);
   const [signRequests, setSignRequests] = useState<null | SigningRequest[]>(
     null
   );
   const [selectedNetwork, setSelectedNetwork] = useState<ReefNetwork>();
   const [provider, setProvider] = useState<Provider>();
 
-  // const reefAccountRef = useRef(reefAccount);
   const queryParams = new URLSearchParams(window.location.search);
   const loginProvider = queryParams.get("loginProvider");
 
   useEffect(() => {
     Promise.all([
-      subscribeAccounts(setAccounts),
-      subscribeSigningRequests(setSignRequests),
+      subscribeAccounts(onAccountsChange),
+      subscribeSigningRequests(onSigningRequestsChange),
       subscribeNetwork(onNetworkChange),
     ]).catch(console.error);
   }, []);
 
   useEffect(() => {
-    if (selectedNetwork) {
-      initWeb3Auth(selectedNetwork);
+    // TODO: why is it required to init w3a here?
+    if (selectedNetwork && !web3auth) {
+      initWeb3Auth();
     }
   }, [selectedNetwork]);
 
-  useEffect((): void => {
-    if (!accounts?.length) return;
+  const onAccountsChange = (_accounts: AccountJson[]) => {
+    setAccounts(_accounts);
+    setState(State.ACCOUNTS);
 
-    const selAcc = accounts.find((acc) => !!acc.isSelected);
+    if (!_accounts?.length) {
+      setSelectedAccount(null);
+      return;
+    }
+
+    const selAcc = _accounts.find((acc) => !!acc.isSelected);
     if (selAcc) {
       setSelectedAccount(selAcc);
     } else {
-      selectAccount(accounts[0].address);
-      setSelectedAccount(accounts[0]);
+      selectAccount(_accounts[0].address);
+      setSelectedAccount(_accounts[0]);
     }
-  }, [accounts]);
+  };
 
-  // useEffect(() => {
-  //   if (web3auth?.connected && web3authProvider && !reefAccount) {
-  //     getReefAccount();
-  //     saveAccount();
-  //   }
-  // }, [web3auth, web3authProvider]);
+  const onSigningRequestsChange = (_signRequests: SigningRequest[]) => {
+    setSignRequests(_signRequests);
+    if (_signRequests.length) {
+      setState(State.SIGNING);
+    } else {
+      setState(State.ACCOUNTS);
+    }
+  };
 
   const onNetworkChange = async (networkId: AvailableNetwork) => {
-    console.log("onNetworkChange", networkId);
     if (networkId !== selectedNetwork?.id) {
       setSelectedNetwork(reefNetworks[networkId]);
 
@@ -125,16 +139,16 @@ const Popup = () => {
     void chrome.tabs.create({ url });
   };
 
-  const initWeb3Auth = async (selectedNetwork: ReefNetwork) => {
+  const initWeb3Auth = async () => {
     try {
       const reefChainConfig: CustomChainConfig = {
         chainId: "0x3673",
-        rpcTarget: selectedNetwork.rpcUrl,
+        rpcTarget: reefNetworks.mainnet.rpcUrl,
         chainNamespace: CHAIN_NAMESPACES.OTHER,
-        displayName: selectedNetwork.name,
+        displayName: reefNetworks.mainnet.name,
         ticker: "REEF",
         tickerName: "Reef",
-        blockExplorer: selectedNetwork.reefScanUrl,
+        blockExplorer: reefNetworks.mainnet.reefScanUrl,
       };
 
       const web3auth = new Web3AuthNoModal({
@@ -175,15 +189,22 @@ const Popup = () => {
 
       await web3auth.init();
 
-      if (web3auth.connectedAdapterName && web3auth.provider) {
-        setWeb3authProvider(web3auth.provider);
-      }
-      if (!web3auth.connected && loginProvider) {
+      if (loginProvider) {
+        setState(State.LOGIN);
+        window.history.replaceState({}, document.title, "/index.html");
         login(loginProvider, web3auth);
       }
     } catch (err: any) {
       console.error(err);
     }
+  };
+
+  const addAccount = () => {
+    setState(State.LOGIN);
+  };
+
+  const cancelLogin = async () => {
+    setState(State.ACCOUNTS);
   };
 
   const login = async (loginProvider: string, web3auth: Web3AuthNoModal) => {
@@ -199,6 +220,10 @@ const Popup = () => {
 
     if (isPopup) openFullPage(loginProvider);
 
+    if (web3auth.connected) {
+      await web3auth.logout();
+    }
+
     const web3authProvider = await web3auth.connectTo<OpenloginLoginParams>(
       WALLET_ADAPTERS.OPENLOGIN,
       { loginProvider }
@@ -207,53 +232,114 @@ const Popup = () => {
       alert("web3authProvider not initialized yet");
       return;
     }
-    setWeb3authProvider(web3authProvider);
 
-    // TODO only if not already created
-    const privateKey = (await web3authProvider.request({
-      method: "private_key",
-    })) as string;
     const userInfo = await web3auth.getUserInfo();
-    const substrateAddress = await createAccountSuri(
-      privateKey,
-      userInfo.name || ""
-    );
-    // setReefAccount(new ReefAccount(substrateAddress, userInfo.name || ""));
-  };
-
-  const logout = async () => {
-    if (!web3auth) {
-      alert("web3auth not initialized yet");
+    if (
+      accounts.find(
+        (acc) =>
+          acc.loginProvider === loginProvider &&
+          acc.verifierId === userInfo.verifierId
+      )
+    ) {
+      alert("Account already exists");
       return;
     }
-    await web3auth.logout();
-    setWeb3authProvider(null);
-    // setReefAccount(null);
-    // reefAccountRef.current = null;
-  };
 
-  const getReefAccount = async () => {
     const privateKey = (await web3authProvider.request({
       method: "private_key",
     })) as string;
-    const userInfo = await web3auth.getUserInfo();
-    const substrateAddress = await createAccountSuri(
+    await createAccountSuri(
       privateKey,
-      userInfo.name || ""
+      userInfo.name || "",
+      loginProvider,
+      userInfo.verifierId,
+      userInfo.profileImage
     );
-    // setReefAccount(new ReefAccount(substrateAddress, userInfo.name || ""));
   };
 
   return (
     <div className="popup">
-      {selectedNetwork && <div>Network: {selectedNetwork.name}</div>}
+      {/* Header */}
+      <div className="flex justify-between">
+        {selectedNetwork && (
+          <div>
+            <span className="text-lg">{selectedNetwork.name}</span>
+            <button
+              className="md"
+              onClick={() =>
+                selectNetwork(
+                  selectedNetwork.id === "mainnet" ? "testnet" : "mainnet"
+                )
+              }
+            >
+              <FontAwesomeIcon icon={faShuffle as IconProp} />
+            </button>
+          </div>
+        )}
 
-      {isPopup && <button onClick={() => openFullPage()}>Full page</button>}
+        <div>
+          {isPopup && (
+            <button className="md" onClick={() => openFullPage()}>
+              <FontAwesomeIcon icon={faExpand as IconProp} />
+            </button>
+          )}
+          {state === State.ACCOUNTS && (
+            <button className="md" onClick={() => addAccount()}>
+              <FontAwesomeIcon icon={faCirclePlus as IconProp} />
+            </button>
+          )}
+          {state === State.LOGIN && (
+            <button className="md" onClick={() => cancelLogin()}>
+              <FontAwesomeIcon icon={faCircleXmark as IconProp} />
+            </button>
+          )}
+        </div>
+      </div>
 
-      {/* Not connected */}
-      {web3auth && !web3auth.connected && (
+      {/* Loading */}
+      {state === State.ACCOUNTS &&
+        (!accounts || (accounts.length > 0 && !provider)) && (
+          <div className="text-lg mt-12">Loading...</div>
+        )}
+
+      {/* No accounts */}
+      {state === State.ACCOUNTS && accounts?.length === 0 && (
         <>
-          <div>Login</div>
+          <div className="text-lg mt-12">No accounts available.</div>
+          <button onClick={addAccount}>Add account</button>
+        </>
+      )}
+
+      {/* Selected account */}
+      {state !== State.LOGIN && selectedAccount && provider && (
+        <Account
+          account={selectedAccount}
+          provider={provider}
+          isSelected={true}
+        />
+      )}
+
+      {/* Other accounts */}
+      {state === State.ACCOUNTS &&
+        accounts?.length > 1 &&
+        provider &&
+        accounts
+          .filter((account) => account.address !== selectedAccount.address)
+          .map((account) => (
+            <Account
+              key={account.address}
+              account={account}
+              provider={provider}
+            />
+          ))}
+
+      {/* Pending signing requests */}
+      {state === State.SIGNING && Signing(signRequests)}
+
+      {/* Login */}
+      {state === State.LOGIN && (
+        <div>
+          <div className="text-lg mt-8">Choose login provider</div>
           {LOGIN_PROVIDERS.map((provider) => (
             <button
               className="group"
@@ -270,31 +356,7 @@ const Popup = () => {
               ></img>
             </button>
           ))}
-        </>
-      )}
-
-      {/* Connected */}
-      {web3auth?.connected && (
-        <>
-          {/* {reefAccountLoading && !reefAccount && (
-            <div className="loading">Loading account...</div>
-          )} */}
-          {selectedAccount && <div>{selectedAccount.address}</div>}
-          {provider && <div>provider</div>}
-          {selectedAccount && provider && (
-            <Account account={selectedAccount} provider={provider} />
-          )}
-
-          {!!signRequests?.length ? (
-            // Pending signing requests
-            Signing(signRequests)
-          ) : (
-            // No pending signing requests
-            <>
-              <button onClick={logout}>Logout</button>
-            </>
-          )}
-        </>
+        </div>
       )}
     </div>
   );

@@ -164,9 +164,9 @@ export default class State {
   //   return Object.keys(this.#metaRequests).length;
   // }
 
-  // public get numSignRequests (): number {
-  //   return Object.keys(this.#signRequests).length;
-  // }
+  public get numSignRequests(): number {
+    return Object.keys(this.#signRequests).length;
+  }
 
   // public get allAuthRequests (): AuthorizeRequest[] {
   //   return Object
@@ -394,14 +394,10 @@ export default class State {
   //   return this.#authUrls;
   // }
 
-  // private popupClose(): void {
-  //   this.#windows.forEach(
-  //     (id: number): void =>
-  //       // eslint-disable-next-line no-void
-  //       void chrome.windows.remove(id)
-  //   );
-  //   this.#windows = [];
-  // }
+  private popupClose(): void {
+    this.#windows.forEach((id: number): void => void chrome.windows.remove(id));
+    this.#windows = [];
+  }
 
   private popupOpen(): void {
     this.#notification !== "extension" &&
@@ -515,7 +511,7 @@ export default class State {
   private updateIcon(shouldClose?: boolean): void {
     // const authCount = this.numAuthRequests;
     // const metaCount = this.numMetaRequests;
-    // const signCount = this.numSignRequests;
+    const signCount = this.numSignRequests;
     // const text = authCount
     //   ? "Auth"
     //   : metaCount
@@ -523,14 +519,15 @@ export default class State {
     //   : signCount
     //   ? `${signCount}`
     //   : "";
+    const text = signCount.toString();
 
-    // eslint-disable-next-line no-void
-    // void chrome.browserAction.setBadgeText({ text });
-    void chrome.action.setBadgeText({ text: "SIGN" });
+    chrome.action.setBadgeBackgroundColor({ color: "#A408EB" });
+    chrome.action.setBadgeTextColor({ color: "#ffffff" });
+    chrome.action.setBadgeText({ text: signCount.toString() });
 
-    // if (shouldClose && text === "") {
-    //   this.popupClose();
-    // }
+    if (shouldClose && text === "") {
+      this.popupClose();
+    }
   }
 
   // private updateIconAuth (shouldClose?: boolean): void {

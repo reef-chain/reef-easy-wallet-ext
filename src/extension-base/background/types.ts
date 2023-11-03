@@ -94,6 +94,7 @@ export interface RequestSignatures {
   // private/internal requests, i.e. from a popup
   "pri(metadata.get)": [string | null, MetadataDef | null];
   "pri(accounts.create.suri)": [RequestAccountCreateSuri, string];
+  "pri(accounts.edit)": [RequestAccountEdit, boolean];
   "pri(accounts.select)": [RequestAccountSelect, boolean];
   "pri(accounts.subscribe)": [RequestAccountSubscribe, boolean, AccountJson[]];
   "pri(network.subscribe)": [RequestNetworkSubscribe, boolean, string];
@@ -179,9 +180,12 @@ export type RequestNetworkSubscribe = null;
 // }
 
 export interface RequestAccountCreateSuri {
-  name: string;
-  genesisHash?: HexString | null;
   privateKey: string;
+  name: string;
+  loginProvider: string;
+  verifierId: string;
+  genesisHash?: HexString | null;
+  icon?: string;
 }
 
 // export interface RequestAccountCreateHardware {
@@ -199,11 +203,12 @@ export interface RequestAccountCreateSuri {
 //   newPass: string;
 // }
 
-// export interface RequestAccountEdit {
-//   address: string;
-//   genesisHash?: string | null;
-//   name: string;
-// }
+export interface RequestAccountEdit {
+  address: string;
+  genesisHash?: string | null;
+  name: string;
+  icon?: string;
+}
 
 // export interface RequestAccountForget {
 //   address: string;

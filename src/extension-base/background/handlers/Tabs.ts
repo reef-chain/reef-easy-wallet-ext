@@ -35,7 +35,7 @@ import type {
 } from "../types";
 import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
 import { KeypairType } from "@polkadot/util-crypto/types";
-import { getSelectedAccountIndex, networkRpcUrlSubject } from "./Extension";
+import { getSelectedAccountIndex, networkIdObservable } from "./Extension";
 import { PHISHING_PAGE_REDIRECT } from "../../defaults";
 import keyring from "@polkadot/ui-keyring";
 import RequestExtrinsicSign from "../RequestExtrinsicSign";
@@ -123,34 +123,24 @@ export default class Tabs {
         // TODO
         // return this.authorize(url, request as RequestAuthorizeTab);
         return true;
-
       case "pub(accounts.list)":
         return this.accountsList(url, request as RequestAccountList);
-
       case "pub(accounts.subscribe)":
         return this.accountsSubscribe(url, id, port);
-
       case "pub(extrinsic.sign)":
         return this.extrinsicSign(url, request as SignerPayloadJSON);
-
       case "pub(metadata.list)":
         return this.metadataList(url);
-
       case "pub(metadata.provide)":
         return this.metadataProvide(url, request as MetadataDef);
-
       case "pub(rpc.listProviders)":
         return this.rpcListProviders();
-
       case "pub(rpc.send)":
         return this.rpcSend(request as RequestRpcSend, port);
-
       case "pub(rpc.startProvider)":
         return this.rpcStartProvider(request as string, port);
-
       case "pub(rpc.subscribe)":
         return this.rpcSubscribe(request as RequestRpcSubscribe, id, port);
-
       case "pub(rpc.subscribeConnected)":
         return this.rpcSubscribeConnected(request as null, id, port);
     }
@@ -158,7 +148,7 @@ export default class Tabs {
 
   private networkSubscribe(id: string, port: chrome.runtime.Port): boolean {
     const cb = createSubscription<"pub(network.subscribe)">(id, port);
-    const subscription = networkRpcUrlSubject.subscribe(
+    const subscription = networkIdObservable.subscribe(
       (networkId: AvailableNetwork): void => cb(networkId)
     );
 

@@ -6,13 +6,13 @@ import keyring from "@polkadot/ui-keyring";
 import { assert } from "@polkadot/util";
 import { TypeRegistry } from "@polkadot/types";
 import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
-
-import { BehaviorSubject } from "rxjs";
+import { Observable } from "rxjs";
 
 import {
   AccountJson,
   MessageTypes,
   RequestAccountCreateSuri,
+  RequestAccountEdit,
   RequestAccountSelect,
   RequestNetworkSelect,
   RequestSigningApprove,
@@ -24,7 +24,7 @@ import { createSubscription, unsubscribe } from "./subscriptions";
 import State from "./State";
 import { InjectedAccount, MetadataDef } from "../../../extension-inject/types";
 import { SubjectInfo } from "@polkadot/ui-keyring/observable/types";
-import { AvailableNetwork, reefNetworks } from "../../../config";
+import { AvailableNetwork } from "../../../config";
 
 const REEF_NETWORK_KEY = "selectedReefNetwork";
 
@@ -66,11 +66,29 @@ function isJsonPayload(
   return (value as SignerPayloadJSON).genesisHash !== undefined;
 }
 
-export const networkRpcUrlSubject: BehaviorSubject<AvailableNetwork> =
-  new BehaviorSubject<AvailableNetwork>(
-    // localStorage.getItem(REEF_NETWORK_KEY) || 'mainnet' // TODO
-    "testnet"
-  );
+function createNetworkIdObservable(): Observable<any> {
+  return new Observable<any>((subscriber) => {
+    chrome.storage.local.get({ [REEF_NETWORK_KEY]: "mainnet" }, (items) => {
+      subscriber.next(items[REEF_NETWORK_KEY]);
+
+      const listener = (
+        changes: { [key: string]: chrome.storage.StorageChange },
+        areaName: string
+      ) => {
+        if (areaName === "local" && REEF_NETWORK_KEY in changes) {
+          subscriber.next(changes[REEF_NETWORK_KEY].newValue);
+        }
+      };
+      chrome.storage.onChanged.addListener(listener);
+
+      return () => {
+        chrome.storage.onChanged.removeListener(listener);
+      };
+    });
+  });
+}
+
+export const networkIdObservable = createNetworkIdObservable();
 
 export function getSelectedAccountIndex(
   accountsMeta: { meta: any }[]
@@ -109,6 +127,8 @@ export default class Extension {
         return this.metadataGet(request as string);
       case "pri(accounts.create.suri)":
         return this.accountsCreateSuri(request as RequestAccountCreateSuri);
+      case "pri(accounts.edit)":
+        return this.accountsEdit(request as RequestAccountEdit);
       case "pri(accounts.subscribe)":
         return this.accountsSubscribe(id, port);
       case "pri(accounts.select)":
@@ -129,18 +149,35 @@ export default class Extension {
   }
 
   private accountsCreateSuri({
-    genesisHash,
-    name,
     privateKey,
+    name,
+    loginProvider,
+    verifierId,
+    genesisHash,
+    icon,
   }: RequestAccountCreateSuri): string {
-    const createResult = keyring.addUri("0x" + privateKey, "no_password"); // TODO
-    const pair = createResult.pair;
-    pair.unlock("no_password"); // TODO
-    keyring.saveAccountMeta(pair, {
-      ...pair.meta,
+    // TODO do not use password?
+    console.log("verifierId", verifierId);
+    console.log("loginProvider", loginProvider);
+    const createResult = keyring.addUri("0x" + privateKey, "no_password", {
+      name,
+      loginProvider,
+      verifierId,
+      genesisHash,
+      icon,
       _isSelectedTs: new Date().getTime(),
     });
+    const pair = createResult.pair;
+    pair.unlock("no_password"); // TODO
     return createResult.pair.address;
+  }
+
+  private accountsEdit({ address, name }: RequestAccountEdit): boolean {
+    const pair = keyring.getPair(address);
+    assert(pair, "Unable to find pair");
+
+    keyring.saveAccountMeta(pair, { ...pair.meta, name });
+    return true;
   }
 
   private metadataGet(genesisHash: string | null): MetadataDef | null {
@@ -180,14 +217,13 @@ export default class Extension {
   }
 
   private networkSelect({ networkId }: RequestNetworkSelect) {
-    localStorage.setItem(REEF_NETWORK_KEY, networkId);
-    networkRpcUrlSubject.next(networkId);
+    chrome.storage.local.set({ [REEF_NETWORK_KEY]: networkId });
     return true;
   }
 
   private networkSubscribe(id: string, port: chrome.runtime.Port): boolean {
     const cb = createSubscription<"pri(network.subscribe)">(id, port);
-    const subscription = networkRpcUrlSubject.subscribe(
+    const subscription = networkIdObservable.subscribe(
       (network: AvailableNetwork): void => cb(network)
     );
 
