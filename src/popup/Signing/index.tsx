@@ -5,49 +5,62 @@ import type { SignerPayloadJSON } from "@polkadot/types/types";
 
 import React, { useCallback, useEffect, useState } from "react";
 
-import Request from "./Request";
 import { SigningRequest } from "../../extension-base/background/types";
+import Request from "./Request";
+import TransactionIndex from "./TransactionIndex";
 
-export default function Signing(
-  requests: SigningRequest[]
-): React.ReactElement {
-  // const [requestIndex, setRequestIndex] = useState(0);
+interface Props {
+  requests: SigningRequest[];
+  getOrRefreshAuth: () => Promise<string | null>;
+}
 
-  // const _onNextClick = useCallback(
-  //   () => setRequestIndex((requestIndex) => requestIndex + 1),
-  //   []
-  // );
+const Signing = ({ requests, getOrRefreshAuth }: Props): JSX.Element => {
+  const [requestIndex, setRequestIndex] = useState(0);
 
-  // const _onPreviousClick = useCallback(
-  //   () => setRequestIndex((requestIndex) => requestIndex - 1),
-  //   []
-  // );
+  const _onNextClick = useCallback(
+    () => setRequestIndex((requestIndex) => requestIndex + 1),
+    []
+  );
 
-  // useEffect(() => {
-  //   setRequestIndex((requestIndex) =>
-  //     requestIndex < requests.length ? requestIndex : requests.length - 1
-  //   );
-  // }, [requests]);
+  const _onPreviousClick = useCallback(
+    () => setRequestIndex((requestIndex) => requestIndex - 1),
+    []
+  );
 
-  // // protect against removal overflows/underflows
-  // const request =
-  //   requests.length !== 0
-  //     ? requestIndex >= 0
-  //       ? requestIndex < requests.length
-  //         ? requests[requestIndex]
-  //         : requests[requests.length - 1]
-  //       : requests[0]
-  //     : null;
+  useEffect(() => {
+    setRequestIndex((requestIndex) =>
+      requestIndex < requests.length ? requestIndex : requests.length - 1
+    );
+  }, [requests]);
 
-  // TODO
-  const request = requests[0];
-  const requestIndex = 0;
+  // protect against removal overflows/underflows
+  const request =
+    requests.length !== 0
+      ? requestIndex >= 0
+        ? requestIndex < requests.length
+          ? requests[requestIndex]
+          : requests[requests.length - 1]
+        : requests[0]
+      : null;
 
   const isTransaction = !!(request?.request?.payload as SignerPayloadJSON)
     ?.blockNumber;
 
   return request ? (
     <>
+      <div className="mb-4">
+        <span className="text-lg">
+          {isTransaction ? "Transaction" : "Sign message"}
+        </span>
+        {requests.length > 1 && (
+          <TransactionIndex
+            index={requestIndex}
+            onNextClick={_onNextClick}
+            onPreviousClick={_onPreviousClick}
+            totalItems={requests.length}
+          />
+        )}
+      </div>
       <Request
         account={request.account}
         buttonText={isTransaction ? "Sign the transaction" : "Sign the message"}
@@ -55,9 +68,12 @@ export default function Signing(
         request={request.request}
         signId={request.id}
         url={request.url}
+        getOrRefreshAuth={getOrRefreshAuth}
       />
     </>
   ) : (
     <span>Loading...</span>
   );
-}
+};
+
+export default Signing;

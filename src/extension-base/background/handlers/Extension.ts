@@ -13,9 +13,11 @@ import {
   MessageTypes,
   RequestAccountCreateSuri,
   RequestAccountEdit,
+  RequestAccountForget,
   RequestAccountSelect,
   RequestNetworkSelect,
   RequestSigningApprove,
+  RequestSigningCancel,
   RequestTypes,
   ResponseType,
   SigningRequest,
@@ -26,7 +28,7 @@ import { InjectedAccount, MetadataDef } from "../../../extension-inject/types";
 import { SubjectInfo } from "@polkadot/ui-keyring/observable/types";
 import { AvailableNetwork } from "../../../config";
 
-const REEF_NETWORK_KEY = "selectedReefNetwork";
+const REEF_NETWORK_KEY = "selected_reef_network";
 
 // a global registry to use internally
 const registry = new TypeRegistry();
@@ -68,7 +70,8 @@ function isJsonPayload(
 
 function createNetworkIdObservable(): Observable<any> {
   return new Observable<any>((subscriber) => {
-    chrome.storage.local.get({ [REEF_NETWORK_KEY]: "mainnet" }, (items) => {
+    // TODO: use "mainnet" as default network
+    chrome.storage.local.get({ [REEF_NETWORK_KEY]: "testnet" }, (items) => {
       subscriber.next(items[REEF_NETWORK_KEY]);
 
       const listener = (
@@ -129,6 +132,8 @@ export default class Extension {
         return this.accountsCreateSuri(request as RequestAccountCreateSuri);
       case "pri(accounts.edit)":
         return this.accountsEdit(request as RequestAccountEdit);
+      case "pri(accounts.forget)":
+        return this.accountsForget(request as RequestAccountForget);
       case "pri(accounts.subscribe)":
         return this.accountsSubscribe(id, port);
       case "pri(accounts.select)":
@@ -139,6 +144,8 @@ export default class Extension {
         return this.networkSubscribe(id, port);
       case "pri(signing.approve)":
         return this.signingApprove(request as RequestSigningApprove);
+      case "pri(signing.cancel)":
+        return this.signingCancel(request as RequestSigningCancel);
       case "pri(signing.requests)":
         return this.signingSubscribe(id, port);
       default:
@@ -156,19 +163,18 @@ export default class Extension {
     genesisHash,
     icon,
   }: RequestAccountCreateSuri): string {
-    // TODO do not use password?
-    console.log("verifierId", verifierId);
-    console.log("loginProvider", loginProvider);
-    const createResult = keyring.addUri("0x" + privateKey, "no_password", {
-      name,
-      loginProvider,
-      verifierId,
-      genesisHash,
-      icon,
-      _isSelectedTs: new Date().getTime(),
-    });
-    const pair = createResult.pair;
-    pair.unlock("no_password"); // TODO
+    const createResult = keyring.addUri(
+      "0x" + privateKey,
+      privateKey.substring(0, 12),
+      {
+        name,
+        loginProvider,
+        verifierId,
+        genesisHash,
+        icon,
+        _isSelectedTs: new Date().getTime(),
+      }
+    );
     return createResult.pair.address;
   }
 
@@ -186,6 +192,13 @@ export default class Extension {
         (result) => result.genesisHash === genesisHash
       ) || null
     );
+  }
+
+  // TODO: add option to account card
+  protected accountsForget({ address }: RequestAccountForget): boolean {
+    keyring.forgetAccount(address);
+
+    return true;
   }
 
   protected accountsSubscribe(id: string, port: chrome.runtime.Port): boolean {
@@ -212,7 +225,6 @@ export default class Extension {
       _isSelectedTs: new Date().getTime(),
     });
 
-    // accountsObservable.subject.next(accountsObservable.subject.getValue());
     return true;
   }
 
@@ -235,7 +247,7 @@ export default class Extension {
     return true;
   }
 
-  private signingApprove({ id }: RequestSigningApprove): boolean {
+  private signingApprove({ id, password }: RequestSigningApprove): boolean {
     const queued = this.#state.getSignRequest(id);
 
     assert(queued, "Unable to find request");
@@ -250,7 +262,7 @@ export default class Extension {
     }
 
     if (pair.isLocked) {
-      pair.unlock("no_password"); // TODO
+      pair.unlock(password);
     }
 
     const { payload } = request;
@@ -278,6 +290,18 @@ export default class Extension {
       id,
       ...result,
     });
+
+    return true;
+  }
+
+  private signingCancel({ id }: RequestSigningCancel): boolean {
+    const queued = this.#state.getSignRequest(id);
+
+    assert(queued, "Unable to find request");
+
+    const { reject } = queued;
+
+    reject(new Error("Cancelled"));
 
     return true;
   }

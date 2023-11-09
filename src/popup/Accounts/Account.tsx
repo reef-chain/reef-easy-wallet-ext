@@ -6,9 +6,14 @@ import {
   toReefAmount,
 } from "../util";
 import { AccountJson } from "../../extension-base/background/types";
-import { Provider } from "@reef-chain/evm-provider";
+import { Provider, Signer } from "@reef-chain/evm-provider";
 import { getAddress } from "@ethersproject/address";
-import { selectAccount } from "../messaging";
+import { selectAccount, sendMessage } from "../messaging";
+import CopyToClipboard from "react-copy-to-clipboard";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { faCopy } from "@fortawesome/free-solid-svg-icons";
+import SigningKey from "../../extension-base/page/Signer";
 
 interface Props {
   account: AccountJson;
@@ -20,12 +25,21 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
   const [balance, setBalance] = useState<BigInt>();
   const [evmAddress, setEvmAddress] = useState<string>();
   const [isEvmClaimed, setIsEvmClaimed] = useState<boolean>();
+  const [signer, setSigner] = useState<Signer>();
 
   useEffect(() => {
+    unsubBalance();
     if (account.address && provider) {
+      const _signer = new Signer(
+        provider,
+        account.address,
+        new SigningKey(sendMessage)
+      );
+      setSigner(_signer);
       queryEvmAddress(account.address, provider);
       subscribeToBalance(account.address, provider);
     } else {
+      setSigner(undefined);
       setEvmAddress(undefined);
       setIsEvmClaimed(undefined);
       setBalance(undefined);
@@ -59,8 +73,15 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
   };
 
   const bindDefaultEvmAddress = async () => {
-    alert("TODO");
-    // const extrinsic = provider.api.tx.evmAccounts.claimDefaultAccount();
+    // TODO handle error, update UI (claimed/not claimed)
+    signer
+      .claimDefaultAccount()
+      .then((response) => {
+        console.log("evm bind response", response);
+      })
+      .catch((error) => {
+        console.log("evm bind error", error);
+      });
   };
 
   return (
@@ -92,18 +113,41 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
           <img src="/icons/icon.png" className="reef-amount-logo"></img>
           {balance !== undefined ? toReefAmount(balance) : "loading..."}
         </div>
-        <div>
-          <b>Native address:</b> {toAddressShortDisplay(account.address)}
-        </div>
-        <div>
-          <b>EVM address:</b>{" "}
-          {evmAddress ? toAddressShortDisplay(evmAddress) : "loading..."}
-          {isEvmClaimed !== undefined && !isEvmClaimed && (
-            <button className="sm" onClick={bindDefaultEvmAddress}>
-              Bind
-            </button>
-          )}
-        </div>
+        <CopyToClipboard
+          text={account.address}
+          className="hover:cursor-pointer"
+        >
+          <div title={account.address}>
+            <label className="font-bold">Native address:</label>
+            {toAddressShortDisplay(account.address)}
+            <FontAwesomeIcon
+              className="ml-2"
+              icon={faCopy as IconProp}
+              size="sm"
+              title="Copy Reef Account Address"
+            />
+          </div>
+        </CopyToClipboard>
+        <CopyToClipboard
+          text={evmAddress ? evmAddress + " (ONLY for Reef chain!)" : ""}
+          className="inline-block hover:cursor-pointer"
+        >
+          <div title={evmAddress || ""}>
+            <label className="font-bold">EVM address:</label>
+            {evmAddress ? toAddressShortDisplay(evmAddress) : "loading..."}
+            <FontAwesomeIcon
+              className="ml-2"
+              icon={faCopy as IconProp}
+              size="sm"
+              title="Copy EVM Address"
+            />
+          </div>
+        </CopyToClipboard>
+        {isEvmClaimed !== undefined && !isEvmClaimed && (
+          <button className="sm" onClick={bindDefaultEvmAddress}>
+            Bind
+          </button>
+        )}
       </div>
     </div>
   );

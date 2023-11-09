@@ -4,11 +4,14 @@
 import { PORT_EXTENSION } from "../extension-base/defaults";
 import {
   AccountJson,
+  AuthorizeRequest,
   MessageTypes,
   MessageTypesWithNoSubscriptions,
   MessageTypesWithNullRequest,
   MessageTypesWithSubscriptions,
+  MetadataRequest,
   RequestTypes,
+  ResponseAuthorizeList,
   ResponseTypes,
   SigningRequest,
   SubscriptionMessageTypes,
@@ -18,6 +21,7 @@ import { Chain } from "../extension-chains/types";
 import { Message } from "../extension-base/types";
 import { getSavedMeta, setSavedMeta } from "./MetadataCache";
 import { AvailableNetwork } from "../config";
+import { MetadataDef } from "../extension-inject/types";
 
 interface Handler {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -88,6 +92,11 @@ export function sendMessage<TMessageType extends MessageTypes>(
 
 // Metadata
 
+// TODO
+export async function approveMetaRequest(id: string): Promise<boolean> {
+  return sendMessage("pri(metadata.approve)", { id });
+}
+
 export async function getMetadata(
   genesisHash?: string | null,
   isPartial = false
@@ -112,6 +121,23 @@ export async function getMetadata(
   return null;
 }
 
+// TODO
+export async function rejectMetaRequest(id: string): Promise<boolean> {
+  return sendMessage("pri(metadata.reject)", { id });
+}
+
+// TODO
+export async function subscribeMetadataRequests(
+  cb: (accounts: MetadataRequest[]) => void
+): Promise<boolean> {
+  return sendMessage("pri(metadata.requests)", null, cb);
+}
+
+// TODO
+export async function getAllMetatdata(): Promise<MetadataDef[]> {
+  return sendMessage("pri(metadata.list)");
+}
+
 // Accounts
 
 export async function createAccountSuri(
@@ -128,6 +154,10 @@ export async function createAccountSuri(
     verifierId,
     icon,
   });
+}
+
+export async function forgetAccount(address: string): Promise<boolean> {
+  return sendMessage("pri(accounts.forget)", { address });
 }
 
 export async function subscribeAccounts(
@@ -164,8 +194,15 @@ export async function subscribeNetwork(
 
 // Signing
 
-export async function approveSign(id: string): Promise<boolean> {
-  return sendMessage("pri(signing.approve)", { id });
+export async function cancelSignRequest(id: string): Promise<boolean> {
+  return sendMessage("pri(signing.cancel)", { id });
+}
+
+export async function approveSignRequest(
+  id: string,
+  password: string
+): Promise<boolean> {
+  return sendMessage("pri(signing.approve)", { id, password });
 }
 
 export async function subscribeSigningRequests(
@@ -174,4 +211,37 @@ export async function subscribeSigningRequests(
   return sendMessage("pri(signing.requests)", null, (val) => {
     cb(val);
   });
+}
+
+// Authorize
+// TODO
+
+export async function getAuthList(): Promise<ResponseAuthorizeList> {
+  return sendMessage("pri(authorize.list)");
+}
+
+export async function approveAuthRequest(id: string): Promise<boolean> {
+  return sendMessage("pri(authorize.approve)", { id });
+}
+
+export async function rejectAuthRequest(id: string): Promise<boolean> {
+  return sendMessage("pri(authorize.reject)", { id });
+}
+
+export async function subscribeAuthorizeRequests(
+  cb: (accounts: AuthorizeRequest[]) => void
+): Promise<boolean> {
+  return sendMessage("pri(authorize.requests)", null, cb);
+}
+
+export async function toggleAuthorization(
+  url: string
+): Promise<ResponseAuthorizeList> {
+  return sendMessage("pri(authorize.toggle)", url);
+}
+
+export async function removeAuthorization(
+  url: string
+): Promise<ResponseAuthorizeList> {
+  return sendMessage("pri(authorize.remove)", url);
 }

@@ -41,6 +41,7 @@ import keyring from "@polkadot/ui-keyring";
 import RequestExtrinsicSign from "../RequestExtrinsicSign";
 import State from "./State";
 import { AvailableNetwork } from "../../../config";
+import RequestBytesSign from "../RequestBytesSign";
 
 function canDerive(type?: KeypairType): boolean {
   return !!type && ["ed25519", "sr25519", "ecdsa", "ethereum"].includes(type);
@@ -127,6 +128,8 @@ export default class Tabs {
         return this.accountsList(url, request as RequestAccountList);
       case "pub(accounts.subscribe)":
         return this.accountsSubscribe(url, id, port);
+      case "pub(bytes.sign)":
+        return this.bytesSign(url, request as SignerPayloadRaw);
       case "pub(extrinsic.sign)":
         return this.extrinsicSign(url, request as SignerPayloadJSON);
       case "pub(metadata.list)":
@@ -194,6 +197,19 @@ export default class Tabs {
     assert(pair, "Unable to find keypair");
 
     return pair;
+  }
+
+  private bytesSign(
+    url: string,
+    request: SignerPayloadRaw
+  ): Promise<ResponseSigning> {
+    const address = request.address;
+    const pair = this.getSigningPair(address);
+
+    return this.#state.sign(url, new RequestBytesSign(request), {
+      address,
+      ...pair.meta,
+    });
   }
 
   private extrinsicSign(
@@ -318,13 +334,13 @@ export default class Tabs {
   }
 
   private async redirectIfPhishing(url: string): Promise<boolean> {
-    // const isInDenyList = await checkIfDenied(url);
+    const isInDenyList = await checkIfDenied(url);
 
-    // if (isInDenyList) {
-    //   this.redirectPhishingLanding(url);
+    if (isInDenyList) {
+      this.redirectPhishingLanding(url);
 
-    //   return true;
-    // }
+      return true;
+    }
 
     return false;
   }

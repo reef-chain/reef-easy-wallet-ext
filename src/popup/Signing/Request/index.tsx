@@ -1,7 +1,7 @@
 // Copyright 2019-2021 @polkadot/extension-ui authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 
 import { TypeRegistry } from "@polkadot/types";
 import type { ExtrinsicPayload } from "@polkadot/types/interfaces";
@@ -9,8 +9,6 @@ import type {
   SignerPayloadJSON,
   SignerPayloadRaw,
 } from "@polkadot/types/types";
-import { decodeAddress } from "@polkadot/util-crypto";
-import SignArea from "./SignArea";
 
 import {
   AccountJson,
@@ -19,7 +17,7 @@ import {
 
 import Bytes from "../Bytes";
 import Extrinsic from "../Extrinsic";
-// import Extrinsic from '../Extrinsic';
+import { approveSignRequest, cancelSignRequest } from "../../messaging";
 
 interface Props {
   account: AccountJson;
@@ -28,6 +26,7 @@ interface Props {
   request: RequestSign;
   signId: string;
   url: string;
+  getOrRefreshAuth: () => Promise<string | null>;
 }
 
 interface Data {
@@ -48,13 +47,14 @@ function isRawPayload(
 }
 
 export default function Request({
-  account: { accountIndex, addressOffset },
   buttonText,
   isFirst,
   request,
   signId,
   url,
+  getOrRefreshAuth,
 }: Props): React.ReactElement<Props> | null {
+  const [isBusy, setIsBusy] = useState(false);
   const [{ hexBytes, payload }, setData] = useState<Data>({
     hexBytes: null,
     payload: null,
@@ -81,23 +81,45 @@ export default function Request({
     }
   }, [request]);
 
-  if (payload !== null) {
-    const json = request.payload as SignerPayloadJSON;
-    return (
-      <>
-        <Extrinsic payload={payload} request={json} url={url} />;
-        <SignArea buttonText={buttonText} signId={signId} />
-      </>
-    );
-  } else if (hexBytes !== null) {
-    const { address, data } = request.payload as SignerPayloadRaw;
-    return (
-      <>
-        <Bytes bytes={data} url={url} />;
-        <SignArea buttonText={buttonText} signId={signId} />
-      </>
-    );
-  }
+  const _onSign = async () => {
+    setIsBusy(true);
 
-  return null;
+    const password = await getOrRefreshAuth();
+    if (!password) {
+      setIsBusy(false);
+      alert("Wrong auth");
+      return;
+    }
+
+    return approveSignRequest(signId, password)
+      .then((): void => {
+        setIsBusy(false);
+      })
+      .catch((error: Error): void => {
+        setIsBusy(false);
+        console.error(error);
+      });
+  };
+
+  const _onCancel = () => {
+    cancelSignRequest(signId);
+  };
+
+  return (
+    <>
+      {payload !== null ? (
+        <Extrinsic
+          payload={payload}
+          request={request.payload as SignerPayloadJSON}
+          url={url}
+        />
+      ) : hexBytes !== null ? (
+        <Bytes bytes={hexBytes} url={url} />
+      ) : null}
+      <div>
+        {isFirst && <button onClick={_onSign}>{buttonText}</button>}
+        <button onClick={_onCancel}>Cancel</button>
+      </div>
+    </>
+  );
 }

@@ -10,6 +10,7 @@ import type {
   ProviderInterface,
   ProviderInterfaceCallback,
 } from "@polkadot/rpc-provider/types";
+import { assert } from "@polkadot/util";
 import type {
   AccountJson,
   // AuthorizeRequest,
@@ -23,13 +24,10 @@ import type {
   ResponseSigning,
   SigningRequest,
 } from "../types";
+import settings from "@polkadot/ui-settings";
 
-// import { addMetadata, knownMetadata } from "@reef-defi/extension-chains";
-// import chrome from "@reef-defi/extension-inject/chrome";
-// import { assert } from "@reef-defi/util";
 import { BehaviorSubject } from "rxjs";
 
-import settings from "@polkadot/ui-settings";
 import { PORT_EXTENSION } from "../../defaults";
 
 import { TypeRegistry } from "@polkadot/types";
@@ -88,24 +86,6 @@ interface SignRequest extends Resolver<ResponseSigning> {
 }
 
 let idCounter = 0;
-
-const NOTIFICATION_URL = chrome.runtime.getURL("notification.html");
-
-const POPUP_WINDOW_OPTS: chrome.windows.CreateData = {
-  focused: true,
-  height: 621,
-  left: 150,
-  top: 150,
-  type: "popup",
-  url: NOTIFICATION_URL,
-  width: 560,
-};
-
-const NORMAL_WINDOW_OPTS: chrome.windows.CreateData = {
-  focused: true,
-  type: "normal",
-  url: NOTIFICATION_URL,
-};
 
 export enum NotificationOptions {
   None,
@@ -339,13 +319,20 @@ export default class State {
   //   provider.on('disconnected', () => cb(null, false));
   // }
 
-  // public rpcUnsubscribe (request: RequestRpcUnsubscribe, port: chrome.runtime.Port): Promise<boolean> {
-  //   const provider = this.#injectedProviders.get(port);
+  public rpcUnsubscribe(
+    request: RequestRpcUnsubscribe,
+    port: chrome.runtime.Port
+  ): Promise<boolean> {
+    const provider = this.#injectedProviders.get(port);
 
-  //   assert(provider, 'Cannot call pub(rpc.unsubscribe) before provider is set');
+    assert(provider, "Cannot call pub(rpc.unsubscribe) before provider is set");
 
-  //   return provider.unsubscribe(request.type, request.method, request.subscriptionId);
-  // }
+    return provider.unsubscribe(
+      request.type,
+      request.method,
+      request.subscriptionId
+    );
+  }
 
   // public saveMetadata (meta: MetadataDef): void {
   //   this.#metaStore.set(meta.genesisHash, meta);
@@ -395,22 +382,25 @@ export default class State {
   // }
 
   private popupClose(): void {
-    this.#windows.forEach((id: number): void => void chrome.windows.remove(id));
-    this.#windows = [];
+    // TODO
   }
 
   private popupOpen(): void {
-    this.#notification !== "extension" &&
-      chrome.windows.create(
-        this.#notification === "window"
-          ? NORMAL_WINDOW_OPTS
-          : POPUP_WINDOW_OPTS,
-        (window): void => {
-          if (window) {
-            this.#windows.push(window.id || 0);
-          }
-        }
-      );
+    // TODO: does not seem to be possible at the moment: https://github.com/GoogleChrome/developer.chrome.com/issues/2602#issuecomment-1774740010
+    // chrome.action.setPopup({ popup: "index.html" });
+    // chrome.action.openPopup();
+    // chrome.windows.create(
+    //   {
+    //     focused: true,
+    //     type: "popup",
+    //     url: "index.html",
+    //     height: 600,
+    //     width: 400,
+    //     top: 0,
+    //     left: 0,
+    //   },
+    //   () => {}
+    // );
   }
 
   // private authComplete = (
@@ -485,7 +475,7 @@ export default class State {
     const complete = (): void => {
       console.log("signComplete.complete");
       delete this.#signRequests[id];
-      // this.updateIconSign(true);
+      this.updateIconSign(true);
     };
 
     return {
@@ -512,18 +502,17 @@ export default class State {
     // const authCount = this.numAuthRequests;
     // const metaCount = this.numMetaRequests;
     const signCount = this.numSignRequests;
-    // const text = authCount
-    //   ? "Auth"
-    //   : metaCount
-    //   ? "Meta"
-    //   : signCount
-    //   ? `${signCount}`
-    //   : "";
-    const text = signCount.toString();
+    const text =
+      // authCount
+      //   ? "Auth"
+      //   : metaCount
+      //   ? "Meta"
+      //   :
+      signCount ? `${signCount}` : "";
 
     chrome.action.setBadgeBackgroundColor({ color: "#A408EB" });
     chrome.action.setBadgeTextColor({ color: "#ffffff" });
-    chrome.action.setBadgeText({ text: signCount.toString() });
+    chrome.action.setBadgeText({ text });
 
     if (shouldClose && text === "") {
       this.popupClose();

@@ -36,7 +36,7 @@ import {
 } from "../extension-base/background/types";
 import Signing from "./Signing";
 import { Provider } from "@reef-chain/evm-provider";
-import { WsProvider } from "@polkadot/api";
+import { Keyring, WsProvider } from "@polkadot/api";
 import Account from "./Accounts/Account";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -69,10 +69,21 @@ const Popup = () => {
   const queryParams = new URLSearchParams(window.location.search);
   const loginProvider = queryParams.get("loginProvider");
 
+  // TODO remove this
+  const createTestAccount = async () => {
+    await createAccountSuri(
+      "a4ce9e364fb071117480f8b49c3f26133771e29ac9520f551fb1c14a92709b8d",
+      "Dummy",
+      "google",
+      "dummy@test.com",
+      null
+    );
+  };
+
   useEffect(() => {
     Promise.all([
       subscribeAccounts(onAccountsChange),
-      subscribeSigningRequests(onSigningRequestsChange),
+      subscribeSigningRequests(setSignRequests),
       subscribeNetwork(onNetworkChange),
     ]).catch(console.error);
   }, []);
@@ -84,12 +95,21 @@ const Popup = () => {
     }
   }, [selectedNetwork]);
 
+  useEffect(() => {
+    if (signRequests?.length && selectedAccount) {
+      setState(State.SIGNING);
+    } else {
+      setState(State.ACCOUNTS);
+    }
+  }, [signRequests, selectedAccount]);
+
   const onAccountsChange = (_accounts: AccountJson[]) => {
     setAccounts(_accounts);
     setState(State.ACCOUNTS);
 
     if (!_accounts?.length) {
       setSelectedAccount(null);
+      createTestAccount(); // TODO remove this
       return;
     }
 
@@ -99,15 +119,6 @@ const Popup = () => {
     } else {
       selectAccount(_accounts[0].address);
       setSelectedAccount(_accounts[0]);
-    }
-  };
-
-  const onSigningRequestsChange = (_signRequests: SigningRequest[]) => {
-    setSignRequests(_signRequests);
-    if (_signRequests.length) {
-      setState(State.SIGNING);
-    } else {
-      setState(State.ACCOUNTS);
     }
   };
 
@@ -192,44 +203,19 @@ const Popup = () => {
       if (loginProvider) {
         setState(State.LOGIN);
         window.history.replaceState({}, document.title, "/index.html");
-        login(loginProvider, web3auth);
+        addAccount(loginProvider, web3auth);
       }
     } catch (err: any) {
       console.error(err);
     }
   };
 
-  const addAccount = () => {
-    setState(State.LOGIN);
-  };
-
-  const cancelLogin = async () => {
-    setState(State.ACCOUNTS);
-  };
-
-  const login = async (loginProvider: string, web3auth: Web3AuthNoModal) => {
-    if (LOGIN_PROVIDERS.indexOf(loginProvider) === -1) {
-      alert("Invalid login provider");
-      return;
-    }
-
-    if (!web3auth) {
-      alert("web3auth not initialized yet");
-      return;
-    }
-
-    if (isPopup) openFullPage(loginProvider);
-
-    if (web3auth.connected) {
-      await web3auth.logout();
-    }
-
-    const web3authProvider = await web3auth.connectTo<OpenloginLoginParams>(
-      WALLET_ADAPTERS.OPENLOGIN,
-      { loginProvider }
-    );
+  const addAccount = async (
+    loginProvider: string,
+    web3auth: Web3AuthNoModal
+  ) => {
+    const web3authProvider = await login(loginProvider, web3auth);
     if (!web3authProvider) {
-      alert("web3authProvider not initialized yet");
       return;
     }
 
@@ -255,6 +241,73 @@ const Popup = () => {
       userInfo.verifierId,
       userInfo.profileImage
     );
+  };
+
+  const getOrRefreshAuth = async () => {
+    if (!web3auth) {
+      alert("web3auth not initialized yet");
+      return null;
+    }
+
+    if (!selectedAccount) {
+      alert("No account selected");
+      return null;
+    }
+
+    const web3authProvider = await login(
+      selectedAccount.loginProvider as string,
+      web3auth
+    );
+    if (!web3authProvider) {
+      return null;
+    }
+
+    const privateKey = (await web3authProvider.request({
+      method: "private_key",
+    })) as string;
+    const keyring = new Keyring({ type: "sr25519" });
+    const keyPair = keyring.addFromUri("0x" + privateKey);
+    if (keyPair.address !== selectedAccount.address) {
+      setSelectedAccount(
+        accounts
+          ? accounts.find((acc) => acc.address === keyPair.address) ||
+              accounts[0]
+          : null
+      );
+      alert("Logged in to wrong account");
+      return null;
+    }
+
+    return privateKey.substring(0, 12);
+  };
+
+  const login = async (loginProvider: string, web3auth: Web3AuthNoModal) => {
+    if (LOGIN_PROVIDERS.indexOf(loginProvider) === -1) {
+      alert("Invalid login provider");
+      return null;
+    }
+
+    if (!web3auth) {
+      alert("web3auth not initialized yet");
+      return null;
+    }
+
+    if (isPopup) openFullPage(loginProvider);
+
+    if (web3auth.connected) {
+      await web3auth.logout();
+    }
+
+    const web3authProvider = await web3auth.connectTo<OpenloginLoginParams>(
+      WALLET_ADAPTERS.OPENLOGIN,
+      { loginProvider }
+    );
+    if (!web3authProvider) {
+      alert("web3authProvider not initialized yet");
+      return null;
+    }
+
+    return web3authProvider;
   };
 
   return (
@@ -284,12 +337,12 @@ const Popup = () => {
             </button>
           )}
           {state === State.ACCOUNTS && (
-            <button className="md" onClick={() => addAccount()}>
+            <button className="md" onClick={() => setState(State.LOGIN)}>
               <FontAwesomeIcon icon={faCirclePlus as IconProp} />
             </button>
           )}
           {state === State.LOGIN && (
-            <button className="md" onClick={() => cancelLogin()}>
+            <button className="md" onClick={() => setState(State.ACCOUNTS)}>
               <FontAwesomeIcon icon={faCircleXmark as IconProp} />
             </button>
           )}
@@ -306,7 +359,7 @@ const Popup = () => {
       {state === State.ACCOUNTS && accounts?.length === 0 && (
         <>
           <div className="text-lg mt-12">No accounts available.</div>
-          <button onClick={addAccount}>Add account</button>
+          <button onClick={() => setState(State.LOGIN)}>Add account</button>
         </>
       )}
 
@@ -334,7 +387,9 @@ const Popup = () => {
           ))}
 
       {/* Pending signing requests */}
-      {state === State.SIGNING && Signing(signRequests)}
+      {state === State.SIGNING && (
+        <Signing requests={signRequests} getOrRefreshAuth={getOrRefreshAuth} />
+      )}
 
       {/* Login */}
       {state === State.LOGIN && (
@@ -344,7 +399,7 @@ const Popup = () => {
             <button
               className="group"
               key={provider}
-              onClick={() => login(provider, web3auth)}
+              onClick={() => addAccount(provider, web3auth)}
             >
               <img
                 className="group-hover:hidden h-6"

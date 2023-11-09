@@ -3,17 +3,12 @@
 
 /* eslint-disable no-use-before-define */
 
-import type {
-  KeyringPair,
-  KeyringPair$Json,
-  KeyringPair$Meta,
-} from "@polkadot/keyring/types";
+import type { KeyringPair, KeyringPair$Meta } from "@polkadot/keyring/types";
 import type { JsonRpcResponse } from "@polkadot/rpc-provider/types";
 import type {
   SignerPayloadJSON,
   SignerPayloadRaw,
 } from "@polkadot/types/types";
-import type { KeyringPairs$Json } from "@polkadot/ui-keyring/types";
 import type { HexString } from "@polkadot/util/types";
 import {
   InjectedAccount,
@@ -27,7 +22,60 @@ import type { KeypairType } from "@polkadot/util-crypto/types";
 import { TypeRegistry } from "@polkadot/types";
 import { AvailableNetwork } from "../../config";
 
-// import { AuthUrls } from "./handlers/State";
+import { AuthUrls } from "./handlers/State";
+
+// [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
+export interface RequestSignatures {
+  // private/internal requests, i.e. from a popup
+  "pri(metadata.approve)": [RequestMetadataApprove, boolean];
+  "pri(metadata.get)": [string | null, MetadataDef | null];
+  "pri(metadata.reject)": [RequestMetadataReject, boolean];
+  "pri(metadata.requests)": [
+    RequestMetadataSubscribe,
+    boolean,
+    MetadataRequest[]
+  ];
+  "pri(metadata.list)": [null, MetadataDef[]];
+  "pri(accounts.create.suri)": [RequestAccountCreateSuri, string];
+  "pri(accounts.edit)": [RequestAccountEdit, boolean];
+  "pri(accounts.forget)": [RequestAccountForget, boolean];
+  "pri(accounts.select)": [RequestAccountSelect, boolean];
+  "pri(accounts.subscribe)": [RequestAccountSubscribe, boolean, AccountJson[]];
+  "pri(network.subscribe)": [RequestNetworkSubscribe, boolean, string];
+  "pri(network.select)": [RequestNetworkSelect, boolean];
+  "pri(signing.cancel)": [RequestSigningCancel, boolean];
+  "pri(signing.approve)": [RequestSigningApprove, boolean];
+  "pri(signing.requests)": [RequestSigningSubscribe, boolean, SigningRequest[]];
+  "pri(authorize.list)": [null, ResponseAuthorizeList];
+  "pri(authorize.approve)": [RequestAuthorizeApprove, boolean];
+  "pri(authorize.reject)": [RequestAuthorizeReject, boolean];
+  "pri(authorize.requests)": [
+    RequestAuthorizeSubscribe,
+    boolean,
+    AuthorizeRequest[]
+  ];
+  "pri(authorize.toggle)": [string, ResponseAuthorizeList];
+  "pri(authorize.remove)": [string, ResponseAuthorizeList];
+  // public/external requests, i.e. from a page
+  "pub(accounts.list)": [RequestAccountList, InjectedAccount[]];
+  "pub(accounts.subscribe)": [
+    RequestAccountSubscribe,
+    boolean,
+    InjectedAccount[]
+  ];
+  "pub(authorize.tab)": [RequestAuthorizeTab, null];
+  "pub(bytes.sign)": [SignerPayloadRaw, ResponseSigning];
+  "pub(extrinsic.sign)": [SignerPayloadJSON, ResponseSigning];
+  "pub(metadata.list)": [null, InjectedMetadataKnown[]];
+  "pub(metadata.provide)": [MetadataDef, boolean];
+  "pub(phishing.redirectIfDenied)": [null, boolean];
+  "pub(rpc.listProviders)": [void, ResponseRpcListProviders];
+  "pub(rpc.send)": [RequestRpcSend, JsonRpcResponse<any>];
+  "pub(rpc.startProvider)": [string, ProviderMeta];
+  "pub(rpc.subscribe)": [RequestRpcSubscribe, number, JsonRpcResponse<any>];
+  "pub(rpc.subscribeConnected)": [null, boolean, boolean];
+  "pub(network.subscribe)": [RequestNetworkSubscribe, boolean, string];
+}
 
 type KeysWithDefinedValues<T> = {
   [K in keyof T]: T[K] extends undefined ? never : K;
@@ -59,69 +107,6 @@ export interface AccountJson extends KeyringPair$Meta {
   isSelected?: boolean;
 }
 
-// export type AccountWithChildren = AccountJson & {
-//   children?: AccountWithChildren[];
-// };
-
-// export type AccountsContext = {
-//   accounts: AccountJson[];
-//   hierarchy: AccountWithChildren[];
-//   master?: AccountJson;
-//   selectedAccount?: AccountJson | null;
-// };
-
-// export interface AuthorizeRequest {
-//   id: string;
-//   request: RequestAuthorizeTab;
-//   url: string;
-// }
-
-// export interface MetadataRequest {
-//   id: string;
-//   request: MetadataDef;
-//   url: string;
-// }
-
-export interface SigningRequest {
-  account: AccountJson;
-  id: string;
-  request: RequestSign;
-  url: string;
-}
-
-// [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
-export interface RequestSignatures {
-  // private/internal requests, i.e. from a popup
-  "pri(metadata.get)": [string | null, MetadataDef | null];
-  "pri(accounts.create.suri)": [RequestAccountCreateSuri, string];
-  "pri(accounts.edit)": [RequestAccountEdit, boolean];
-  "pri(accounts.select)": [RequestAccountSelect, boolean];
-  "pri(accounts.subscribe)": [RequestAccountSubscribe, boolean, AccountJson[]];
-  "pri(network.subscribe)": [RequestNetworkSubscribe, boolean, string];
-  "pri(network.select)": [RequestNetworkSelect, boolean];
-  "pri(signing.approve)": [RequestSigningApprove, boolean];
-  "pri(signing.requests)": [RequestSigningSubscribe, boolean, SigningRequest[]];
-  // public/external requests, i.e. from a page
-  "pub(accounts.list)": [RequestAccountList, InjectedAccount[]];
-  "pub(accounts.subscribe)": [
-    RequestAccountSubscribe,
-    boolean,
-    InjectedAccount[]
-  ];
-  "pub(authorize.tab)": [RequestAuthorizeTab, null];
-  "pub(bytes.sign)": [SignerPayloadRaw, ResponseSigning];
-  "pub(extrinsic.sign)": [SignerPayloadJSON, ResponseSigning];
-  "pub(metadata.list)": [null, InjectedMetadataKnown[]];
-  "pub(metadata.provide)": [MetadataDef, boolean];
-  "pub(phishing.redirectIfDenied)": [null, boolean];
-  "pub(rpc.listProviders)": [void, ResponseRpcListProviders];
-  "pub(rpc.send)": [RequestRpcSend, JsonRpcResponse<any>];
-  "pub(rpc.startProvider)": [string, ProviderMeta];
-  "pub(rpc.subscribe)": [RequestRpcSubscribe, number, JsonRpcResponse<any>];
-  "pub(rpc.subscribeConnected)": [null, boolean, boolean];
-  "pub(network.subscribe)": [RequestNetworkSubscribe, boolean, string];
-}
-
 export type MessageTypes = keyof RequestSignatures;
 
 // Requests
@@ -139,6 +124,25 @@ export interface TransportRequestMessage<TMessageType extends MessageTypes> {
   request: RequestTypes[TMessageType];
 }
 
+export interface AuthorizeRequest {
+  id: string;
+  request: RequestAuthorizeTab;
+  url: string;
+}
+
+export interface MetadataRequest {
+  id: string;
+  request: MetadataDef;
+  url: string;
+}
+
+export interface SigningRequest {
+  account: AccountJson;
+  id: string;
+  request: RequestSign;
+  url: string;
+}
+
 export interface RequestAccountSelect {
   address: string;
 }
@@ -151,33 +155,27 @@ export interface RequestAuthorizeTab {
   origin: string;
 }
 
-// export interface RequestAuthorizeApprove {
-//   id: string;
-// }
+export interface RequestAuthorizeApprove {
+  id: string;
+}
 
-// export interface RequestAuthorizeReject {
-//   id: string;
-// }
+export interface RequestAuthorizeReject {
+  id: string;
+}
 
-// export type RequestAuthorizeSubscribe = null;
+export type RequestAuthorizeSubscribe = null;
 
 export type RequestNetworkSubscribe = null;
 
-// export interface RequestMetadataApprove {
-//   id: string;
-// }
+export interface RequestMetadataApprove {
+  id: string;
+}
 
-// export interface RequestMetadataReject {
-//   id: string;
-// }
+export interface RequestMetadataReject {
+  id: string;
+}
 
-// export type RequestMetadataSubscribe = null;
-
-// export interface RequestAccountCreateExternal {
-//   address: string;
-//   genesisHash?: string | null;
-//   name: string;
-// }
+export type RequestMetadataSubscribe = null;
 
 export interface RequestAccountCreateSuri {
   privateKey: string;
@@ -188,21 +186,6 @@ export interface RequestAccountCreateSuri {
   icon?: string;
 }
 
-// export interface RequestAccountCreateHardware {
-//   accountIndex: number;
-//   address: string;
-//   addressOffset: number;
-//   genesisHash: string;
-//   hardwareType: string;
-//   name: string;
-// }
-
-// export interface RequestAccountChangePassword {
-//   address: string;
-//   oldPass: string;
-//   newPass: string;
-// }
-
 export interface RequestAccountEdit {
   address: string;
   genesisHash?: string | null;
@@ -210,49 +193,9 @@ export interface RequestAccountEdit {
   icon?: string;
 }
 
-// export interface RequestAccountForget {
-//   address: string;
-// }
-
-// export interface RequestAccountShow {
-//   address: string;
-//   isShowing: boolean;
-// }
-
-// export interface RequestAccountTie {
-//   address: string;
-//   genesisHash: string | null;
-// }
-
-// export interface RequestAccountValidate {
-//   address: string;
-//   password: string;
-// }
-
-// export interface RequestDeriveCreate {
-//   name: string;
-//   genesisHash?: string | null;
-//   suri: string;
-//   parentAddress: string;
-//   parentPassword: string;
-//   password: string;
-// }
-
-// export interface RequestDeriveValidate {
-//   suri: string;
-//   parentAddress: string;
-//   parentPassword: string;
-// }
-
-// export interface RequestAccountExport {
-//   address: string;
-//   password: string;
-// }
-
-// export interface RequestAccountBatchExport {
-//   addresses: string[];
-//   password: string;
-// }
+export interface RequestAccountForget {
+  address: string;
+}
 
 export interface RequestAccountList {
   anyType?: boolean;
@@ -277,32 +220,14 @@ export interface RequestRpcUnsubscribe {
 
 export interface RequestSigningApprove {
   id: string;
+  password: string;
 }
 
-// export interface RequestSigningCancel {
-//   id: string;
-// }
-
-// export interface RequestSigningIsLocked {
-//   id: string;
-// }
-
-// export interface ResponseSigningIsLocked {
-//   isLocked: boolean;
-//   remainingTime: number;
-// }
+export interface RequestSigningCancel {
+  id: string;
+}
 
 export type RequestSigningSubscribe = null;
-
-// export interface RequestSeedCreate {
-//   length?: SeedLengths;
-//   type?: KeypairType;
-// }
-
-// export interface RequestSeedValidate {
-//   suri: string;
-//   type?: KeypairType;
-// }
 
 // Responses
 
@@ -344,29 +269,6 @@ export interface ResponseSigning {
   signature: HexString;
 }
 
-// export interface ResponseDeriveValidate {
-//   address: string;
-//   suri: string;
-// }
-
-// export interface ResponseSeedCreate {
-//   address: string;
-//   seed: string;
-// }
-
-// export interface ResponseSeedValidate {
-//   address: string;
-//   suri: string;
-// }
-
-// export interface ResponseAccountExport {
-//   exportedJson: KeyringPair$Json;
-// }
-
-// export interface ResponseAccountsExport {
-//   exportedJson: KeyringPairs$Json;
-// }
-
 export type ResponseRpcListProviders = ProviderList;
 
 // Subscriptions
@@ -387,27 +289,6 @@ export interface RequestSign {
   sign(registry: TypeRegistry, pair: KeyringPair): { signature: HexString };
 }
 
-// export interface RequestJsonRestore {
-//   file: KeyringPair$Json;
-//   password: string;
-// }
-
-// export interface RequestBatchRestore {
-//   file: KeyringPairs$Json;
-//   password: string;
-// }
-
-// export interface ResponseJsonRestore {
-//   error: string | null;
-// }
-
-// export interface ResponseJsonGetAccountInfo {
-//   address: string;
-//   name: string;
-//   genesisHash: string;
-//   type: KeypairType;
-// }
-
-// export interface ResponseAuthorizeList {
-//   list: AuthUrls;
-// }
+export interface ResponseAuthorizeList {
+  list: AuthUrls;
+}
