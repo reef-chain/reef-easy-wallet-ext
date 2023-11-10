@@ -1,41 +1,30 @@
 // Copyright 2019-2021 @polkadot/extension-bg authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-// import type {
-//   MetadataDef,
-//   ProviderMeta,
-// } from "@reef-defi/extension-inject/types";
 import type {
-  JsonRpcResponse,
+  // JsonRpcResponse,
   ProviderInterface,
-  ProviderInterfaceCallback,
+  // ProviderInterfaceCallback,
 } from "@polkadot/rpc-provider/types";
-import { assert } from "@polkadot/util";
+// import { assert } from "@polkadot/util";
+import { BehaviorSubject } from "rxjs";
+
 import type {
   AccountJson,
   // AuthorizeRequest,
   // MetadataRequest,
   RequestAuthorizeTab,
-  RequestRpcSend,
-  RequestRpcSubscribe,
-  RequestRpcUnsubscribe,
+  // RequestRpcSend,
+  // RequestRpcSubscribe,
+  // RequestRpcUnsubscribe,
   RequestSign,
-  ResponseRpcListProviders,
+  // ResponseRpcListProviders,
   ResponseSigning,
   SigningRequest,
 } from "../types";
-import settings from "@polkadot/ui-settings";
-
-import { BehaviorSubject } from "rxjs";
-
 import { PORT_EXTENSION } from "../../defaults";
-
-import { TypeRegistry } from "@polkadot/types";
-import { SignerPayloadJSON } from "@polkadot/types/types";
 import { MetadataDef } from "../../../extension-inject/types";
 import { knownMetadata } from "../../../extension-chains";
-import keyring from "@polkadot/ui-keyring";
-
 // import { MetadataStore } from "../../stores";
 
 interface Resolver<T> {
@@ -66,14 +55,12 @@ export type AuthUrls = Record<string, AuthUrlInfo>;
 //   url: string;
 // }
 
-// List of providers passed into constructor. This is the list of providers
-// exposed by the extension.
+// List of providers passed into constructor. This is the list of providers exposed by the extension.
 type Providers = Record<
   string,
   {
     meta: any; // ProviderMeta;
-    // The provider is not running at init, calling this will instantiate the
-    // provider.
+    // The provider is not running at init, calling this will instantiate the provider.
     start: () => ProviderInterface;
   }
 >;
@@ -85,19 +72,9 @@ interface SignRequest extends Resolver<ResponseSigning> {
   url: string;
 }
 
-let idCounter = 0;
-
-export enum NotificationOptions {
-  None,
-  Normal,
-  PopUp,
-}
-
-const AUTH_URLS_KEY = "authUrls";
-
-function getId(): string {
-  return `${Date.now()}.${++idCounter}`;
-}
+// const AUTH_URLS_KEY = "auth_urls";
+const ID_COUNTER_KEY = "id_counter";
+const DETACHED_WINDOW_ID_KEY = "detached_window_id";
 
 export default class State {
   // public readonly authSubject: BehaviorSubject<AuthorizeRequest[]> =
@@ -106,30 +83,44 @@ export default class State {
   //   new BehaviorSubject<MetadataRequest[]>([]);
   public readonly signSubject: BehaviorSubject<SigningRequest[]> =
     new BehaviorSubject<SigningRequest[]>([]);
-  readonly #authUrls: AuthUrls = {};
-  readonly #authRequests: Record<string, AuthRequest> = {};
+  #authUrls: AuthUrls = {};
+  // readonly #authRequests: Record<string, AuthRequest> = {};
   // readonly #metaStore = new MetadataStore();
   // Map of providers currently injected in tabs
-  readonly #injectedProviders = new Map<
-    chrome.runtime.Port,
-    ProviderInterface
-  >();
+  // readonly #injectedProviders = new Map<
+  //   chrome.runtime.Port,
+  //   ProviderInterface
+  // >();
   // readonly #metaRequests: Record<string, MetaRequest> = {};
-  #notification = settings.notification;
   // Map of all providers exposed by the extension, they are retrievable by key
-  // readonly #providers: Providers;
+  // readonly #providers: Providers = {};
+  // Sign requests are not persisted, if service worker stops they are treated as cancelled by user
   readonly #signRequests: Record<string, SignRequest> = {};
   #detachedWindowId = 0;
+  #idCounter = 0;
 
-  constructor(providers: Providers = {}) {
-    // this.#providers = providers;
+  constructor() {
+    this.updateIcon();
+
     // this.#metaStore.all((_key: string, def: MetadataDef): void => {
     //   addMetadata(def);
     // });
-    // retrieve previously set authorizations
-    // const authString = localStorage.getItem(AUTH_URLS_KEY) || "{}";
-    // const previousAuth = JSON.parse(authString) as AuthUrls;
-    // this.#authUrls = previousAuth;
+
+    // chrome.storage.local.get([AUTH_URLS_KEY]).then((item) => {
+    //   this.#authUrls = item[AUTH_URLS_KEY] || {};
+    //   console.log("authUrls", this.#authUrls);
+    // });
+
+    chrome.storage.local.get([ID_COUNTER_KEY]).then((item) => {
+      this.#idCounter = item[ID_COUNTER_KEY] || 0;
+      console.log("idCounter", this.#idCounter);
+    });
+
+    chrome.storage.local.get([DETACHED_WINDOW_ID_KEY]).then((item) => {
+      this.#detachedWindowId = item[DETACHED_WINDOW_ID_KEY] || 0;
+      console.log("detachedWindowId", this.#detachedWindowId);
+    });
+
     chrome.windows.onRemoved.addListener((id) => {
       if (id == this.#detachedWindowId) {
         console.log("detached window closed");
@@ -138,11 +129,18 @@ export default class State {
     });
   }
 
+  private getId(): string {
+    this.#idCounter++;
+    chrome.storage.local.set({ [ID_COUNTER_KEY]: this.#idCounter });
+    return `${Date.now()}.${this.#idCounter}`;
+  }
+
   public get detachedWindowId(): number {
     return this.#detachedWindowId;
   }
 
   public set detachedWindowId(id: number) {
+    chrome.storage.local.set({ [DETACHED_WINDOW_ID_KEY]: id });
     this.#detachedWindowId = id;
   }
 
@@ -217,7 +215,7 @@ export default class State {
   //   }
 
   //   return new Promise((resolve, reject): void => {
-  //     const id = getId();
+  //     const id = this.getId();
 
   //     this.#authRequests[id] = {
   //       ...this.authComplete(id, resolve, reject),
@@ -247,7 +245,7 @@ export default class State {
 
   // public injectMetadata (url: string, request: MetadataDef): Promise<boolean> {
   //   return new Promise((resolve, reject): void => {
-  //     const id = getId();
+  //     const id = this.getId();
 
   //     this.#metaRequests[id] = {
   //       ...this.metaComplete(id, resolve, reject),
@@ -333,20 +331,20 @@ export default class State {
   //   provider.on('disconnected', () => cb(null, false));
   // }
 
-  public rpcUnsubscribe(
-    request: RequestRpcUnsubscribe,
-    port: chrome.runtime.Port
-  ): Promise<boolean> {
-    const provider = this.#injectedProviders.get(port);
+  // public rpcUnsubscribe(
+  //   request: RequestRpcUnsubscribe,
+  //   port: chrome.runtime.Port
+  // ): Promise<boolean> {
+  //   const provider = this.#injectedProviders.get(port);
 
-    assert(provider, "Cannot call pub(rpc.unsubscribe) before provider is set");
+  //   assert(provider, "Cannot call pub(rpc.unsubscribe) before provider is set");
 
-    return provider.unsubscribe(
-      request.type,
-      request.method,
-      request.subscriptionId
-    );
-  }
+  //   return provider.unsubscribe(
+  //     request.type,
+  //     request.method,
+  //     request.subscriptionId
+  //   );
+  // }
 
   // public saveMetadata (meta: MetadataDef): void {
   //   this.#metaStore.set(meta.genesisHash, meta);
@@ -354,18 +352,12 @@ export default class State {
   //   addMetadata(meta);
   // }
 
-  // public setNotification (notification: string): boolean {
-  //   this.#notification = notification;
-
-  //   return true;
-  // }
-
   public sign(
     url: string,
     request: RequestSign,
     account: AccountJson
   ): Promise<ResponseSigning> {
-    const id = getId();
+    const id = this.getId();
 
     return new Promise((resolve, reject): void => {
       this.#signRequests[id] = {
@@ -402,6 +394,18 @@ export default class State {
   }
 
   private popupOpen(): void {
+    if (this.detachedWindowId) {
+      chrome.windows.update(this.detachedWindowId, { focused: true }, (win) => {
+        if (chrome.runtime.lastError || !win) {
+          this.createDetached();
+        }
+      });
+    } else {
+      this.createDetached();
+    }
+  }
+
+  private createDetached = async () => {
     chrome.windows.getCurrent((win) => {
       chrome.windows.create(
         {
@@ -414,11 +418,11 @@ export default class State {
           top: win.top + 75,
         },
         (newWindow) => {
-          this.#detachedWindowId = newWindow.id;
+          this.detachedWindowId = newWindow.id;
         }
       );
     });
-  }
+  };
 
   // private authComplete = (
   //   id: string,
@@ -490,7 +494,6 @@ export default class State {
     reject: (error: Error) => void
   ): Resolver<ResponseSigning> => {
     const complete = (): void => {
-      console.log("signComplete.complete");
       delete this.#signRequests[id];
       this.updateIconSign(true);
     };

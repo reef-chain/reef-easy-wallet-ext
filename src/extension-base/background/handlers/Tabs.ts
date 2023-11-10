@@ -1,25 +1,27 @@
 import { checkIfDenied } from "@polkadot/phishing";
+import type { KeyringPair } from "@polkadot/keyring/types";
+import { assert, isNumber } from "@polkadot/util";
+import {
+  SingleAddress,
+  SubjectInfo,
+} from "@polkadot/ui-keyring/observable/types";
+import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
+// import type { JsonRpcResponse } from "@polkadot/rpc-provider/types";
+import type {
+  SignerPayloadJSON,
+  SignerPayloadRaw,
+} from "@polkadot/types/types";
+import keyring from "@polkadot/ui-keyring";
+
 import {
   MessageTypes,
-  RequestAuthorizeTab,
+  // RequestAuthorizeTab,
   RequestRpcSend,
   RequestTypes,
   ResponseRpcListProviders,
   ResponseTypes,
 } from "../types";
-
-import type { KeyringPair } from "@polkadot/keyring/types";
-import { assert, isNumber } from "@polkadot/util";
 import { createSubscription, unsubscribe } from "./subscriptions";
-import {
-  SingleAddress,
-  SubjectInfo,
-} from "@polkadot/ui-keyring/observable/types";
-import type { JsonRpcResponse } from "@polkadot/rpc-provider/types";
-import type {
-  SignerPayloadJSON,
-  SignerPayloadRaw,
-} from "@polkadot/types/types";
 import {
   InjectedAccount,
   InjectedMetadataKnown,
@@ -30,27 +32,16 @@ import type {
   RequestRpcSubscribe,
   ResponseSigning,
   SubscriptionMessageTypes,
-  RequestRpcUnsubscribe,
-  RequestAccountList,
+  // RequestRpcUnsubscribe,
 } from "../types";
-import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
-import { KeypairType } from "@polkadot/util-crypto/types";
 import { getSelectedAccountIndex, networkIdObservable } from "./Extension";
 import { PHISHING_PAGE_REDIRECT } from "../../defaults";
-import keyring from "@polkadot/ui-keyring";
 import RequestExtrinsicSign from "../RequestExtrinsicSign";
 import State from "./State";
 import { AvailableNetwork } from "../../../config";
 import RequestBytesSign from "../RequestBytesSign";
 
-function canDerive(type?: KeypairType): boolean {
-  return !!type && ["ed25519", "sr25519", "ecdsa", "ethereum"].includes(type);
-}
-
-function transformAccounts(
-  accounts: SubjectInfo,
-  anyType = false
-): InjectedAccount[] {
+function transformAccounts(accounts: SubjectInfo): InjectedAccount[] {
   const accs = Object.values(accounts);
 
   const filtered = accs
@@ -61,7 +52,6 @@ function transformAccounts(
         },
       }) => !isHidden
     )
-    .filter(({ type }) => (anyType ? true : canDerive(type)))
     .sort(
       (a, b) => (a.json.meta.whenCreated || 0) - (b.json.meta.whenCreated || 0)
     );
@@ -125,15 +115,15 @@ export default class Tabs {
         // return this.authorize(url, request as RequestAuthorizeTab);
         return true;
       case "pub(accounts.list)":
-        return this.accountsList(url, request as RequestAccountList);
+        return this.accountsList();
       case "pub(accounts.subscribe)":
-        return this.accountsSubscribe(url, id, port);
+        return this.accountsSubscribe(id, port);
       case "pub(bytes.sign)":
         return this.bytesSign(url, request as SignerPayloadRaw);
       case "pub(extrinsic.sign)":
         return this.extrinsicSign(url, request as SignerPayloadJSON);
       case "pub(metadata.list)":
-        return this.metadataList(url);
+        return this.metadataList();
       case "pub(metadata.provide)":
         return this.metadataProvide(url, request as MetadataDef);
       case "pub(rpc.listProviders)":
@@ -164,18 +154,11 @@ export default class Tabs {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private accountsList(
-    url: string,
-    { anyType }: RequestAccountList
-  ): InjectedAccount[] {
-    return transformAccounts(accountsObservable.subject.getValue(), anyType);
+  private accountsList(): InjectedAccount[] {
+    return transformAccounts(accountsObservable.subject.getValue());
   }
 
-  private accountsSubscribe(
-    url: string,
-    id: string,
-    port: chrome.runtime.Port
-  ): boolean {
+  private accountsSubscribe(id: string, port: chrome.runtime.Port): boolean {
     const cb = createSubscription<"pub(accounts.subscribe)">(id, port);
     const subscription = accountsObservable.subject.subscribe(
       (accounts: SubjectInfo): void => {
@@ -231,7 +214,7 @@ export default class Tabs {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private metadataList(url: string): InjectedMetadataKnown[] {
+  private metadataList(): InjectedMetadataKnown[] {
     return this.#state.knownMetadata.map(({ genesisHash, specVersion }) => ({
       genesisHash,
       specVersion,

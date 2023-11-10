@@ -8,8 +8,8 @@ export default class Accounts {
     sendRequest = _sendRequest;
   }
 
-  public get(anyType?: boolean): Promise<InjectedAccount[]> {
-    return sendRequest("pub(accounts.list)", { anyType });
+  public get(): Promise<InjectedAccount[]> {
+    return sendRequest("pub(accounts.list)");
   }
 
   public subscribe(cb: (accounts: InjectedAccount[]) => unknown): Unsubcall {

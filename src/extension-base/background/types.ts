@@ -59,7 +59,7 @@ export interface RequestSignatures {
   "pri(authorize.toggle)": [string, ResponseAuthorizeList];
   "pri(authorize.remove)": [string, ResponseAuthorizeList];
   // public/external requests, i.e. from a page
-  "pub(accounts.list)": [RequestAccountList, InjectedAccount[]];
+  "pub(accounts.list)": [null, InjectedAccount[]];
   "pub(accounts.subscribe)": [
     RequestAccountSubscribe,
     boolean,
@@ -201,10 +201,6 @@ export interface RequestAccountEdit {
 
 export interface RequestAccountForget {
   address: string;
-}
-
-export interface RequestAccountList {
-  anyType?: boolean;
 }
 
 export type RequestAccountSubscribe = null;
