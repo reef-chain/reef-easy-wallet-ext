@@ -119,7 +119,7 @@ export default class State {
   // Map of all providers exposed by the extension, they are retrievable by key
   // readonly #providers: Providers;
   readonly #signRequests: Record<string, SignRequest> = {};
-  #windows: number[] = [];
+  #detachedWindowId = 0;
 
   constructor(providers: Providers = {}) {
     // this.#providers = providers;
@@ -130,6 +130,20 @@ export default class State {
     // const authString = localStorage.getItem(AUTH_URLS_KEY) || "{}";
     // const previousAuth = JSON.parse(authString) as AuthUrls;
     // this.#authUrls = previousAuth;
+    chrome.windows.onRemoved.addListener((id) => {
+      if (id == this.#detachedWindowId) {
+        console.log("detached window closed");
+        this.#detachedWindowId = 0;
+      }
+    });
+  }
+
+  public get detachedWindowId(): number {
+    return this.#detachedWindowId;
+  }
+
+  public set detachedWindowId(id: number) {
+    this.#detachedWindowId = id;
   }
 
   public get knownMetadata(): MetadataDef[] {
@@ -382,25 +396,28 @@ export default class State {
   // }
 
   private popupClose(): void {
-    // TODO
+    if (this.#detachedWindowId) {
+      chrome.windows.remove(this.#detachedWindowId).catch(console.error);
+    }
   }
 
   private popupOpen(): void {
-    // TODO: does not seem to be possible at the moment: https://github.com/GoogleChrome/developer.chrome.com/issues/2602#issuecomment-1774740010
-    // chrome.action.setPopup({ popup: "index.html" });
-    // chrome.action.openPopup();
-    // chrome.windows.create(
-    //   {
-    //     focused: true,
-    //     type: "popup",
-    //     url: "index.html",
-    //     height: 600,
-    //     width: 400,
-    //     top: 0,
-    //     left: 0,
-    //   },
-    //   () => {}
-    // );
+    chrome.windows.getCurrent((win) => {
+      chrome.windows.create(
+        {
+          focused: true,
+          type: "popup",
+          url: "index.html?detached=true",
+          height: 600,
+          width: 400,
+          left: win.width - 500,
+          top: win.top + 75,
+        },
+        (newWindow) => {
+          this.#detachedWindowId = newWindow.id;
+        }
+      );
+    });
   }
 
   // private authComplete = (

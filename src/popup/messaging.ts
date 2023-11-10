@@ -90,6 +90,14 @@ export function sendMessage<TMessageType extends MessageTypes>(
   });
 }
 
+export async function getDetachedWindowId(): Promise<number> {
+  return sendMessage("pri(detached.window.get)", null);
+}
+
+export async function setDetachedWindowId(id: number): Promise<boolean> {
+  return sendMessage("pri(detached.window.set)", { id });
+}
+
 // Metadata
 
 // TODO

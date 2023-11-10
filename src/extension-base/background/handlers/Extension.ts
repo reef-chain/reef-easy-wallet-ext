@@ -10,6 +10,7 @@ import { Observable } from "rxjs";
 
 import {
   AccountJson,
+  DetachedWindowRequest,
   MessageTypes,
   RequestAccountCreateSuri,
   RequestAccountEdit,
@@ -126,6 +127,10 @@ export default class Extension {
     port: chrome.runtime.Port
   ): Promise<ResponseType<TMessageType>> {
     switch (type) {
+      case "pri(detached.window.get)":
+        return this.getDetachedWindowId();
+      case "pri(detached.window.set)":
+        return this.setDetachedWindowId(request as DetachedWindowRequest);
       case "pri(metadata.get)":
         return this.metadataGet(request as string);
       case "pri(accounts.create.suri)":
@@ -153,6 +158,15 @@ export default class Extension {
           `Extension.ts Unable to handle message of type ${type}`
         );
     }
+  }
+
+  private setDetachedWindowId({ id }: DetachedWindowRequest): boolean {
+    this.#state.detachedWindowId = id;
+    return true;
+  }
+
+  private getDetachedWindowId(): number {
+    return this.#state.detachedWindowId;
   }
 
   private accountsCreateSuri({

@@ -24,8 +24,10 @@ import {
 import "./popup.css";
 import {
   createAccountSuri,
+  getDetachedWindowId,
   selectAccount,
   selectNetwork,
+  setDetachedWindowId,
   subscribeAccounts,
   subscribeNetwork,
   subscribeSigningRequests,
@@ -67,7 +69,7 @@ const Popup = () => {
   const [provider, setProvider] = useState<Provider>();
 
   const queryParams = new URLSearchParams(window.location.search);
-  const loginProvider = queryParams.get("loginProvider");
+  const isDetached = queryParams.get("detached");
 
   // TODO remove this
   const createTestAccount = async () => {
@@ -81,11 +83,15 @@ const Popup = () => {
   };
 
   useEffect(() => {
-    Promise.all([
-      subscribeAccounts(onAccountsChange),
-      subscribeSigningRequests(setSignRequests),
-      subscribeNetwork(onNetworkChange),
-    ]).catch(console.error);
+    if (!isDefaultPopup || isDetached) {
+      Promise.all([
+        subscribeAccounts(onAccountsChange),
+        subscribeSigningRequests(setSignRequests),
+        subscribeNetwork(onNetworkChange),
+      ]).catch(console.error);
+    } else {
+      focusOrCreateDetached();
+    }
   }, []);
 
   useEffect(() => {
@@ -102,6 +108,45 @@ const Popup = () => {
       setState(State.ACCOUNTS);
     }
   }, [signRequests, selectedAccount]);
+
+  const isDefaultPopup = useMemo(() => {
+    return window.innerWidth <= 400;
+  }, []);
+
+  const focusOrCreateDetached = async () => {
+    const detachedWindowId = await getDetachedWindowId();
+    if (detachedWindowId) {
+      chrome.windows.update(detachedWindowId, { focused: true }, (win) => {
+        if (chrome.runtime.lastError || !win) {
+          createDetached();
+        } else {
+          window.close();
+        }
+      });
+    } else {
+      createDetached();
+    }
+  };
+
+  const createDetached = async () => {
+    chrome.windows.getCurrent((win) => {
+      chrome.windows.create(
+        {
+          focused: true,
+          type: "popup",
+          url: "index.html?detached=true",
+          height: 600,
+          width: 400,
+          left: win.width - 500,
+          top: win.top + 75,
+        },
+        (detachedWindow) => {
+          setDetachedWindowId(detachedWindow.id);
+          window.close();
+        }
+      );
+    });
+  };
 
   const onAccountsChange = (_accounts: AccountJson[]) => {
     setAccounts(_accounts);
@@ -139,15 +184,10 @@ const Popup = () => {
     }
   };
 
-  const isPopup = useMemo(() => {
-    return window.innerWidth <= 400;
-  }, []);
-
-  const openFullPage = (loginProvider?: string) => {
-    const url = `${chrome.runtime.getURL(
-      loginProvider ? `index.html?loginProvider=${loginProvider}` : "index.html"
-    )}`;
+  const openFullPage = () => {
+    const url = `${chrome.runtime.getURL("index.html")}`;
     void chrome.tabs.create({ url });
+    window.close();
   };
 
   const initWeb3Auth = async () => {
@@ -199,12 +239,6 @@ const Popup = () => {
       web3auth.configureAdapter(openloginAdapter);
 
       await web3auth.init();
-
-      if (loginProvider) {
-        setState(State.LOGIN);
-        window.history.replaceState({}, document.title, "/index.html");
-        addAccount(loginProvider, web3auth);
-      }
     } catch (err: any) {
       console.error(err);
     }
@@ -292,8 +326,6 @@ const Popup = () => {
       return null;
     }
 
-    if (isPopup) openFullPage(loginProvider);
-
     if (web3auth.connected) {
       await web3auth.logout();
     }
@@ -331,7 +363,7 @@ const Popup = () => {
         )}
 
         <div>
-          {isPopup && (
+          {isDetached && (
             <button className="md" onClick={() => openFullPage()}>
               <FontAwesomeIcon icon={faExpand as IconProp} />
             </button>

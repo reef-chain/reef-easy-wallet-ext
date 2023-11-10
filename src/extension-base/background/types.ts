@@ -27,6 +27,8 @@ import { AuthUrls } from "./handlers/State";
 // [MessageType]: [RequestType, ResponseType, SubscriptionMessageType?]
 export interface RequestSignatures {
   // private/internal requests, i.e. from a popup
+  "pri(detached.window.get)": [null, number];
+  "pri(detached.window.set)": [DetachedWindowRequest, boolean];
   "pri(metadata.approve)": [RequestMetadataApprove, boolean];
   "pri(metadata.get)": [string | null, MetadataDef | null];
   "pri(metadata.reject)": [RequestMetadataReject, boolean];
@@ -122,6 +124,10 @@ export interface TransportRequestMessage<TMessageType extends MessageTypes> {
   message: TMessageType;
   origin: "reef_ew_page" | "reef_ew_extension";
   request: RequestTypes[TMessageType];
+}
+
+export interface DetachedWindowRequest {
+  id: number;
 }
 
 export interface AuthorizeRequest {
