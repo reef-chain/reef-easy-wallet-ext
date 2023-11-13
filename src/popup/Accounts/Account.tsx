@@ -8,11 +8,16 @@ import {
 import { AccountJson } from "../../extension-base/background/types";
 import { Provider, Signer } from "@reef-chain/evm-provider";
 import { getAddress } from "@ethersproject/address";
-import { selectAccount, sendMessage } from "../messaging";
+import {
+  editAccount,
+  forgetAccount,
+  selectAccount,
+  sendMessage,
+} from "../messaging";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faCopy } from "@fortawesome/free-solid-svg-icons";
+import { faCopy, faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 import SigningKey from "../../extension-base/page/Signer";
 
 interface Props {
@@ -22,10 +27,13 @@ interface Props {
 }
 
 const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
+  const [name, setName] = useState<string>(account.name);
   const [balance, setBalance] = useState<BigInt>();
   const [evmAddress, setEvmAddress] = useState<string>();
   const [isEvmClaimed, setIsEvmClaimed] = useState<boolean>();
   const [signer, setSigner] = useState<Signer>();
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
 
   useEffect(() => {
     unsubBalance();
@@ -99,7 +107,19 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
       </div>
       <div className="content">
         <div className="name">
-          {account.name}
+          {isEditingName ? (
+            <input
+              className="text-sm text-primary rounded-md px-2 my-2"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onBlur={() => {
+                editAccount(account.address, name);
+                setIsEditingName(false);
+              }}
+            />
+          ) : (
+            account.name
+          )}
           {!isSelected && (
             <button
               className="sm"
@@ -147,6 +167,40 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
           <button className="sm" onClick={bindDefaultEvmAddress}>
             Bind
           </button>
+        )}
+      </div>
+      <div className="relative">
+        <FontAwesomeIcon
+          className="hover:cursor-pointer p-2"
+          onClick={() => setIsOptionsOpen(!isOptionsOpen)}
+          icon={faEllipsisVertical as IconProp}
+          title="Account options"
+        />
+        {isOptionsOpen && (
+          <div className="absolute right-0 p-2 bg-white text-secondary font-bold text-left rounded-lg">
+            <div className="mb-1 pb-1 border-b border-gray-300">
+              <span className="font-normal">Verifier ID:</span>{" "}
+              {(account.verifierId || "unknown") as string}
+            </div>
+            <div
+              className="mb-1 hover:cursor-pointer hover:text-primary"
+              onClick={() => {
+                setIsEditingName(true);
+                setIsOptionsOpen(false);
+              }}
+            >
+              Rename
+            </div>
+            <div
+              className="hover:cursor-pointer hover:text-primary"
+              onClick={() => {
+                forgetAccount(account.address);
+                setIsOptionsOpen(false);
+              }}
+            >
+              Forget account
+            </div>
+          </div>
         )}
       </div>
     </div>

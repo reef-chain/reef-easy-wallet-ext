@@ -113,17 +113,14 @@ export default class State {
 
     chrome.storage.local.get([ID_COUNTER_KEY]).then((item) => {
       this.#idCounter = item[ID_COUNTER_KEY] || 0;
-      console.log("idCounter", this.#idCounter);
     });
 
     chrome.storage.local.get([DETACHED_WINDOW_ID_KEY]).then((item) => {
       this.#detachedWindowId = item[DETACHED_WINDOW_ID_KEY] || 0;
-      console.log("detachedWindowId", this.#detachedWindowId);
     });
 
     chrome.windows.onRemoved.addListener((id) => {
       if (id == this.#detachedWindowId) {
-        console.log("detached window closed");
         this.#detachedWindowId = 0;
       }
     });

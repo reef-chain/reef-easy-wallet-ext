@@ -165,6 +165,13 @@ export async function createAccountSuri(
   });
 }
 
+export async function editAccount(
+  address: string,
+  name: string
+): Promise<boolean> {
+  return sendMessage("pri(accounts.edit)", { address, name });
+}
+
 export async function forgetAccount(address: string): Promise<boolean> {
   return sendMessage("pri(accounts.forget)", { address });
 }

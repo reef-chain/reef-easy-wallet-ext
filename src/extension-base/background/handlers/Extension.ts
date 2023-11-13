@@ -219,7 +219,6 @@ export default class Extension {
     );
   }
 
-  // TODO: add option to account card
   protected accountsForget({ address }: RequestAccountForget): boolean {
     keyring.forgetAccount(address);
 
