@@ -14,6 +14,7 @@ import { cryptoWaitReady } from "@polkadot/util-crypto";
 import { assert } from "@polkadot/util";
 
 import keyring from "@polkadot/ui-keyring";
+import { LocalStore } from "../extension-base/localStore";
 
 // listen to all messages and handle appropriately
 chrome.runtime.onConnect.addListener((port): void => {
@@ -42,7 +43,7 @@ cryptoWaitReady()
     console.log("crypto initialized");
 
     // load all the keyring data
-    keyring.loadAll({ type: "sr25519" });
+    keyring.loadAll({ store: new LocalStore(), type: "sr25519" });
     console.log("KEYRING LOADED ALL=", keyring.getAccounts().length);
     console.log("initialization completed");
   })
