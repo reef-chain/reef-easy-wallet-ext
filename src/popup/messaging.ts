@@ -12,6 +12,7 @@ import {
   MetadataRequest,
   RequestTypes,
   ResponseAuthorizeList,
+  ResponseSigningIsLocked,
   ResponseTypes,
   SigningRequest,
   SubscriptionMessageTypes,
@@ -206,11 +207,18 @@ export async function cancelSignRequest(id: string): Promise<boolean> {
   return sendMessage("pri(signing.cancel)", { id });
 }
 
+export async function isSignLocked(
+  id: string
+): Promise<ResponseSigningIsLocked> {
+  return sendMessage("pri(signing.isLocked)", { id });
+}
+
 export async function approveSignRequest(
   id: string,
-  password: string
+  savePass: boolean,
+  password?: string
 ): Promise<boolean> {
-  return sendMessage("pri(signing.approve)", { id, password });
+  return sendMessage("pri(signing.approve)", { id, password, savePass });
 }
 
 export async function subscribeSigningRequests(

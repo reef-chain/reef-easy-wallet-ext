@@ -1,3 +1,4 @@
+import type { KeyringPair } from "@polkadot/keyring/types";
 import type {
   SignerPayloadJSON,
   SignerPayloadRaw,
@@ -19,7 +20,9 @@ import {
   RequestNetworkSelect,
   RequestSigningApprove,
   RequestSigningCancel,
+  RequestSigningIsLocked,
   RequestTypes,
+  ResponseSigningIsLocked,
   ResponseType,
   SigningRequest,
 } from "../types";
@@ -28,6 +31,9 @@ import State from "./State";
 import { InjectedAccount, MetadataDef } from "../../../extension-inject/types";
 import { SubjectInfo } from "@polkadot/ui-keyring/observable/types";
 import { AvailableNetwork } from "../../../config";
+import { PASSWORD_EXPIRY_MS } from "../../defaults";
+
+type CachedUnlocks = Record<string, number>;
 
 const REEF_NETWORK_KEY = "selected_reef_network";
 
@@ -114,9 +120,12 @@ export function getSelectedAccountIndex(
 }
 
 export default class Extension {
+  readonly #cachedUnlocks: CachedUnlocks;
+
   readonly #state: State;
 
   constructor(state: State) {
+    this.#cachedUnlocks = {};
     this.#state = state;
   }
 
@@ -151,6 +160,8 @@ export default class Extension {
         return this.signingApprove(request as RequestSigningApprove);
       case "pri(signing.cancel)":
         return this.signingCancel(request as RequestSigningCancel);
+      case "pri(signing.isLocked)":
+        return this.signingIsLocked(request as RequestSigningIsLocked);
       case "pri(signing.requests)":
         return this.signingSubscribe(id, port);
       default:
@@ -215,6 +226,22 @@ export default class Extension {
     return true;
   }
 
+  private refreshAccountPasswordCache(pair: KeyringPair): number {
+    const { address } = pair;
+
+    const savedExpiry = this.#cachedUnlocks[address] || 0;
+    const remainingTime = savedExpiry - Date.now();
+
+    if (remainingTime < 0) {
+      this.#cachedUnlocks[address] = 0;
+      pair.lock();
+
+      return 0;
+    }
+
+    return remainingTime;
+  }
+
   protected accountsSubscribe(id: string, port: chrome.runtime.Port): boolean {
     const cb = createSubscription<"pri(accounts.subscribe)">(id, port);
     const subscription = accountsObservable.subject.subscribe(
@@ -261,7 +288,11 @@ export default class Extension {
     return true;
   }
 
-  private signingApprove({ id, password }: RequestSigningApprove): boolean {
+  private signingApprove({
+    id,
+    password,
+    savePass,
+  }: RequestSigningApprove): boolean {
     const queued = this.#state.getSignRequest(id);
 
     assert(queued, "Unable to find request");
@@ -275,8 +306,15 @@ export default class Extension {
       return false;
     }
 
+    this.refreshAccountPasswordCache(pair);
+
+    // if the keyring pair is locked, the password is needed
+    if (pair.isLocked && !password) {
+      reject(new Error("Password needed to unlock the account"));
+    }
+
     if (pair.isLocked) {
-      pair.unlock(password);
+      pair.decodePkcs8(password);
     }
 
     const { payload } = request;
@@ -300,6 +338,12 @@ export default class Extension {
 
     const result = request.sign(registry, pair);
 
+    if (savePass) {
+      this.#cachedUnlocks[pair.address] = Date.now() + PASSWORD_EXPIRY_MS;
+    } else {
+      pair.lock();
+    }
+
     resolve({
       id,
       ...result,
@@ -318,6 +362,26 @@ export default class Extension {
     reject(new Error("Cancelled"));
 
     return true;
+  }
+
+  private signingIsLocked({
+    id,
+  }: RequestSigningIsLocked): ResponseSigningIsLocked {
+    const queued = this.#state.getSignRequest(id);
+
+    assert(queued, "Unable to find request");
+
+    const address = queued.request.payload.address;
+    const pair = keyring.getPair(address);
+
+    assert(pair, "Unable to find pair");
+
+    const remainingTime = this.refreshAccountPasswordCache(pair);
+
+    return {
+      isLocked: pair.isLocked,
+      remainingTime,
+    };
   }
 
   private signingSubscribe(id: string, port: chrome.runtime.Port): boolean {

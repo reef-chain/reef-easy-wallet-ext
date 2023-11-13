@@ -48,6 +48,7 @@ export interface RequestSignatures {
   "pri(signing.cancel)": [RequestSigningCancel, boolean];
   "pri(signing.approve)": [RequestSigningApprove, boolean];
   "pri(signing.requests)": [RequestSigningSubscribe, boolean, SigningRequest[]];
+  "pri(signing.isLocked)": [RequestSigningIsLocked, ResponseSigningIsLocked];
   "pri(authorize.list)": [null, ResponseAuthorizeList];
   "pri(authorize.approve)": [RequestAuthorizeApprove, boolean];
   "pri(authorize.reject)": [RequestAuthorizeReject, boolean];
@@ -149,6 +150,10 @@ export interface SigningRequest {
   url: string;
 }
 
+export interface RequestSigningIsLocked {
+  id: string;
+}
+
 export interface RequestAccountSelect {
   address: string;
 }
@@ -222,7 +227,8 @@ export interface RequestRpcUnsubscribe {
 
 export interface RequestSigningApprove {
   id: string;
-  password: string;
+  password?: string;
+  savePass: boolean;
 }
 
 export interface RequestSigningCancel {
@@ -269,6 +275,11 @@ export type TransportResponseMessage<TMessageType extends MessageTypes> =
 export interface ResponseSigning {
   id: string;
   signature: HexString;
+}
+
+export interface ResponseSigningIsLocked {
+  isLocked: boolean;
+  remainingTime: number;
 }
 
 export type ResponseRpcListProviders = ProviderList;
