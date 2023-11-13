@@ -79,8 +79,8 @@ function renderMethod(
   return (
     <>
       <tr>
-        <td className="label">Method</td>
-        <td className="data">
+        <td>Method</td>
+        <td>
           <details>
             <summary>
               {method.section}.{method.method}
@@ -94,8 +94,8 @@ function renderMethod(
       </tr>
       {method.meta && (
         <tr>
-          <td className="label">Info</td>
-          <td className="data">
+          <td>Info</td>
+          <td>
             <details>
               <summary>
                 {method.meta.docs.map((d) => d.toString().trim()).join(" ")}

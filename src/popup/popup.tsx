@@ -29,11 +29,15 @@ import {
   selectNetwork,
   setDetachedWindowId,
   subscribeAccounts,
+  subscribeAuthorizeRequests,
+  subscribeMetadataRequests,
   subscribeNetwork,
   subscribeSigningRequests,
 } from "./messaging";
 import {
   AccountJson,
+  AuthorizeRequest,
+  MetadataRequest,
   SigningRequest,
 } from "../extension-base/background/types";
 import Signing from "./Signing";
@@ -48,11 +52,14 @@ import {
   faExpand,
   faShuffle,
 } from "@fortawesome/free-solid-svg-icons";
+import Metadata from "./Metadata";
 
 const enum State {
   ACCOUNTS,
-  SIGNING,
   LOGIN,
+  AUTH_REQUESTS,
+  META_REQUESTS,
+  SIGN_REQUESTS,
 }
 
 const Popup = () => {
@@ -60,6 +67,12 @@ const Popup = () => {
   const [state, setState] = useState<State>(State.ACCOUNTS);
   const [accounts, setAccounts] = useState<null | AccountJson[]>(null);
   const [selectedAccount, setSelectedAccount] = useState<null | AccountJson>(
+    null
+  );
+  const [authRequests, setAuthRequests] = useState<null | AuthorizeRequest[]>(
+    null
+  );
+  const [metaRequests, setMetaRequests] = useState<null | MetadataRequest[]>(
     null
   );
   const [signRequests, setSignRequests] = useState<null | SigningRequest[]>(
@@ -86,6 +99,8 @@ const Popup = () => {
     if (!isDefaultPopup || isDetached) {
       Promise.all([
         subscribeAccounts(onAccountsChange),
+        subscribeAuthorizeRequests(setAuthRequests),
+        subscribeMetadataRequests(setMetaRequests),
         subscribeSigningRequests(setSignRequests),
         subscribeNetwork(onNetworkChange),
       ]).catch(console.error);
@@ -102,12 +117,18 @@ const Popup = () => {
   }, [selectedNetwork]);
 
   useEffect(() => {
-    if (signRequests?.length && selectedAccount) {
-      setState(State.SIGNING);
+    if (!selectedAccount) {
+      setState(State.ACCOUNTS);
+    } else if (authRequests?.length) {
+      setState(State.AUTH_REQUESTS);
+    } else if (metaRequests?.length) {
+      setState(State.META_REQUESTS);
+    } else if (signRequests?.length) {
+      setState(State.SIGN_REQUESTS);
     } else {
       setState(State.ACCOUNTS);
     }
-  }, [signRequests, selectedAccount]);
+  }, [authRequests, metaRequests, signRequests, selectedAccount]);
 
   const isDefaultPopup = useMemo(() => {
     return window.innerWidth <= 400;
@@ -418,8 +439,16 @@ const Popup = () => {
             />
           ))}
 
+      {/* Pending authorization requests */}
+      {/* {state === State.AUTH_REQUESTS && (
+        <Authorize requests={authRequests} getOrRefreshAuth={getOrRefreshAuth} />
+      )} */}
+
+      {/* Pending metadata requests */}
+      {state === State.META_REQUESTS && <Metadata requests={metaRequests} />}
+
       {/* Pending signing requests */}
-      {state === State.SIGNING && (
+      {state === State.SIGN_REQUESTS && (
         <Signing requests={signRequests} getOrRefreshAuth={getOrRefreshAuth} />
       )}
 

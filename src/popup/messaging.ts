@@ -101,7 +101,6 @@ export async function setDetachedWindowId(id: number): Promise<boolean> {
 
 // Metadata
 
-// TODO
 export async function approveMetaRequest(id: string): Promise<boolean> {
   return sendMessage("pri(metadata.approve)", { id });
 }
@@ -130,19 +129,16 @@ export async function getMetadata(
   return null;
 }
 
-// TODO
 export async function rejectMetaRequest(id: string): Promise<boolean> {
   return sendMessage("pri(metadata.reject)", { id });
 }
 
-// TODO
 export async function subscribeMetadataRequests(
   cb: (accounts: MetadataRequest[]) => void
 ): Promise<boolean> {
   return sendMessage("pri(metadata.requests)", null, cb);
 }
 
-// TODO
 export async function getAllMetatdata(): Promise<MetadataDef[]> {
   return sendMessage("pri(metadata.list)");
 }

@@ -6,7 +6,7 @@ import {
   SubjectInfo,
 } from "@polkadot/ui-keyring/observable/types";
 import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
-// import type { JsonRpcResponse } from "@polkadot/rpc-provider/types";
+import type { JsonRpcResponse } from "@polkadot/rpc-provider/types";
 import type {
   SignerPayloadJSON,
   SignerPayloadRaw,
@@ -15,7 +15,7 @@ import keyring from "@polkadot/ui-keyring";
 
 import {
   MessageTypes,
-  // RequestAuthorizeTab,
+  RequestAuthorizeTab,
   RequestRpcSend,
   RequestTypes,
   ResponseRpcListProviders,
@@ -32,7 +32,7 @@ import type {
   RequestRpcSubscribe,
   ResponseSigning,
   SubscriptionMessageTypes,
-  // RequestRpcUnsubscribe,
+  RequestRpcUnsubscribe,
 } from "../types";
 import { getSelectedAccountIndex, networkIdObservable } from "./Extension";
 import { PHISHING_PAGE_REDIRECT } from "../../defaults";
@@ -209,8 +209,7 @@ export default class Tabs {
   }
 
   private metadataProvide(url: string, request: MetadataDef): Promise<boolean> {
-    // return this.#state.injectMetadata(url, request);
-    return Promise.resolve(true);
+    return this.#state.injectMetadata(url, request);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

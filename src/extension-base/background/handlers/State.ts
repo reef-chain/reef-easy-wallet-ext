@@ -2,30 +2,30 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type {
-  // JsonRpcResponse,
+  JsonRpcResponse,
   ProviderInterface,
-  // ProviderInterfaceCallback,
+  ProviderInterfaceCallback,
 } from "@polkadot/rpc-provider/types";
-// import { assert } from "@polkadot/util";
+import { assert } from "@polkadot/util";
 import { BehaviorSubject } from "rxjs";
 
 import type {
   AccountJson,
-  // AuthorizeRequest,
-  // MetadataRequest,
+  AuthorizeRequest,
+  MetadataRequest,
   RequestAuthorizeTab,
-  // RequestRpcSend,
-  // RequestRpcSubscribe,
-  // RequestRpcUnsubscribe,
+  RequestRpcSend,
+  RequestRpcSubscribe,
+  RequestRpcUnsubscribe,
   RequestSign,
-  // ResponseRpcListProviders,
+  ResponseRpcListProviders,
   ResponseSigning,
   SigningRequest,
 } from "../types";
 import { PORT_EXTENSION } from "../../defaults";
 import { MetadataDef } from "../../../extension-inject/types";
-import { knownMetadata } from "../../../extension-chains";
-// import { MetadataStore } from "../../stores";
+import { addMetadata, knownMetadata } from "../../../extension-chains";
+import { MetadataStore } from "../../stores";
 
 interface Resolver<T> {
   reject: (error: Error) => void;
@@ -49,21 +49,21 @@ export interface AuthUrlInfo {
 
 export type AuthUrls = Record<string, AuthUrlInfo>;
 
-// interface MetaRequest extends Resolver<boolean> {
-//   id: string;
-//   request: MetadataDef;
-//   url: string;
-// }
+interface MetaRequest extends Resolver<boolean> {
+  id: string;
+  request: MetadataDef;
+  url: string;
+}
 
 // List of providers passed into constructor. This is the list of providers exposed by the extension.
-type Providers = Record<
-  string,
-  {
-    meta: any; // ProviderMeta;
-    // The provider is not running at init, calling this will instantiate the provider.
-    start: () => ProviderInterface;
-  }
->;
+// type Providers = Record<
+//   string,
+//   {
+//     meta: any; // ProviderMeta;
+//     // The provider is not running at init, calling this will instantiate the provider.
+//     start: () => ProviderInterface;
+//   }
+// >;
 
 interface SignRequest extends Resolver<ResponseSigning> {
   account: AccountJson;
@@ -72,26 +72,26 @@ interface SignRequest extends Resolver<ResponseSigning> {
   url: string;
 }
 
-// const AUTH_URLS_KEY = "auth_urls";
+const AUTH_URLS_KEY = "auth_urls";
 const ID_COUNTER_KEY = "id_counter";
 const DETACHED_WINDOW_ID_KEY = "detached_window_id";
 
 export default class State {
   // public readonly authSubject: BehaviorSubject<AuthorizeRequest[]> =
   //   new BehaviorSubject<AuthorizeRequest[]>([]);
-  // public readonly metaSubject: BehaviorSubject<MetadataRequest[]> =
-  //   new BehaviorSubject<MetadataRequest[]>([]);
+  public readonly metaSubject: BehaviorSubject<MetadataRequest[]> =
+    new BehaviorSubject<MetadataRequest[]>([]);
   public readonly signSubject: BehaviorSubject<SigningRequest[]> =
     new BehaviorSubject<SigningRequest[]>([]);
   #authUrls: AuthUrls = {};
   // readonly #authRequests: Record<string, AuthRequest> = {};
-  // readonly #metaStore = new MetadataStore();
+  readonly #metaStore = new MetadataStore();
   // Map of providers currently injected in tabs
   // readonly #injectedProviders = new Map<
   //   chrome.runtime.Port,
   //   ProviderInterface
   // >();
-  // readonly #metaRequests: Record<string, MetaRequest> = {};
+  readonly #metaRequests: Record<string, MetaRequest> = {};
   // Map of all providers exposed by the extension, they are retrievable by key
   // readonly #providers: Providers = {};
   // Sign requests are not persisted, if service worker stops they are treated as cancelled by user
@@ -102,9 +102,9 @@ export default class State {
   constructor() {
     this.updateIcon();
 
-    // this.#metaStore.all((_key: string, def: MetadataDef): void => {
-    //   addMetadata(def);
-    // });
+    this.#metaStore.all((_key: string, def: MetadataDef): void => {
+      addMetadata(def);
+    });
 
     // chrome.storage.local.get([AUTH_URLS_KEY]).then((item) => {
     //   this.#authUrls = item[AUTH_URLS_KEY] || {};
@@ -149,9 +149,9 @@ export default class State {
   //   return Object.keys(this.#authRequests).length;
   // }
 
-  // public get numMetaRequests (): number {
-  //   return Object.keys(this.#metaRequests).length;
-  // }
+  public get numMetaRequests(): number {
+    return Object.keys(this.#metaRequests).length;
+  }
 
   public get numSignRequests(): number {
     return Object.keys(this.#signRequests).length;
@@ -163,11 +163,11 @@ export default class State {
   //     .map(({ id, request, url }): AuthorizeRequest => ({ id, request, url }));
   // }
 
-  // public get allMetaRequests (): MetadataRequest[] {
-  //   return Object
-  //     .values(this.#metaRequests)
-  //     .map(({ id, request, url }): MetadataRequest => ({ id, request, url }));
-  // }
+  public get allMetaRequests(): MetadataRequest[] {
+    return Object.values(this.#metaRequests).map(
+      ({ id, request, url }): MetadataRequest => ({ id, request, url })
+    );
+  }
 
   public get allSignRequests(): SigningRequest[] {
     return Object.values(this.#signRequests).map(
@@ -240,29 +240,29 @@ export default class State {
   //   return true;
   // }
 
-  // public injectMetadata (url: string, request: MetadataDef): Promise<boolean> {
-  //   return new Promise((resolve, reject): void => {
-  //     const id = this.getId();
+  public injectMetadata(url: string, request: MetadataDef): Promise<boolean> {
+    return new Promise((resolve, reject): void => {
+      const id = this.getId();
 
-  //     this.#metaRequests[id] = {
-  //       ...this.metaComplete(id, resolve, reject),
-  //       id,
-  //       request,
-  //       url
-  //     };
+      this.#metaRequests[id] = {
+        ...this.metaComplete(id, resolve, reject),
+        id,
+        request,
+        url,
+      };
 
-  //     this.updateIconMeta();
-  //     this.popupOpen();
-  //   });
-  // }
+      this.updateIconMeta();
+      this.popupOpen();
+    });
+  }
 
   // public getAuthRequest (id: string): AuthRequest {
   //   return this.#authRequests[id];
   // }
 
-  // public getMetaRequest (id: string): MetaRequest {
-  //   return this.#metaRequests[id];
-  // }
+  public getMetaRequest(id: string): MetaRequest {
+    return this.#metaRequests[id];
+  }
 
   public getSignRequest(id: string): SignRequest {
     return this.#signRequests[id];
@@ -343,11 +343,11 @@ export default class State {
   //   );
   // }
 
-  // public saveMetadata (meta: MetadataDef): void {
-  //   this.#metaStore.set(meta.genesisHash, meta);
+  public saveMetadata(meta: MetadataDef): void {
+    this.#metaStore.set(meta.genesisHash, meta);
 
-  //   addMetadata(meta);
-  // }
+    addMetadata(meta);
+  }
 
   public sign(
     url: string,
@@ -463,27 +463,27 @@ export default class State {
   //   localStorage.setItem(AUTH_URLS_KEY, JSON.stringify(this.#authUrls));
   // }
 
-  // private metaComplete = (
-  //   id: string,
-  //   resolve: (result: boolean) => void,
-  //   reject: (error: Error) => void
-  // ): Resolver<boolean> => {
-  //   const complete = (): void => {
-  //     delete this.#metaRequests[id];
-  //     this.updateIconMeta(true);
-  //   };
+  private metaComplete = (
+    id: string,
+    resolve: (result: boolean) => void,
+    reject: (error: Error) => void
+  ): Resolver<boolean> => {
+    const complete = (): void => {
+      delete this.#metaRequests[id];
+      this.updateIconMeta(true);
+    };
 
-  //   return {
-  //     reject: (error: Error): void => {
-  //       complete();
-  //       reject(error);
-  //     },
-  //     resolve: (result: boolean): void => {
-  //       complete();
-  //       resolve(result);
-  //     },
-  //   };
-  // };
+    return {
+      reject: (error: Error): void => {
+        complete();
+        reject(error);
+      },
+      resolve: (result: boolean): void => {
+        complete();
+        resolve(result);
+      },
+    };
+  };
 
   private signComplete = (
     id: string,
@@ -517,15 +517,11 @@ export default class State {
 
   private updateIcon(shouldClose?: boolean): void {
     // const authCount = this.numAuthRequests;
-    // const metaCount = this.numMetaRequests;
+    const metaCount = this.numMetaRequests;
     const signCount = this.numSignRequests;
     const text =
-      // authCount
-      //   ? "Auth"
-      //   : metaCount
-      //   ? "Meta"
-      //   :
-      signCount ? `${signCount}` : "";
+      // authCount ? "Auth" :
+      metaCount ? "Meta" : signCount ? `${signCount}` : "";
 
     chrome.action.setBadgeBackgroundColor({ color: "#A408EB" });
     chrome.action.setBadgeTextColor({ color: "#ffffff" });
@@ -541,10 +537,10 @@ export default class State {
   //   this.updateIcon(shouldClose);
   // }
 
-  // private updateIconMeta (shouldClose?: boolean): void {
-  //   this.metaSubject.next(this.allMetaRequests);
-  //   this.updateIcon(shouldClose);
-  // }
+  private updateIconMeta(shouldClose?: boolean): void {
+    this.metaSubject.next(this.allMetaRequests);
+    this.updateIcon(shouldClose);
+  }
 
   private updateIconSign(shouldClose?: boolean): void {
     this.signSubject.next(this.allSignRequests);

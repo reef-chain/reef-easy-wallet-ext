@@ -13,10 +13,13 @@ import {
   AccountJson,
   DetachedWindowRequest,
   MessageTypes,
+  MetadataRequest,
   RequestAccountCreateSuri,
   RequestAccountEdit,
   RequestAccountForget,
   RequestAccountSelect,
+  RequestMetadataApprove,
+  RequestMetadataReject,
   RequestNetworkSelect,
   RequestSigningApprove,
   RequestSigningCancel,
@@ -140,8 +143,16 @@ export default class Extension {
         return this.getDetachedWindowId();
       case "pri(detached.window.set)":
         return this.setDetachedWindowId(request as DetachedWindowRequest);
+      case "pri(metadata.approve)":
+        return this.metadataApprove(request as RequestMetadataApprove);
       case "pri(metadata.get)":
         return this.metadataGet(request as string);
+      case "pri(metadata.list)":
+        return this.metadataList();
+      case "pri(metadata.reject)":
+        return this.metadataReject(request as RequestMetadataReject);
+      case "pri(metadata.requests)":
+        return this.metadataSubscribe(id, port);
       case "pri(accounts.create.suri)":
         return this.accountsCreateSuri(request as RequestAccountCreateSuri);
       case "pri(accounts.edit)":
@@ -211,12 +222,56 @@ export default class Extension {
     return true;
   }
 
+  private metadataApprove({ id }: RequestMetadataApprove): boolean {
+    const queued = this.#state.getMetaRequest(id);
+
+    assert(queued, "Unable to find request");
+
+    const { request, resolve } = queued;
+
+    this.#state.saveMetadata(request);
+
+    resolve(true);
+
+    return true;
+  }
+
   private metadataGet(genesisHash: string | null): MetadataDef | null {
     return (
       this.#state.knownMetadata.find(
         (result) => result.genesisHash === genesisHash
       ) || null
     );
+  }
+
+  private metadataList(): MetadataDef[] {
+    return this.#state.knownMetadata;
+  }
+
+  private metadataReject({ id }: RequestMetadataReject): boolean {
+    const queued = this.#state.getMetaRequest(id);
+
+    assert(queued, "Unable to find request");
+
+    const { reject } = queued;
+
+    reject(new Error("Rejected"));
+
+    return true;
+  }
+
+  private metadataSubscribe(id: string, port: chrome.runtime.Port): boolean {
+    const cb = createSubscription<"pri(metadata.requests)">(id, port);
+    const subscription = this.#state.metaSubject.subscribe(
+      (requests: MetadataRequest[]): void => cb(requests)
+    );
+
+    port.onDisconnect.addListener((): void => {
+      unsubscribe(id);
+      subscription.unsubscribe();
+    });
+
+    return true;
   }
 
   protected accountsForget({ address }: RequestAccountForget): boolean {

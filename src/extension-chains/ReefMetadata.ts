@@ -235,3 +235,9 @@ export const reefMetadataTestnet: MetadataDef = {
     },
   },
 };
+
+const reefMetadataMainnet: MetadataDef = reefMetadataTestnet;
+reefMetadataMainnet.chain = "Reef Mainnet";
+reefMetadataMainnet.genesisHash =
+  "0x7834781d38e4798d548e34ec947d19deea29df148a7bf32484b7b24dacf8d4b7";
+export { reefMetadataMainnet };

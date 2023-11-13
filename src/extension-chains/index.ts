@@ -6,13 +6,14 @@ import type { MetadataDef } from "../extension-inject/types";
 import type { Chain } from "./types";
 
 import { Metadata, TypeRegistry } from "@polkadot/types";
-import { reefMetadataTestnet } from "./ReefMetadata";
+import { reefMetadataMainnet, reefMetadataTestnet } from "./ReefMetadata";
 
 // imports chain details, generally metadata. For the generation of these,
 // inside the api, run `yarn chain:info --ws <url>`
 
 const definitions = new Map<string, MetadataDef>();
 definitions.set(reefMetadataTestnet.genesisHash, reefMetadataTestnet);
+definitions.set(reefMetadataMainnet.genesisHash, reefMetadataMainnet);
 
 const expanded = new Map<string, Chain>();
 
