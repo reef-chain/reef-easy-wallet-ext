@@ -22,13 +22,10 @@ import { Chain } from "../extension-chains/types";
 import { Message } from "../extension-base/types";
 import { getSavedMeta, setSavedMeta } from "./MetadataCache";
 import { AvailableNetwork } from "../config";
-import { MetadataDef } from "../extension-inject/types";
 
 interface Handler {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   resolve: (data: any) => void;
   reject: (error: Error) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subscriber?: (data: any) => void;
 }
 
@@ -44,7 +41,6 @@ port.onMessage.addListener((data: Message["data"]): void => {
 
   if (!handler) {
     console.error(`Unknown response: ${JSON.stringify(data)}`);
-
     return;
   }
 
@@ -139,10 +135,6 @@ export async function subscribeMetadataRequests(
   return sendMessage("pri(metadata.requests)", null, cb);
 }
 
-export async function getAllMetatdata(): Promise<MetadataDef[]> {
-  return sendMessage("pri(metadata.list)");
-}
-
 // Accounts
 
 export async function createAccountSuri(
@@ -233,7 +225,6 @@ export async function subscribeSigningRequests(
 }
 
 // Authorize
-// TODO
 
 export async function getAuthList(): Promise<ResponseAuthorizeList> {
   return sendMessage("pri(authorize.list)");

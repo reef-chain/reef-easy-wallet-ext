@@ -6,16 +6,15 @@ import type {
   ProviderInterfaceEmitted,
 } from "@polkadot/rpc-provider/types";
 import type { AnyFunction } from "@polkadot/types/types";
-import type { SendRequest } from "./types";
-
+import { isUndefined, logger } from "@polkadot/util";
 import EventEmitter from "eventemitter3";
+
+import type { SendRequest } from "./types";
 import {
   InjectedProvider,
   ProviderList,
   ProviderMeta,
 } from "../../extension-inject/types";
-
-import { isUndefined, logger } from "@polkadot/util";
 
 const l = logger("PostMessageProvider");
 
@@ -116,16 +115,11 @@ export default class PostMessageProvider implements InjectedProvider {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public async send(
     method: string,
     params: unknown[],
-    isCacheable?: boolean
+    _isCacheable?: boolean
   ): Promise<any> {
-    if (isCacheable) {
-      // TODO: implement caching
-    }
-
     return sendRequest("pub(rpc.send)", { method, params });
   }
 

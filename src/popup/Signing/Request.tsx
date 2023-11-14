@@ -14,7 +14,6 @@ import {
   AccountJson,
   RequestSign,
 } from "../../extension-base/background/types";
-
 import Bytes from "./Bytes";
 import Extrinsic from "./Extrinsic";
 import {

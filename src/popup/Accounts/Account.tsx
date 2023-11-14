@@ -81,7 +81,6 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
   };
 
   const bindDefaultEvmAddress = async () => {
-    // TODO handle error, update UI (claimed/not claimed)
     signer
       .claimDefaultAccount()
       .then((response) => {
@@ -89,6 +88,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
       })
       .catch((error) => {
         console.log("evm bind error", error);
+        alert("Failed to bind EVM address");
       });
   };
 

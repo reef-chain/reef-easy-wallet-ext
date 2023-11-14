@@ -105,15 +105,12 @@ export default class Tabs {
     }
 
     if (type !== "pub(authorize.tab)") {
-      // TODO
-      //   this.#state.ensureUrlAuthorized(url);
+      this.#state.ensureUrlAuthorized(url);
     }
 
     switch (type) {
       case "pub(authorize.tab)":
-        // TODO
-        // return this.authorize(url, request as RequestAuthorizeTab);
-        return true;
+        return this.authorize(url, request as RequestAuthorizeTab);
       case "pub(accounts.list)":
         return this.accountsList();
       case "pub(accounts.subscribe)":
@@ -151,6 +148,13 @@ export default class Tabs {
     });
 
     return true;
+  }
+
+  private authorize(
+    url: string,
+    request: RequestAuthorizeTab
+  ): Promise<boolean> {
+    return this.#state.authorizeUrl(url, request);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -221,30 +225,21 @@ export default class Tabs {
   }
 
   private rpcListProviders(): Promise<ResponseRpcListProviders> {
-    //   return this.#state.rpcListProviders();
-    return Promise.resolve(null);
+    return this.#state.rpcListProviders();
   }
-
-  // private rpcSend(
-  //   request: RequestRpcSend,
-  //   port: chrome.runtime.Port
-  // ): Promise<JsonRpcResponse> {
-  //   return this.#state.rpcSend(request, port);
-  // }
 
   private rpcSend(
     request: RequestRpcSend,
     port: chrome.runtime.Port
-  ): Promise<null> {
-    return Promise.resolve(null);
+  ): Promise<JsonRpcResponse<any>> {
+    return this.#state.rpcSend(request, port);
   }
 
   private rpcStartProvider(
     key: string,
     port: chrome.runtime.Port
   ): Promise<ProviderMeta> {
-    // return this.#state.rpcStartProvider(key, port);
-    return Promise.resolve(null);
+    return this.#state.rpcStartProvider(key, port);
   }
 
   private async rpcSubscribe(
@@ -257,14 +252,14 @@ export default class Tabs {
       _error: Error | null,
       data: SubscriptionMessageTypes["pub(rpc.subscribe)"]
     ): void => innerCb(data);
-    // const subscriptionId = await this.#state.rpcSubscribe(request, cb, port);
+    const subscriptionId = await this.#state.rpcSubscribe(request, cb, port);
 
-    // port.onDisconnect.addListener((): void => {
-    //   unsubscribe(id);
-    //   this.rpcUnsubscribe({ ...request, subscriptionId }, port).catch(
-    //     console.error
-    //   );
-    // });
+    port.onDisconnect.addListener((): void => {
+      unsubscribe(id);
+      this.rpcUnsubscribe({ ...request, subscriptionId }, port).catch(
+        console.error
+      );
+    });
 
     return true;
   }
@@ -280,7 +275,7 @@ export default class Tabs {
       data: SubscriptionMessageTypes["pub(rpc.subscribeConnected)"]
     ): void => innerCb(data);
 
-    // this.#state.rpcSubscribeConnected(request, cb, port);
+    this.#state.rpcSubscribeConnected(request, cb, port);
 
     port.onDisconnect.addListener((): void => {
       unsubscribe(id);
@@ -289,12 +284,12 @@ export default class Tabs {
     return Promise.resolve(true);
   }
 
-  // private async rpcUnsubscribe(
-  //   request: RequestRpcUnsubscribe,
-  //   port: chrome.runtime.Port
-  // ): Promise<boolean> {
-  //   return this.#state.rpcUnsubscribe(request, port);
-  // }
+  private async rpcUnsubscribe(
+    request: RequestRpcUnsubscribe,
+    port: chrome.runtime.Port
+  ): Promise<boolean> {
+    return this.#state.rpcUnsubscribe(request, port);
+  }
 
   private redirectPhishingLanding(phishingWebsite: string): void {
     const nonFragment = phishingWebsite.split("#")[0];

@@ -10,10 +10,10 @@ interface Props {
   requests: MetadataRequest[];
 }
 
-const Metadata = ({ requests }: Props): JSX.Element => {
+export const Metadata = ({ requests }: Props): JSX.Element => {
   return requests?.length ? (
     <>
-      <div className="mb-4">
+      <div className="my-4">
         <span className="text-lg">Metadata</span>
       </div>
       <Request
@@ -27,5 +27,3 @@ const Metadata = ({ requests }: Props): JSX.Element => {
     <span>Loading...</span>
   );
 };
-
-export default Metadata;

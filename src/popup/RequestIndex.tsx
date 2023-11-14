@@ -6,8 +6,6 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
   faArrowAltCircleLeft,
   faArrowAltCircleRight,
-  faArrowLeft,
-  faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
@@ -19,7 +17,7 @@ interface Props {
   onPreviousClick: () => void;
 }
 
-function TransactionIndex({
+function RequestIndex({
   index,
   onNextClick,
   onPreviousClick,
@@ -62,4 +60,4 @@ function TransactionIndex({
   );
 }
 
-export default TransactionIndex;
+export default RequestIndex;

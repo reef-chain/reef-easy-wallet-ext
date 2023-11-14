@@ -4,13 +4,15 @@ import type {
   SignerPayloadRaw,
 } from "@polkadot/types/types";
 import keyring from "@polkadot/ui-keyring";
+import { SubjectInfo } from "@polkadot/ui-keyring/observable/types";
+import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
 import { assert } from "@polkadot/util";
 import { TypeRegistry } from "@polkadot/types";
-import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
 import { Observable } from "rxjs";
 
 import {
   AccountJson,
+  AuthorizeRequest,
   DetachedWindowRequest,
   MessageTypes,
   MetadataRequest,
@@ -18,6 +20,8 @@ import {
   RequestAccountEdit,
   RequestAccountForget,
   RequestAccountSelect,
+  RequestAuthorizeApprove,
+  RequestAuthorizeReject,
   RequestMetadataApprove,
   RequestMetadataReject,
   RequestNetworkSelect,
@@ -25,6 +29,7 @@ import {
   RequestSigningCancel,
   RequestSigningIsLocked,
   RequestTypes,
+  ResponseAuthorizeList,
   ResponseSigningIsLocked,
   ResponseType,
   SigningRequest,
@@ -32,7 +37,6 @@ import {
 import { createSubscription, unsubscribe } from "./subscriptions";
 import State from "./State";
 import { InjectedAccount, MetadataDef } from "../../../extension-inject/types";
-import { SubjectInfo } from "@polkadot/ui-keyring/observable/types";
 import { AvailableNetwork } from "../../../config";
 import { PASSWORD_EXPIRY_MS } from "../../defaults";
 
@@ -153,6 +157,18 @@ export default class Extension {
         return this.metadataReject(request as RequestMetadataReject);
       case "pri(metadata.requests)":
         return this.metadataSubscribe(id, port);
+      case "pri(authorize.approve)":
+        return this.authorizeApprove(request as RequestAuthorizeApprove);
+      case "pri(authorize.list)":
+        return this.getAuthList();
+      case "pri(authorize.reject)":
+        return this.authorizeReject(request as RequestAuthorizeReject);
+      case "pri(authorize.toggle)":
+        return this.toggleAuthorization(request as string);
+      case "pri(authorize.remove)":
+        return this.removeAuthorization(request as string);
+      case "pri(authorize.requests)":
+        return this.authorizeSubscribe(id, port);
       case "pri(accounts.create.suri)":
         return this.accountsCreateSuri(request as RequestAccountCreateSuri);
       case "pri(accounts.edit)":
@@ -220,6 +236,56 @@ export default class Extension {
 
     keyring.saveAccountMeta(pair, { ...pair.meta, name });
     return true;
+  }
+
+  private authorizeApprove({ id }: RequestAuthorizeApprove): boolean {
+    const queued = this.#state.getAuthRequest(id);
+
+    assert(queued, "Unable to find request");
+
+    const { resolve } = queued;
+
+    resolve(true);
+
+    return true;
+  }
+
+  private getAuthList(): ResponseAuthorizeList {
+    return { list: this.#state.authUrls };
+  }
+
+  private authorizeReject({ id }: RequestAuthorizeReject): boolean {
+    const queued = this.#state.getAuthRequest(id);
+
+    assert(queued, "Unable to find request");
+
+    const { reject } = queued;
+
+    reject(new Error("Rejected"));
+
+    return true;
+  }
+
+  private toggleAuthorization(url: string): ResponseAuthorizeList {
+    return { list: this.#state.toggleAuthorization(url) };
+  }
+
+  private authorizeSubscribe(id: string, port: chrome.runtime.Port): boolean {
+    const cb = createSubscription<"pri(authorize.requests)">(id, port);
+    const subscription = this.#state.authSubject.subscribe(
+      (requests: AuthorizeRequest[]): void => cb(requests)
+    );
+
+    port.onDisconnect.addListener((): void => {
+      unsubscribe(id);
+      subscription.unsubscribe();
+    });
+
+    return true;
+  }
+
+  private removeAuthorization(url: string): ResponseAuthorizeList {
+    return { list: this.#state.removeAuthorization(url) };
   }
 
   private metadataApprove({ id }: RequestMetadataApprove): boolean {

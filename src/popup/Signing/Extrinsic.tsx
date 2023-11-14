@@ -69,42 +69,48 @@ function renderMethod(
 ): React.ReactNode {
   if (!args || !method) {
     return (
-      <tr>
-        <td className="label">Method data</td>
-        <td className="data">{data}</td>
-      </tr>
+      <table className="flex">
+        <tbody>
+          <tr>
+            <td>Method data</td>
+            <td className="pl-4">{data}</td>
+          </tr>
+        </tbody>
+      </table>
     );
   }
 
   return (
-    <>
-      <tr>
-        <td>Method</td>
-        <td>
-          <details>
-            <summary>
-              {method.section}.{method.method}
-              {method.meta
-                ? `(${method.meta.args.map(({ name }) => name).join(", ")})`
-                : ""}
-            </summary>
-            <pre>{JSON.stringify(args, null, 2)}</pre>
-          </details>
-        </td>
-      </tr>
-      {method.meta && (
+    <table className="flex">
+      <tbody>
         <tr>
-          <td>Info</td>
-          <td>
+          <td>Method</td>
+          <td className="pl-4">
             <details>
               <summary>
-                {method.meta.docs.map((d) => d.toString().trim()).join(" ")}
+                {method.section}.{method.method}
+                {method.meta
+                  ? `(${method.meta.args.map(({ name }) => name).join(", ")})`
+                  : ""}
               </summary>
+              <pre>{JSON.stringify(args, null, 2)}</pre>
             </details>
           </td>
         </tr>
-      )}
-    </>
+        {method.meta && (
+          <tr>
+            <td>Info</td>
+            <td className="pl-4">
+              <details>
+                <summary>
+                  {method.meta.docs.map((d) => d.toString().trim()).join(" ")}
+                </summary>
+              </details>
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
   );
 }
 
@@ -137,34 +143,34 @@ function Extrinsic({
   );
 
   return (
-    <table>
+    <table className="flex">
       <tbody>
         <tr>
-          <td className="label">From</td>
-          <td className="data">{url}</td>
+          <td>From</td>
+          <td className="pl-4">{url}</td>
         </tr>
         <tr>
-          <td className="label">{chain ? "Chain" : "Genesis"}</td>
-          <td className="data">{chain ? chain.name : genesisHash}</td>
+          <td>{chain ? "Chain" : "Genesis"}</td>
+          <td className="pl-4">{chain ? chain.name : genesisHash}</td>
         </tr>
         <tr>
-          <td className="label">Version</td>
-          <td className="data">{specVersion.toNumber()}</td>
+          <td>Version</td>
+          <td className="pl-4">{specVersion.toNumber()}</td>
         </tr>
         <tr>
-          <td className="label">Nonce</td>
-          <td className="data">{formatNumber(nonce)}</td>
+          <td>Nonce</td>
+          <td className="pl-4">{formatNumber(nonce)}</td>
         </tr>
         {!tip.isEmpty && (
           <tr>
-            <td className="label">Tip</td>
-            <td className="data">{formatNumber(tip)}</td>
+            <td>Tip</td>
+            <td className="pl-4">{formatNumber(tip)}</td>
           </tr>
         )}
         {renderMethod(method, decoded)}
         <tr>
-          <td className="label">Lifetime</td>
-          <td className="data">{mortalityAsString(era, blockNumber)}</td>
+          <td>Lifetime</td>
+          <td className="pl-4">{mortalityAsString(era, blockNumber)}</td>
         </tr>
       </tbody>
     </table>

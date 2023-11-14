@@ -27,3 +27,17 @@ export const toReefAmount = (amount: BigInt, decimals = 0): string => {
   const reefUnits = formatFixed(amount ? amount.toString() : "0", 18);
   return parseFloat(reefUnits).toFixed(decimals);
 };
+
+export const createPopupData = (
+  win: chrome.windows.Window
+): chrome.windows.CreateData => {
+  return {
+    focused: true,
+    type: "popup",
+    url: "index.html?detached=true",
+    height: 600,
+    width: 400,
+    left: win.width - 500,
+    top: win.top + 75,
+  };
+};

@@ -1,5 +1,4 @@
-import React, { useMemo } from "react";
-import { useEffect, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { Web3AuthNoModal } from "@web3auth/no-modal";
 import {
   OpenloginAdapter,
@@ -12,6 +11,18 @@ import {
   WALLET_ADAPTERS,
 } from "@web3auth/base";
 import { CommonPrivateKeyProvider } from "@web3auth/base-provider";
+import { Provider } from "@reef-chain/evm-provider";
+import { Keyring, WsProvider } from "@polkadot/api";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCirclePlus,
+  faCircleXmark,
+  faExpand,
+  faShuffle,
+  faTasks,
+} from "@fortawesome/free-solid-svg-icons";
+
 import {
   AvailableNetwork,
   CLIENT_ID,
@@ -21,7 +32,6 @@ import {
   reefNetworks,
   WEB3_AUTH_NETWORK,
 } from "../config";
-import "./popup.css";
 import {
   createAccountSuri,
   getDetachedWindowId,
@@ -40,19 +50,13 @@ import {
   MetadataRequest,
   SigningRequest,
 } from "../extension-base/background/types";
-import Signing from "./Signing";
-import { Provider } from "@reef-chain/evm-provider";
-import { Keyring, WsProvider } from "@polkadot/api";
 import Account from "./Accounts/Account";
-import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCirclePlus,
-  faCircleXmark,
-  faExpand,
-  faShuffle,
-} from "@fortawesome/free-solid-svg-icons";
-import Metadata from "./Metadata";
+import { Signing } from "./Signing";
+import { Metadata } from "./Metadata";
+import { Authorize } from "./Authorize";
+import { AuthManagement } from "./AuthManagement";
+import { createPopupData } from "./util";
+import "./popup.css";
 
 const enum State {
   ACCOUNTS,
@@ -60,6 +64,7 @@ const enum State {
   AUTH_REQUESTS,
   META_REQUESTS,
   SIGN_REQUESTS,
+  AUTH_MANAGEMENT,
 }
 
 const Popup = () => {
@@ -84,17 +89,6 @@ const Popup = () => {
   const queryParams = new URLSearchParams(window.location.search);
   const isDetached = queryParams.get("detached");
 
-  // TODO remove this
-  const createTestAccount = async () => {
-    await createAccountSuri(
-      "a4ce9e364fb071117480f8b49c3f26133771e29ac9520f551fb1c14a92709b8d",
-      "Dummy",
-      "google",
-      "dummy@test.com",
-      null
-    );
-  };
-
   useEffect(() => {
     if (!isDefaultPopup || isDetached) {
       Promise.all([
@@ -110,7 +104,6 @@ const Popup = () => {
   }, []);
 
   useEffect(() => {
-    // TODO: why is it required to init w3a here?
     if (selectedNetwork && !web3auth) {
       initWeb3Auth();
     }
@@ -151,21 +144,10 @@ const Popup = () => {
 
   const createDetached = async () => {
     chrome.windows.getCurrent((win) => {
-      chrome.windows.create(
-        {
-          focused: true,
-          type: "popup",
-          url: "index.html?detached=true",
-          height: 600,
-          width: 400,
-          left: win.width - 500,
-          top: win.top + 75,
-        },
-        (detachedWindow) => {
-          setDetachedWindowId(detachedWindow.id);
-          window.close();
-        }
-      );
+      chrome.windows.create(createPopupData(win), (detachedWindow) => {
+        setDetachedWindowId(detachedWindow.id);
+        window.close();
+      });
     });
   };
 
@@ -175,7 +157,6 @@ const Popup = () => {
 
     if (!_accounts?.length) {
       setSelectedAccount(null);
-      createTestAccount(); // TODO remove this
       return;
     }
 
@@ -390,11 +371,19 @@ const Popup = () => {
             </button>
           )}
           {state === State.ACCOUNTS && (
-            <button className="md" onClick={() => setState(State.LOGIN)}>
-              <FontAwesomeIcon icon={faCirclePlus as IconProp} />
-            </button>
+            <>
+              <button
+                className="md"
+                onClick={() => setState(State.AUTH_MANAGEMENT)}
+              >
+                <FontAwesomeIcon icon={faTasks as IconProp} />
+              </button>
+              <button className="md" onClick={() => setState(State.LOGIN)}>
+                <FontAwesomeIcon icon={faCirclePlus as IconProp} />
+              </button>
+            </>
           )}
-          {state === State.LOGIN && (
+          {(state === State.AUTH_MANAGEMENT || state === State.LOGIN) && (
             <button className="md" onClick={() => setState(State.ACCOUNTS)}>
               <FontAwesomeIcon icon={faCircleXmark as IconProp} />
             </button>
@@ -417,13 +406,15 @@ const Popup = () => {
       )}
 
       {/* Selected account */}
-      {state !== State.LOGIN && selectedAccount && provider && (
-        <Account
-          account={selectedAccount}
-          provider={provider}
-          isSelected={true}
-        />
-      )}
+      {(state === State.ACCOUNTS || state === State.SIGN_REQUESTS) &&
+        selectedAccount &&
+        provider && (
+          <Account
+            account={selectedAccount}
+            provider={provider}
+            isSelected={true}
+          />
+        )}
 
       {/* Other accounts */}
       {state === State.ACCOUNTS &&
@@ -440,9 +431,7 @@ const Popup = () => {
           ))}
 
       {/* Pending authorization requests */}
-      {/* {state === State.AUTH_REQUESTS && (
-        <Authorize requests={authRequests} getOrRefreshAuth={getOrRefreshAuth} />
-      )} */}
+      {state === State.AUTH_REQUESTS && <Authorize requests={authRequests} />}
 
       {/* Pending metadata requests */}
       {state === State.META_REQUESTS && <Metadata requests={metaRequests} />}
@@ -451,6 +440,9 @@ const Popup = () => {
       {state === State.SIGN_REQUESTS && (
         <Signing requests={signRequests} getOrRefreshAuth={getOrRefreshAuth} />
       )}
+
+      {/* Auth management */}
+      {state === State.AUTH_MANAGEMENT && <AuthManagement />}
 
       {/* Login */}
       {state === State.LOGIN && (

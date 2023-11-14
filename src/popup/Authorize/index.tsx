@@ -2,20 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import React, { useCallback, useEffect, useState } from "react";
-import type { SignerPayloadJSON } from "@polkadot/types/types";
 
-import { SigningRequest } from "../../extension-base/background/types";
-import Request from "./Request";
 import RequestIndex from "../RequestIndex";
+import Request from "./Request";
+import { AuthorizeRequest } from "../../extension-base/background/types";
 
 interface Props {
-  requests: SigningRequest[];
-  getOrRefreshAuth: () => Promise<string | null>;
+  requests: AuthorizeRequest[];
 }
 
-export const Signing = ({ requests, getOrRefreshAuth }: Props): JSX.Element => {
+export const Authorize = ({ requests }: Props): JSX.Element => {
   const [requestIndex, setRequestIndex] = useState(0);
-  const [isTransaction, setIsTransaction] = useState(false);
 
   const _onNextClick = useCallback(
     () => setRequestIndex((requestIndex) => requestIndex + 1),
@@ -33,19 +30,10 @@ export const Signing = ({ requests, getOrRefreshAuth }: Props): JSX.Element => {
     );
   }, [requests]);
 
-  useEffect(() => {
-    const isTransaction = !!(
-      requests[requestIndex]?.request?.payload as SignerPayloadJSON
-    )?.blockNumber;
-    setIsTransaction(isTransaction);
-  }, [requestIndex]);
-
   return requests.length && requests[requestIndex] ? (
     <>
-      <div className="mb-4">
-        <span className="text-lg">
-          {isTransaction ? "Transaction" : "Sign message"}
-        </span>
+      <div className="my-4">
+        <span className="text-lg">Authorize</span>
         {requests.length > 1 && (
           <RequestIndex
             index={requestIndex}
@@ -56,13 +44,10 @@ export const Signing = ({ requests, getOrRefreshAuth }: Props): JSX.Element => {
         )}
       </div>
       <Request
-        account={requests[requestIndex].account}
-        buttonText={isTransaction ? "Sign the transaction" : "Sign the message"}
-        isFirst={requestIndex === 0}
+        authId={requests[requestIndex].id}
         request={requests[requestIndex].request}
-        signId={requests[requestIndex].id}
+        key={requests[requestIndex].id}
         url={requests[requestIndex].url}
-        getOrRefreshAuth={getOrRefreshAuth}
       />
     </>
   ) : (

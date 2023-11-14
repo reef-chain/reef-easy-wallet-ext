@@ -23,9 +23,10 @@ import type {
   SigningRequest,
 } from "../types";
 import { PORT_EXTENSION } from "../../defaults";
-import { MetadataDef } from "../../../extension-inject/types";
+import { MetadataDef, ProviderMeta } from "../../../extension-inject/types";
 import { addMetadata, knownMetadata } from "../../../extension-chains";
 import { MetadataStore } from "../../stores";
+import { createPopupData } from "../../../popup/util";
 
 interface Resolver<T> {
   reject: (error: Error) => void;
@@ -56,14 +57,14 @@ interface MetaRequest extends Resolver<boolean> {
 }
 
 // List of providers passed into constructor. This is the list of providers exposed by the extension.
-// type Providers = Record<
-//   string,
-//   {
-//     meta: any; // ProviderMeta;
-//     // The provider is not running at init, calling this will instantiate the provider.
-//     start: () => ProviderInterface;
-//   }
-// >;
+type Providers = Record<
+  string,
+  {
+    meta: any; // ProviderMeta;
+    // The provider is not running at init, calling this will instantiate the provider.
+    start: () => ProviderInterface;
+  }
+>;
 
 interface SignRequest extends Resolver<ResponseSigning> {
   account: AccountJson;
@@ -77,23 +78,23 @@ const ID_COUNTER_KEY = "id_counter";
 const DETACHED_WINDOW_ID_KEY = "detached_window_id";
 
 export default class State {
-  // public readonly authSubject: BehaviorSubject<AuthorizeRequest[]> =
-  //   new BehaviorSubject<AuthorizeRequest[]>([]);
+  public readonly authSubject: BehaviorSubject<AuthorizeRequest[]> =
+    new BehaviorSubject<AuthorizeRequest[]>([]);
   public readonly metaSubject: BehaviorSubject<MetadataRequest[]> =
     new BehaviorSubject<MetadataRequest[]>([]);
   public readonly signSubject: BehaviorSubject<SigningRequest[]> =
     new BehaviorSubject<SigningRequest[]>([]);
   #authUrls: AuthUrls = {};
-  // readonly #authRequests: Record<string, AuthRequest> = {};
+  readonly #authRequests: Record<string, AuthRequest> = {};
   readonly #metaStore = new MetadataStore();
   // Map of providers currently injected in tabs
-  // readonly #injectedProviders = new Map<
-  //   chrome.runtime.Port,
-  //   ProviderInterface
-  // >();
+  readonly #injectedProviders = new Map<
+    chrome.runtime.Port,
+    ProviderInterface
+  >();
   readonly #metaRequests: Record<string, MetaRequest> = {};
   // Map of all providers exposed by the extension, they are retrievable by key
-  // readonly #providers: Providers = {};
+  readonly #providers: Providers = {};
   // Sign requests are not persisted, if service worker stops they are treated as cancelled by user
   readonly #signRequests: Record<string, SignRequest> = {};
   #detachedWindowId = 0;
@@ -106,10 +107,9 @@ export default class State {
       addMetadata(def);
     });
 
-    // chrome.storage.local.get([AUTH_URLS_KEY]).then((item) => {
-    //   this.#authUrls = item[AUTH_URLS_KEY] || {};
-    //   console.log("authUrls", this.#authUrls);
-    // });
+    chrome.storage.local.get([AUTH_URLS_KEY]).then((item) => {
+      this.#authUrls = item[AUTH_URLS_KEY] || {};
+    });
 
     chrome.storage.local.get([ID_COUNTER_KEY]).then((item) => {
       this.#idCounter = item[ID_COUNTER_KEY] || 0;
@@ -145,9 +145,9 @@ export default class State {
     return knownMetadata();
   }
 
-  // public get numAuthRequests (): number {
-  //   return Object.keys(this.#authRequests).length;
-  // }
+  public get numAuthRequests(): number {
+    return Object.keys(this.#authRequests).length;
+  }
 
   public get numMetaRequests(): number {
     return Object.keys(this.#metaRequests).length;
@@ -157,11 +157,11 @@ export default class State {
     return Object.keys(this.#signRequests).length;
   }
 
-  // public get allAuthRequests (): AuthorizeRequest[] {
-  //   return Object
-  //     .values(this.#authRequests)
-  //     .map(({ id, request, url }): AuthorizeRequest => ({ id, request, url }));
-  // }
+  public get allAuthRequests(): AuthorizeRequest[] {
+    return Object.values(this.#authRequests).map(
+      ({ id, request, url }): AuthorizeRequest => ({ id, request, url })
+    );
+  }
 
   public get allMetaRequests(): MetadataRequest[] {
     return Object.values(this.#metaRequests).map(
@@ -180,65 +180,78 @@ export default class State {
     );
   }
 
-  // public get authUrls (): AuthUrls {
-  //   return this.#authUrls;
-  // }
+  public get authUrls(): AuthUrls {
+    return this.#authUrls;
+  }
 
-  // public toggleAuthorization (url: string): AuthUrls {
-  //   const entry = this.#authUrls[url];
+  public toggleAuthorization(url: string): AuthUrls {
+    const entry = this.#authUrls[url];
 
-  //   assert(entry, `The source ${url} is not known`);
+    assert(entry, `The source ${url} is not known`);
 
-  //   this.#authUrls[url].isAllowed = !entry.isAllowed;
-  //   this.saveCurrentAuthList();
+    this.#authUrls[url].isAllowed = !entry.isAllowed;
+    this.saveCurrentAuthList();
 
-  //   return this.#authUrls;
-  // }
+    return this.#authUrls;
+  }
 
-  // public async authorizeUrl (url: string, request: RequestAuthorizeTab): Promise<boolean> {
-  //   const idStr = this.stripUrl(url);
+  public async authorizeUrl(
+    url: string,
+    request: RequestAuthorizeTab
+  ): Promise<boolean> {
+    const idStr = this.stripUrl(url);
 
-  //   // Do not enqueue duplicate authorization requests.
-  //   const isDuplicate = Object.values(this.#authRequests)
-  //     .some((request) => request.idStr === idStr);
+    // Do not enqueue duplicate authorization requests.
+    const isDuplicate = Object.values(this.#authRequests).some(
+      (request) => request.idStr === idStr
+    );
 
-  //   assert(!isDuplicate, `The source ${url} has a pending authorization request`);
+    assert(
+      !isDuplicate,
+      `The source ${url} has a pending authorization request`
+    );
 
-  //   if (this.#authUrls[idStr]) {
-  //     // this url was seen in the past
-  //     assert(this.#authUrls[idStr].isAllowed, `The source ${url} is not allowed to interact with this extension`);
+    if (this.#authUrls[idStr]) {
+      // this url was seen in the past
+      assert(
+        this.#authUrls[idStr].isAllowed,
+        `The source ${url} is not allowed to interact with this extension`
+      );
 
-  //     return false;
-  //   }
+      return false;
+    }
 
-  //   return new Promise((resolve, reject): void => {
-  //     const id = this.getId();
+    return new Promise((resolve, reject): void => {
+      const id = this.getId();
 
-  //     this.#authRequests[id] = {
-  //       ...this.authComplete(id, resolve, reject),
-  //       id,
-  //       idStr,
-  //       request,
-  //       url
-  //     };
+      this.#authRequests[id] = {
+        ...this.authComplete(id, resolve, reject),
+        id,
+        idStr,
+        request,
+        url,
+      };
 
-  //     this.updateIconAuth();
-  //     this.popupOpen();
-  //   });
-  // }
+      this.updateIconAuth();
+      this.popupOpen();
+    });
+  }
 
-  // public ensureUrlAuthorized (url: string): boolean {
-  //   if (url === PORT_EXTENSION) {
-  //     return true;
-  //   }
+  public ensureUrlAuthorized(url: string): boolean {
+    if (url === PORT_EXTENSION) {
+      return true;
+    }
 
-  //   const entry = this.#authUrls[this.stripUrl(url)];
+    const entry = this.#authUrls[this.stripUrl(url)];
 
-  //   assert(entry, `The source ${url} has not been enabled yet`);
-  //   assert(entry.isAllowed, `The source ${url} is not allowed to interact with this extension`);
+    assert(entry, `The source ${url} has not been enabled yet`);
+    assert(
+      entry.isAllowed,
+      `The source ${url} is not allowed to interact with this extension`
+    );
 
-  //   return true;
-  // }
+    return true;
+  }
 
   public injectMetadata(url: string, request: MetadataDef): Promise<boolean> {
     return new Promise((resolve, reject): void => {
@@ -256,9 +269,9 @@ export default class State {
     });
   }
 
-  // public getAuthRequest (id: string): AuthRequest {
-  //   return this.#authRequests[id];
-  // }
+  public getAuthRequest(id: string): AuthRequest {
+    return this.#authRequests[id];
+  }
 
   public getMetaRequest(id: string): MetaRequest {
     return this.#metaRequests[id];
@@ -268,80 +281,102 @@ export default class State {
     return this.#signRequests[id];
   }
 
-  // // List all providers the extension is exposing
-  // public rpcListProviders (): Promise<ResponseRpcListProviders> {
-  //   return Promise.resolve(Object.keys(this.#providers).reduce((acc, key) => {
-  //     acc[key] = this.#providers[key].meta;
+  // List all providers the extension is exposing
+  public rpcListProviders(): Promise<ResponseRpcListProviders> {
+    return Promise.resolve(
+      Object.keys(this.#providers).reduce((acc, key) => {
+        acc[key] = this.#providers[key].meta;
 
-  //     return acc;
-  //   }, {} as ResponseRpcListProviders));
-  // }
+        return acc;
+      }, {} as ResponseRpcListProviders)
+    );
+  }
 
-  // public rpcSend (request: RequestRpcSend, port: chrome.runtime.Port): Promise<JsonRpcResponse> {
-  //   const provider = this.#injectedProviders.get(port);
+  public rpcSend(
+    request: RequestRpcSend,
+    port: chrome.runtime.Port
+  ): Promise<JsonRpcResponse<any>> {
+    const provider = this.#injectedProviders.get(port);
 
-  //   assert(provider, 'Cannot call pub(rpc.subscribe) before provider is set');
+    assert(provider, "Cannot call pub(rpc.subscribe) before provider is set");
 
-  //   return provider.send(request.method, request.params);
-  // }
+    return provider.send(request.method, request.params);
+  }
 
-  // // Start a provider, return its meta
-  // public rpcStartProvider (key: string, port: chrome.runtime.Port): Promise<ProviderMeta> {
-  //   assert(Object.keys(this.#providers).includes(key), `Provider ${key} is not exposed by extension`);
+  // Start a provider, return its meta
+  public rpcStartProvider(
+    key: string,
+    port: chrome.runtime.Port
+  ): Promise<ProviderMeta> {
+    assert(
+      Object.keys(this.#providers).includes(key),
+      `Provider ${key} is not exposed by extension`
+    );
 
-  //   if (this.#injectedProviders.get(port)) {
-  //     return Promise.resolve(this.#providers[key].meta);
-  //   }
+    if (this.#injectedProviders.get(port)) {
+      return Promise.resolve(this.#providers[key].meta);
+    }
 
-  //   // Instantiate the provider
-  //   this.#injectedProviders.set(port, this.#providers[key].start());
+    // Instantiate the provider
+    this.#injectedProviders.set(port, this.#providers[key].start());
 
-  //   // Close provider connection when page is closed
-  //   port.onDisconnect.addListener((): void => {
-  //     const provider = this.#injectedProviders.get(port);
+    // Close provider connection when page is closed
+    port.onDisconnect.addListener((): void => {
+      const provider = this.#injectedProviders.get(port);
 
-  //     if (provider) {
-  //       provider.disconnect().catch(console.error);
-  //     }
+      if (provider) {
+        provider.disconnect().catch(console.error);
+      }
 
-  //     this.#injectedProviders.delete(port);
-  //   });
+      this.#injectedProviders.delete(port);
+    });
 
-  //   return Promise.resolve(this.#providers[key].meta);
-  // }
+    return Promise.resolve(this.#providers[key].meta);
+  }
 
-  // public rpcSubscribe ({ method, params, type }: RequestRpcSubscribe, cb: ProviderInterfaceCallback, port: chrome.runtime.Port): Promise<number | string> {
-  //   const provider = this.#injectedProviders.get(port);
+  public rpcSubscribe(
+    { method, params, type }: RequestRpcSubscribe,
+    cb: ProviderInterfaceCallback,
+    port: chrome.runtime.Port
+  ): Promise<number | string> {
+    const provider = this.#injectedProviders.get(port);
 
-  //   assert(provider, 'Cannot call pub(rpc.subscribe) before provider is set');
+    assert(provider, "Cannot call pub(rpc.subscribe) before provider is set");
 
-  //   return provider.subscribe(type, method, params, cb);
-  // }
+    return provider.subscribe(type, method, params, cb);
+  }
 
-  // public rpcSubscribeConnected (_request: null, cb: ProviderInterfaceCallback, port: chrome.runtime.Port): void {
-  //   const provider = this.#injectedProviders.get(port);
+  public rpcSubscribeConnected(
+    _request: null,
+    cb: ProviderInterfaceCallback,
+    port: chrome.runtime.Port
+  ): void {
+    const provider = this.#injectedProviders.get(port);
 
-  //   assert(provider, 'Cannot call pub(rpc.subscribeConnected) before provider is set');
+    assert(
+      provider,
+      "Cannot call pub(rpc.subscribeConnected) before provider is set"
+    );
 
-  //   cb(null, provider.isConnected); // Immediately send back current isConnected
-  //   provider.on('connected', () => cb(null, true));
-  //   provider.on('disconnected', () => cb(null, false));
-  // }
+    cb(null, provider.isConnected); // Immediately send back current isConnected
+    provider.on("connected", () => cb(null, true));
+    provider.on("disconnected", () => cb(null, false));
+  }
 
-  // public rpcUnsubscribe(
-  //   request: RequestRpcUnsubscribe,
-  //   port: chrome.runtime.Port
-  // ): Promise<boolean> {
-  //   const provider = this.#injectedProviders.get(port);
+  public rpcUnsubscribe(
+    request: RequestRpcUnsubscribe,
+    port: chrome.runtime.Port
+  ): Promise<boolean> {
+    const provider = this.#injectedProviders.get(port);
 
-  //   assert(provider, "Cannot call pub(rpc.unsubscribe) before provider is set");
+    assert(provider, "Cannot call pub(rpc.unsubscribe) before provider is set");
 
-  //   return provider.unsubscribe(
-  //     request.type,
-  //     request.method,
-  //     request.subscriptionId
-  //   );
-  // }
+    return provider.unsubscribe(
+      request.type,
+      request.method,
+      request.subscriptionId
+    );
+  }
 
   public saveMetadata(meta: MetadataDef): void {
     this.#metaStore.set(meta.genesisHash, meta);
@@ -373,16 +408,16 @@ export default class State {
     });
   }
 
-  // public removeAuthorization(url: string): AuthUrls {
-  //   const entry = this.#authUrls[url];
+  public removeAuthorization(url: string): AuthUrls {
+    const entry = this.#authUrls[url];
 
-  //   assert(entry, `The source ${url} is not known`);
+    assert(entry, `The source ${url} is not known`);
 
-  //   delete this.#authUrls[url];
-  //   this.saveCurrentAuthList();
+    delete this.#authUrls[url];
+    this.saveCurrentAuthList();
 
-  //   return this.#authUrls;
-  // }
+    return this.#authUrls;
+  }
 
   private popupClose(): void {
     if (this.#detachedWindowId) {
@@ -404,64 +439,53 @@ export default class State {
 
   private createDetached = async () => {
     chrome.windows.getCurrent((win) => {
-      chrome.windows.create(
-        {
-          focused: true,
-          type: "popup",
-          url: "index.html?detached=true",
-          height: 600,
-          width: 400,
-          left: win.width - 500,
-          top: win.top + 75,
-        },
-        (newWindow) => {
-          this.detachedWindowId = newWindow.id;
-        }
-      );
+      chrome.windows.create(createPopupData(win), (newWindow) => {
+        this.detachedWindowId = newWindow.id;
+      });
     });
   };
 
-  // private authComplete = (
-  //   id: string,
-  //   resolve: (result: boolean) => void,
-  //   reject: (error: Error) => void
-  // ): Resolver<boolean> => {
-  //   const complete = (result: boolean | Error) => {
-  //     const isAllowed = result === true;
-  //     const {
-  //       idStr,
-  //       request: { origin },
-  //       url,
-  //     } = this.#authRequests[id];
+  private authComplete = (
+    id: string,
+    resolve: (result: boolean) => void,
+    reject: (error: Error) => void
+  ): Resolver<boolean> => {
+    const complete = (result: boolean | Error) => {
+      const isAllowed = result === true;
+      const {
+        idStr,
+        request: { origin },
+        url,
+      } = this.#authRequests[id];
 
-  //     this.#authUrls[this.stripUrl(url)] = {
-  //       count: 0,
-  //       id: idStr,
-  //       isAllowed,
-  //       origin,
-  //       url,
-  //     };
+      this.#authUrls[this.stripUrl(url)] = {
+        count: 0,
+        id: idStr,
+        isAllowed,
+        origin,
+        url,
+      };
 
-  //     this.saveCurrentAuthList();
-  //     delete this.#authRequests[id];
-  //     this.updateIconAuth(true);
-  //   };
+      this.saveCurrentAuthList();
+      delete this.#authRequests[id];
+      this.updateIconAuth(true);
+    };
 
-  //   return {
-  //     reject: (error: Error): void => {
-  //       complete(error);
-  //       reject(error);
-  //     },
-  //     resolve: (result: boolean): void => {
-  //       complete(result);
-  //       resolve(result);
-  //     },
-  //   };
-  // };
+    return {
+      reject: (error: Error): void => {
+        complete(error);
+        reject(error);
+      },
+      resolve: (result: boolean): void => {
+        complete(result);
+        resolve(result);
+      },
+    };
+  };
 
-  // private saveCurrentAuthList() {
-  //   localStorage.setItem(AUTH_URLS_KEY, JSON.stringify(this.#authUrls));
-  // }
+  private saveCurrentAuthList() {
+    chrome.storage.local.set({ [AUTH_URLS_KEY]: this.#authUrls });
+  }
 
   private metaComplete = (
     id: string,
@@ -507,21 +531,32 @@ export default class State {
     };
   };
 
-  // private stripUrl (url: string): string {
-  //   assert(url && (url.startsWith('http:') || url.startsWith('https:') || url.startsWith('ipfs:') || url.startsWith('ipns:')), `Invalid url ${url}, expected to start with http: or https: or ipfs: or ipns:`);
+  private stripUrl(url: string): string {
+    assert(
+      url &&
+        (url.startsWith("http:") ||
+          url.startsWith("https:") ||
+          url.startsWith("ipfs:") ||
+          url.startsWith("ipns:")),
+      `Invalid url ${url}, expected to start with http: or https: or ipfs: or ipns:`
+    );
 
-  //   const parts = url.split('/');
+    const parts = url.split("/");
 
-  //   return parts[2];
-  // }
+    return parts[2];
+  }
 
   private updateIcon(shouldClose?: boolean): void {
-    // const authCount = this.numAuthRequests;
+    const authCount = this.numAuthRequests;
     const metaCount = this.numMetaRequests;
     const signCount = this.numSignRequests;
-    const text =
-      // authCount ? "Auth" :
-      metaCount ? "Meta" : signCount ? `${signCount}` : "";
+    const text = authCount
+      ? "Auth"
+      : metaCount
+      ? "Meta"
+      : signCount
+      ? `${signCount}`
+      : "";
 
     chrome.action.setBadgeBackgroundColor({ color: "#A408EB" });
     chrome.action.setBadgeTextColor({ color: "#ffffff" });
@@ -532,10 +567,10 @@ export default class State {
     }
   }
 
-  // private updateIconAuth (shouldClose?: boolean): void {
-  //   this.authSubject.next(this.allAuthRequests);
-  //   this.updateIcon(shouldClose);
-  // }
+  private updateIconAuth(shouldClose?: boolean): void {
+    this.authSubject.next(this.allAuthRequests);
+    this.updateIcon(shouldClose);
+  }
 
   private updateIconMeta(shouldClose?: boolean): void {
     this.metaSubject.next(this.allMetaRequests);
