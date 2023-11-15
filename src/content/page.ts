@@ -7,7 +7,7 @@ import type {
 } from "../extension-base/background/types";
 import type { Message } from "../extension-base/types";
 
-import { PORT_CONTENT } from "../extension-base/defaults";
+import { PORT_CONTENT, PKG_VERSION } from "../extension-base/defaults";
 import {
   enable,
   handleResponse,
@@ -18,7 +18,7 @@ import {
   REEF_EXTENSION_IDENT,
   REEF_INJECTED_EVENT,
   startInjection,
-} from "@reef-defi/extension-inject";
+} from "../extension-inject";
 
 startInjection(REEF_EXTENSION_IDENT);
 
@@ -28,8 +28,7 @@ window.addEventListener("message", ({ data, source }: Message): void => {
   if (source !== window || data.origin !== PORT_CONTENT) {
     return;
   }
-
-  console.log("page window msg listener=", data);
+  console.log("[Page receives]", data);
 
   if (data.id) {
     handleResponse(data as TransportRequestMessage<keyof RequestSignatures>);
@@ -56,7 +55,7 @@ redirectIfPhishing()
 function inject() {
   injectExtension(enable, {
     name: REEF_EXTENSION_IDENT,
-    version: process.env.PKG_VERSION as string,
+    version: PKG_VERSION,
   });
   const event = new Event(REEF_INJECTED_EVENT);
 

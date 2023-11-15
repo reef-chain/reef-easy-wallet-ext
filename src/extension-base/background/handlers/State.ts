@@ -2,14 +2,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type {
-  MetadataDef,
-  ProviderMeta,
-} from "@reef-defi/extension-inject/types";
-import type {
   JsonRpcResponse,
   ProviderInterface,
   ProviderInterfaceCallback,
 } from "@polkadot/rpc-provider/types";
+import { assert } from "@polkadot/util";
+import { BehaviorSubject } from "rxjs";
+
 import type {
   AccountJson,
   AuthorizeRequest,
@@ -23,16 +22,11 @@ import type {
   ResponseSigning,
   SigningRequest,
 } from "../types";
-
-import { PORT_EXTENSION } from "../../../extension-base/defaults";
-import { addMetadata, knownMetadata } from "@reef-defi/extension-chains";
-import chrome from "@reef-defi/extension-inject/chrome";
-import { assert } from "@reef-defi/util";
-import { BehaviorSubject } from "rxjs";
-
-import settings from "@polkadot/ui-settings";
-
+import { PORT_EXTENSION } from "../../defaults";
+import { MetadataDef, ProviderMeta } from "../../../extension-inject/types";
+import { addMetadata, knownMetadata } from "../../../extension-chains";
 import { MetadataStore } from "../../stores";
+import { createPopupData } from "../../../popup/util";
 
 interface Resolver<T> {
   reject: (error: Error) => void;
@@ -62,14 +56,12 @@ interface MetaRequest extends Resolver<boolean> {
   url: string;
 }
 
-// List of providers passed into constructor. This is the list of providers
-// exposed by the extension.
+// List of providers passed into constructor. This is the list of providers exposed by the extension.
 type Providers = Record<
   string,
   {
-    meta: ProviderMeta;
-    // The provider is not running at init, calling this will instantiate the
-    // provider.
+    meta: any; // ProviderMeta;
+    // The provider is not running at init, calling this will instantiate the provider.
     start: () => ProviderInterface;
   }
 >;
@@ -81,37 +73,9 @@ interface SignRequest extends Resolver<ResponseSigning> {
   url: string;
 }
 
-let idCounter = 0;
-
-const NOTIFICATION_URL = chrome.extension.getURL("notification.html");
-
-const POPUP_WINDOW_OPTS: chrome.windows.CreateData = {
-  focused: true,
-  height: 621,
-  left: 150,
-  top: 150,
-  type: "popup",
-  url: NOTIFICATION_URL,
-  width: 560,
-};
-
-const NORMAL_WINDOW_OPTS: chrome.windows.CreateData = {
-  focused: true,
-  type: "normal",
-  url: NOTIFICATION_URL,
-};
-
-export enum NotificationOptions {
-  None,
-  Normal,
-  PopUp,
-}
-
-const AUTH_URLS_KEY = "authUrls";
-
-function getId(): string {
-  return `${Date.now()}.${++idCounter}`;
-}
+const AUTH_URLS_KEY = "auth_urls";
+const ID_COUNTER_KEY = "id_counter";
+const DETACHED_WINDOW_ID_KEY = "detached_window_id";
 
 export default class State {
   public readonly authSubject: BehaviorSubject<AuthorizeRequest[]> =
@@ -120,7 +84,7 @@ export default class State {
     new BehaviorSubject<MetadataRequest[]>([]);
   public readonly signSubject: BehaviorSubject<SigningRequest[]> =
     new BehaviorSubject<SigningRequest[]>([]);
-  readonly #authUrls: AuthUrls = {};
+  #authUrls: AuthUrls = {};
   readonly #authRequests: Record<string, AuthRequest> = {};
   readonly #metaStore = new MetadataStore();
   // Map of providers currently injected in tabs
@@ -129,24 +93,52 @@ export default class State {
     ProviderInterface
   >();
   readonly #metaRequests: Record<string, MetaRequest> = {};
-  #notification = settings.notification;
   // Map of all providers exposed by the extension, they are retrievable by key
-  readonly #providers: Providers;
+  readonly #providers: Providers = {};
+  // Sign requests are not persisted, if service worker stops they are treated as cancelled by user
   readonly #signRequests: Record<string, SignRequest> = {};
-  #windows: number[] = [];
+  #detachedWindowId = 0;
+  #idCounter = 0;
 
-  constructor(providers: Providers = {}) {
-    this.#providers = providers;
+  constructor() {
+    this.updateIcon();
 
     this.#metaStore.all((_key: string, def: MetadataDef): void => {
       addMetadata(def);
     });
 
-    // retrieve previously set authorizations
-    const authString = localStorage.getItem(AUTH_URLS_KEY) || "{}";
-    const previousAuth = JSON.parse(authString) as AuthUrls;
+    chrome.storage.local.get([AUTH_URLS_KEY]).then((item) => {
+      this.#authUrls = item[AUTH_URLS_KEY] || {};
+    });
 
-    this.#authUrls = previousAuth;
+    chrome.storage.local.get([ID_COUNTER_KEY]).then((item) => {
+      this.#idCounter = item[ID_COUNTER_KEY] || 0;
+    });
+
+    chrome.storage.local.get([DETACHED_WINDOW_ID_KEY]).then((item) => {
+      this.#detachedWindowId = item[DETACHED_WINDOW_ID_KEY] || 0;
+    });
+
+    chrome.windows.onRemoved.addListener((id) => {
+      if (id == this.#detachedWindowId) {
+        this.#detachedWindowId = 0;
+      }
+    });
+  }
+
+  private getId(): string {
+    this.#idCounter++;
+    chrome.storage.local.set({ [ID_COUNTER_KEY]: this.#idCounter });
+    return `${Date.now()}.${this.#idCounter}`;
+  }
+
+  public get detachedWindowId(): number {
+    return this.#detachedWindowId;
+  }
+
+  public set detachedWindowId(id: number) {
+    chrome.storage.local.set({ [DETACHED_WINDOW_ID_KEY]: id });
+    this.#detachedWindowId = id;
   }
 
   public get knownMetadata(): MetadataDef[] {
@@ -230,7 +222,7 @@ export default class State {
     }
 
     return new Promise((resolve, reject): void => {
-      const id = getId();
+      const id = this.getId();
 
       this.#authRequests[id] = {
         ...this.authComplete(id, resolve, reject),
@@ -263,7 +255,7 @@ export default class State {
 
   public injectMetadata(url: string, request: MetadataDef): Promise<boolean> {
     return new Promise((resolve, reject): void => {
-      const id = getId();
+      const id = this.getId();
 
       this.#metaRequests[id] = {
         ...this.metaComplete(id, resolve, reject),
@@ -303,7 +295,7 @@ export default class State {
   public rpcSend(
     request: RequestRpcSend,
     port: chrome.runtime.Port
-  ): Promise<JsonRpcResponse> {
+  ): Promise<JsonRpcResponse<any>> {
     const provider = this.#injectedProviders.get(port);
 
     assert(provider, "Cannot call pub(rpc.subscribe) before provider is set");
@@ -392,18 +384,12 @@ export default class State {
     addMetadata(meta);
   }
 
-  public setNotification(notification: string): boolean {
-    this.#notification = notification;
-
-    return true;
-  }
-
   public sign(
     url: string,
     request: RequestSign,
     account: AccountJson
   ): Promise<ResponseSigning> {
-    const id = getId();
+    const id = this.getId();
 
     return new Promise((resolve, reject): void => {
       this.#signRequests[id] = {
@@ -434,27 +420,30 @@ export default class State {
   }
 
   private popupClose(): void {
-    this.#windows.forEach(
-      (id: number): void =>
-        // eslint-disable-next-line no-void
-        void chrome.windows.remove(id)
-    );
-    this.#windows = [];
+    if (this.#detachedWindowId) {
+      chrome.windows.remove(this.#detachedWindowId).catch(console.error);
+    }
   }
 
   private popupOpen(): void {
-    this.#notification !== "extension" &&
-      chrome.windows.create(
-        this.#notification === "window"
-          ? NORMAL_WINDOW_OPTS
-          : POPUP_WINDOW_OPTS,
-        (window): void => {
-          if (window) {
-            this.#windows.push(window.id || 0);
-          }
+    if (this.detachedWindowId) {
+      chrome.windows.update(this.detachedWindowId, { focused: true }, (win) => {
+        if (chrome.runtime.lastError || !win) {
+          this.createDetached();
         }
-      );
+      });
+    } else {
+      this.createDetached();
+    }
   }
+
+  private createDetached = async () => {
+    chrome.windows.getCurrent((win) => {
+      chrome.windows.create(createPopupData(win), (newWindow) => {
+        this.detachedWindowId = newWindow.id;
+      });
+    });
+  };
 
   private authComplete = (
     id: string,
@@ -495,7 +484,7 @@ export default class State {
   };
 
   private saveCurrentAuthList() {
-    localStorage.setItem(AUTH_URLS_KEY, JSON.stringify(this.#authUrls));
+    chrome.storage.local.set({ [AUTH_URLS_KEY]: this.#authUrls });
   }
 
   private metaComplete = (
@@ -569,8 +558,9 @@ export default class State {
       ? `${signCount}`
       : "";
 
-    // eslint-disable-next-line no-void
-    void chrome.browserAction.setBadgeText({ text });
+    chrome.action.setBadgeBackgroundColor({ color: "#A408EB" });
+    chrome.action.setBadgeTextColor({ color: "#ffffff" });
+    chrome.action.setBadgeText({ text });
 
     if (shouldClose && text === "") {
       this.popupClose();

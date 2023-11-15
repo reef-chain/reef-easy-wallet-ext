@@ -8,5 +8,5 @@ export interface Message extends MessageEvent {
     origin: string;
     response?: string;
     subscription?: string;
-  }
+  };
 }

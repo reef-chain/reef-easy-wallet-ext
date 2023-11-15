@@ -1,54 +1,47 @@
-// Copyright 2019-2021 @polkadot/extension authors & contributors
-// SPDX-License-Identifier: Apache-2.0
-
-import type {
-  InjectedAccount,
-  InjectedMetadataKnown,
-  MetadataDef,
-  ProviderMeta,
-} from "@reef-defi/extension-inject/types";
+import { checkIfDenied } from "@polkadot/phishing";
 import type { KeyringPair } from "@polkadot/keyring/types";
+import { assert, isNumber } from "@polkadot/util";
+import {
+  SingleAddress,
+  SubjectInfo,
+} from "@polkadot/ui-keyring/observable/types";
+import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
 import type { JsonRpcResponse } from "@polkadot/rpc-provider/types";
 import type {
   SignerPayloadJSON,
   SignerPayloadRaw,
 } from "@polkadot/types/types";
-import type {
-  SingleAddress,
-  SubjectInfo,
-} from "@polkadot/ui-keyring/observable/types";
-import type {
+import keyring from "@polkadot/ui-keyring";
+
+import {
   MessageTypes,
-  RequestAccountList,
   RequestAuthorizeTab,
   RequestRpcSend,
-  RequestRpcSubscribe,
-  RequestRpcUnsubscribe,
   RequestTypes,
   ResponseRpcListProviders,
-  ResponseSigning,
   ResponseTypes,
-  SubscriptionMessageTypes,
 } from "../types";
-
+import { createSubscription, unsubscribe } from "./subscriptions";
+import {
+  InjectedAccount,
+  InjectedMetadataKnown,
+  MetadataDef,
+  ProviderMeta,
+} from "../../../extension-inject/types";
+import type {
+  RequestRpcSubscribe,
+  ResponseSigning,
+  SubscriptionMessageTypes,
+  RequestRpcUnsubscribe,
+} from "../types";
+import { getSelectedAccountIndex, networkIdObservable } from "./Extension";
 import { PHISHING_PAGE_REDIRECT } from "../../defaults";
-import { canDerive } from "../../utils/canDerive";
-
-import { checkIfDenied } from "@polkadot/phishing";
-import keyring from "@polkadot/ui-keyring";
-import { accounts as accountsObservable } from "@polkadot/ui-keyring/observable/accounts";
-import { assert, isNumber } from "@polkadot/util";
-
-import { getSelectedAccountIndex } from "../../reef/background/handlers/ReefExtension";
-import RequestBytesSign from "../RequestBytesSign";
 import RequestExtrinsicSign from "../RequestExtrinsicSign";
 import State from "./State";
-import { createSubscription, unsubscribe } from "./subscriptions";
+import { AvailableNetwork } from "../../../config";
+import RequestBytesSign from "../RequestBytesSign";
 
-function transformAccounts(
-  accounts: SubjectInfo,
-  anyType = false
-): InjectedAccount[] {
+function transformAccounts(accounts: SubjectInfo): InjectedAccount[] {
   const accs = Object.values(accounts);
 
   const filtered = accs
@@ -59,7 +52,6 @@ function transformAccounts(
         },
       }) => !isHidden
     )
-    .filter(({ type }) => (anyType ? true : canDerive(type)))
     .sort(
       (a, b) => (a.json.meta.whenCreated || 0) - (b.json.meta.whenCreated || 0)
     );
@@ -104,6 +96,10 @@ export default class Tabs {
     url: string,
     port: chrome.runtime.Port
   ): Promise<ResponseTypes[keyof ResponseTypes]> {
+    if (type === "pub(network.subscribe)") {
+      return this.networkSubscribe(id, port);
+    }
+
     if (type === "pub(phishing.redirectIfDenied)") {
       return this.redirectIfPhishing(url);
     }
@@ -115,46 +111,43 @@ export default class Tabs {
     switch (type) {
       case "pub(authorize.tab)":
         return this.authorize(url, request as RequestAuthorizeTab);
-
       case "pub(accounts.list)":
-        return this.accountsList(url, request as RequestAccountList);
-
+        return this.accountsList();
       case "pub(accounts.subscribe)":
-        return this.accountsSubscribe(url, id, port);
-
+        return this.accountsSubscribe(id, port);
       case "pub(bytes.sign)":
         return this.bytesSign(url, request as SignerPayloadRaw);
-
       case "pub(extrinsic.sign)":
         return this.extrinsicSign(url, request as SignerPayloadJSON);
-
       case "pub(metadata.list)":
-        return this.metadataList(url);
-
+        return this.metadataList();
       case "pub(metadata.provide)":
         return this.metadataProvide(url, request as MetadataDef);
-
       case "pub(rpc.listProviders)":
         return this.rpcListProviders();
-
       case "pub(rpc.send)":
         return this.rpcSend(request as RequestRpcSend, port);
-
       case "pub(rpc.startProvider)":
         return this.rpcStartProvider(request as string, port);
-
       case "pub(rpc.subscribe)":
         return this.rpcSubscribe(request as RequestRpcSubscribe, id, port);
-
       case "pub(rpc.subscribeConnected)":
         return this.rpcSubscribeConnected(request as null, id, port);
-
-      case "pub(rpc.unsubscribe)":
-        return this.rpcUnsubscribe(request as RequestRpcUnsubscribe, port);
-
-      default:
-        throw new Error(`Unable to handle message of type ${type}`);
     }
+  }
+
+  private networkSubscribe(id: string, port: chrome.runtime.Port): boolean {
+    const cb = createSubscription<"pub(network.subscribe)">(id, port);
+    const subscription = networkIdObservable.subscribe(
+      (networkId: AvailableNetwork): void => cb(networkId)
+    );
+
+    port.onDisconnect.addListener((): void => {
+      unsubscribe(id);
+      subscription.unsubscribe();
+    });
+
+    return true;
   }
 
   private authorize(
@@ -164,23 +157,16 @@ export default class Tabs {
     return this.#state.authorizeUrl(url, request);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private accountsList(
-    url: string,
-    { anyType }: RequestAccountList
-  ): InjectedAccount[] {
-    return transformAccounts(accountsObservable.subject.getValue(), anyType);
+  private accountsList(): InjectedAccount[] {
+    return transformAccounts(accountsObservable.subject.getValue());
   }
 
-  // FIXME This looks very much like what we have in Extension
-  private accountsSubscribe(
-    url: string,
-    id: string,
-    port: chrome.runtime.Port
-  ): boolean {
+  private accountsSubscribe(id: string, port: chrome.runtime.Port): boolean {
     const cb = createSubscription<"pub(accounts.subscribe)">(id, port);
     const subscription = accountsObservable.subject.subscribe(
-      (accounts: SubjectInfo): void => cb(transformAccounts(accounts))
+      (accounts: SubjectInfo): void => {
+        return cb(transformAccounts(accounts));
+      }
     );
 
     port.onDisconnect.addListener((): void => {
@@ -229,8 +215,7 @@ export default class Tabs {
     return this.#state.injectMetadata(url, request);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  private metadataList(url: string): InjectedMetadataKnown[] {
+  private metadataList(): InjectedMetadataKnown[] {
     return this.#state.knownMetadata.map(({ genesisHash, specVersion }) => ({
       genesisHash,
       specVersion,
@@ -244,7 +229,7 @@ export default class Tabs {
   private rpcSend(
     request: RequestRpcSend,
     port: chrome.runtime.Port
-  ): Promise<JsonRpcResponse> {
+  ): Promise<JsonRpcResponse<any>> {
     return this.#state.rpcSend(request, port);
   }
 
@@ -307,19 +292,15 @@ export default class Tabs {
   private redirectPhishingLanding(phishingWebsite: string): void {
     const nonFragment = phishingWebsite.split("#")[0];
     const encodedWebsite = encodeURIComponent(nonFragment);
-    const url = `${chrome.extension.getURL(
+    const url = `${chrome.runtime.getURL(
       "index.html"
-    )}#${PHISHING_PAGE_REDIRECT}/${encodedWebsite}`;
+    )}?${PHISHING_PAGE_REDIRECT}=${encodedWebsite}`;
 
     chrome.tabs.query({ url: nonFragment }, (tabs) => {
       tabs
         .map(({ id }) => id)
         .filter((id): id is number => isNumber(id))
-        .forEach(
-          (id) =>
-            // eslint-disable-next-line no-void
-            void chrome.tabs.update(id, { url })
-        );
+        .forEach((id) => void chrome.tabs.update(id, { url }));
     });
   }
 

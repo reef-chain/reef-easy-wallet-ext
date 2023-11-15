@@ -1,5 +1,4 @@
-import React, { useMemo } from "react";
-import { useEffect, useRef, useState } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import { Web3AuthNoModal } from "@web3auth/no-modal";
 import {
   OpenloginAdapter,
@@ -9,75 +8,212 @@ import {
 import {
   CHAIN_NAMESPACES,
   CustomChainConfig,
-  SafeEventEmitterProvider,
   WALLET_ADAPTERS,
 } from "@web3auth/base";
 import { CommonPrivateKeyProvider } from "@web3auth/base-provider";
-// import { ethers } from 'ethers';
-// import Account from './Account';
-import RPC from "../util/rpc";
+import { Provider } from "@reef-chain/evm-provider";
+import { Keyring, WsProvider } from "@polkadot/api";
+import { IconProp } from "@fortawesome/fontawesome-svg-core";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faCirclePlus,
+  faCircleXmark,
+  faExpand,
+  faShuffle,
+  faTasks,
+} from "@fortawesome/free-solid-svg-icons";
+
+import {
+  AvailableNetwork,
   CLIENT_ID,
   LOGIN_PROVIDERS,
-  REEFSCAN_URL,
   REEF_LOGO,
-  REEF_NETWORK,
-  RPC_URL,
+  ReefNetwork,
+  reefNetworks,
   WEB3_AUTH_NETWORK,
-} from "./config";
-// import { ReefAccount, captureError } from './util';
+} from "../config";
+import {
+  createAccountSuri,
+  getDetachedWindowId,
+  selectAccount,
+  selectNetwork,
+  setDetachedWindowId,
+  subscribeAccounts,
+  subscribeAuthorizeRequests,
+  subscribeMetadataRequests,
+  subscribeNetwork,
+  subscribeSigningRequests,
+} from "./messaging";
+import {
+  AccountJson,
+  AuthorizeRequest,
+  MetadataRequest,
+  SigningRequest,
+} from "../extension-base/background/types";
+import Account from "./Accounts/Account";
+import { Signing } from "./Signing";
+import { Metadata } from "./Metadata";
+import { Authorize } from "./Authorize";
+import { AuthManagement } from "./AuthManagement";
+import { createPopupData } from "./util";
 import "./popup.css";
-import { getKeyPair, initKeyring, saveKeyPair } from "./keyring";
+import { PHISHING_PAGE_REDIRECT } from "../extension-base/defaults";
+import { PhishingDetected } from "./PhishingDetected";
+
+const enum State {
+  ACCOUNTS,
+  LOGIN,
+  AUTH_REQUESTS,
+  META_REQUESTS,
+  SIGN_REQUESTS,
+  AUTH_MANAGEMENT,
+  PHISHING_DETECTED,
+}
 
 const Popup = () => {
   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
-  const [web3authProvider, setWeb3authProvider] =
-    useState<SafeEventEmitterProvider | null>(null);
-  // const [reefAccount, setReefAccount] = useState<ReefAccount | null>(null);
-  const [reefAccount, setReefAccount] = useState<any | null>(null);
-  const [reefAccountLoading, setReefAccountLoading] = useState(false);
-  const reefAccountRef = useRef(reefAccount);
-  const queryParams = new URLSearchParams(window.location.search);
-  const loginProvider = queryParams.get("loginProvider");
+  const [state, setState] = useState<State>(State.ACCOUNTS);
+  const [accounts, setAccounts] = useState<null | AccountJson[]>(null);
+  const [selectedAccount, setSelectedAccount] = useState<null | AccountJson>(
+    null
+  );
+  const [authRequests, setAuthRequests] = useState<null | AuthorizeRequest[]>(
+    null
+  );
+  const [metaRequests, setMetaRequests] = useState<null | MetadataRequest[]>(
+    null
+  );
+  const [signRequests, setSignRequests] = useState<null | SigningRequest[]>(
+    null
+  );
+  const [selectedNetwork, setSelectedNetwork] = useState<ReefNetwork>();
+  const [provider, setProvider] = useState<Provider>();
 
-  const test = async () => {
-    saveKeyPair(web3authProvider);
-    const pair = getKeyPair();
-    console.log(pair);
-  };
+  const queryParams = new URLSearchParams(window.location.search);
+  const isDetached = queryParams.get("detached");
+  const phishingWebsite = queryParams.get(PHISHING_PAGE_REDIRECT);
 
   useEffect(() => {
-    // initKeyring();
-    initWeb3Auth();
+    if (!isDefaultPopup || isDetached) {
+      Promise.all([
+        subscribeAccounts(onAccountsChange),
+        subscribeAuthorizeRequests(setAuthRequests),
+        subscribeMetadataRequests(setMetaRequests),
+        subscribeSigningRequests(setSignRequests),
+        subscribeNetwork(onNetworkChange),
+      ]).catch(console.error);
+    } else {
+      focusOrCreateDetached();
+    }
   }, []);
 
   useEffect(() => {
-    if (web3auth?.connected && web3authProvider && !reefAccount) {
-      getReefAccount();
+    if (selectedNetwork && !web3auth) {
+      initWeb3Auth();
     }
-  }, [web3auth, web3authProvider]);
+  }, [selectedNetwork]);
 
-  const isPopup = useMemo(() => {
+  useEffect(() => {
+    if (phishingWebsite) {
+      setState(State.PHISHING_DETECTED);
+    } else if (!selectedAccount) {
+      setState(State.ACCOUNTS);
+    } else if (authRequests?.length) {
+      setState(State.AUTH_REQUESTS);
+    } else if (metaRequests?.length) {
+      setState(State.META_REQUESTS);
+    } else if (signRequests?.length) {
+      setState(State.SIGN_REQUESTS);
+    } else {
+      setState(State.ACCOUNTS);
+    }
+  }, [
+    authRequests,
+    metaRequests,
+    signRequests,
+    selectedAccount,
+    phishingWebsite,
+  ]);
+
+  const isDefaultPopup = useMemo(() => {
     return window.innerWidth <= 400;
   }, []);
 
-  const openFullPage = (loginProvider?: string) => {
-    const url = `${chrome.runtime.getURL(
-      loginProvider ? `index.html?loginProvider=${loginProvider}` : "index.html"
-    )}`;
+  const focusOrCreateDetached = async () => {
+    const detachedWindowId = await getDetachedWindowId();
+    if (detachedWindowId) {
+      chrome.windows.update(detachedWindowId, { focused: true }, (win) => {
+        if (chrome.runtime.lastError || !win) {
+          createDetached();
+        } else {
+          window.close();
+        }
+      });
+    } else {
+      createDetached();
+    }
+  };
+
+  const createDetached = async () => {
+    chrome.windows.getCurrent((win) => {
+      chrome.windows.create(createPopupData(win), (detachedWindow) => {
+        setDetachedWindowId(detachedWindow.id);
+        window.close();
+      });
+    });
+  };
+
+  const onAccountsChange = (_accounts: AccountJson[]) => {
+    setAccounts(_accounts);
+    setState(State.ACCOUNTS);
+
+    if (!_accounts?.length) {
+      setSelectedAccount(null);
+      return;
+    }
+
+    const selAcc = _accounts.find((acc) => !!acc.isSelected);
+    if (selAcc) {
+      setSelectedAccount(selAcc);
+    } else {
+      selectAccount(_accounts[0].address);
+      setSelectedAccount(_accounts[0]);
+    }
+  };
+
+  const onNetworkChange = async (networkId: AvailableNetwork) => {
+    if (networkId !== selectedNetwork?.id) {
+      setSelectedNetwork(reefNetworks[networkId]);
+
+      const newProvider = new Provider({
+        provider: new WsProvider(reefNetworks[networkId].rpcUrl),
+      });
+      try {
+        await newProvider.api.isReadyOrError;
+        setProvider(newProvider);
+      } catch (e) {
+        console.log("Provider isReadyOrError ERROR=", e);
+        throw e;
+      }
+    }
+  };
+
+  const openFullPage = () => {
+    const url = `${chrome.runtime.getURL("index.html")}`;
     void chrome.tabs.create({ url });
+    window.close();
   };
 
   const initWeb3Auth = async () => {
     try {
       const reefChainConfig: CustomChainConfig = {
         chainId: "0x3673",
-        rpcTarget: RPC_URL,
+        rpcTarget: reefNetworks.mainnet.rpcUrl,
         chainNamespace: CHAIN_NAMESPACES.OTHER,
-        displayName: REEF_NETWORK,
+        displayName: reefNetworks.mainnet.name,
         ticker: "REEF",
         tickerName: "Reef",
-        blockExplorer: REEFSCAN_URL,
+        blockExplorer: reefNetworks.mainnet.reefScanUrl,
       };
 
       const web3auth = new Web3AuthNoModal({
@@ -99,9 +235,6 @@ const Popup = () => {
           clientId: CLIENT_ID,
           network: WEB3_AUTH_NETWORK,
           uxMode: UX_MODE.POPUP,
-          // uxMode: UX_MODE.REDIRECT,
-          // redirectUrl:
-          //   "chrome-extension://ggmkeplalbadblhbbkcchekkfmmnoiln/index.html",
           whiteLabel: {
             appName: "Reef Web3Auth Wallet",
             appUrl: "https://reef.io/",
@@ -120,30 +253,96 @@ const Popup = () => {
       web3auth.configureAdapter(openloginAdapter);
 
       await web3auth.init();
-
-      if (web3auth.connectedAdapterName && web3auth.provider) {
-        setWeb3authProvider(web3auth.provider);
-      }
-      if (!web3auth.connected && loginProvider) {
-        login(loginProvider, web3auth);
-      }
     } catch (err: any) {
       console.error(err);
     }
   };
 
+  const addAccount = async (
+    loginProvider: string,
+    web3auth: Web3AuthNoModal
+  ) => {
+    const web3authProvider = await login(loginProvider, web3auth);
+    if (!web3authProvider) {
+      return;
+    }
+
+    const userInfo = await web3auth.getUserInfo();
+    if (
+      accounts.find(
+        (acc) =>
+          acc.loginProvider === loginProvider &&
+          acc.verifierId === userInfo.verifierId
+      )
+    ) {
+      alert("Account already exists");
+      return;
+    }
+
+    const privateKey = (await web3authProvider.request({
+      method: "private_key",
+    })) as string;
+    await createAccountSuri(
+      privateKey,
+      userInfo.name || "",
+      loginProvider,
+      userInfo.verifierId,
+      userInfo.profileImage
+    );
+  };
+
+  const getOrRefreshAuth = async () => {
+    if (!web3auth) {
+      alert("web3auth not initialized yet");
+      return null;
+    }
+
+    if (!selectedAccount) {
+      alert("No account selected");
+      return null;
+    }
+
+    const web3authProvider = await login(
+      selectedAccount.loginProvider as string,
+      web3auth
+    );
+    if (!web3authProvider) {
+      return null;
+    }
+
+    const privateKey = (await web3authProvider.request({
+      method: "private_key",
+    })) as string;
+    const keyring = new Keyring({ type: "sr25519" });
+    const keyPair = keyring.addFromUri("0x" + privateKey);
+    if (keyPair.address !== selectedAccount.address) {
+      setSelectedAccount(
+        accounts
+          ? accounts.find((acc) => acc.address === keyPair.address) ||
+              accounts[0]
+          : null
+      );
+      alert("Logged in to wrong account");
+      return null;
+    }
+
+    return privateKey.substring(0, 12);
+  };
+
   const login = async (loginProvider: string, web3auth: Web3AuthNoModal) => {
     if (LOGIN_PROVIDERS.indexOf(loginProvider) === -1) {
       alert("Invalid login provider");
-      return;
+      return null;
     }
 
     if (!web3auth) {
       alert("web3auth not initialized yet");
-      return;
+      return null;
     }
 
-    if (isPopup) openFullPage(loginProvider);
+    if (web3auth.connected) {
+      await web3auth.logout();
+    }
 
     const web3authProvider = await web3auth.connectTo<OpenloginLoginParams>(
       WALLET_ADAPTERS.OPENLOGIN,
@@ -151,161 +350,129 @@ const Popup = () => {
     );
     if (!web3authProvider) {
       alert("web3authProvider not initialized yet");
-      return;
+      return null;
     }
-    setWeb3authProvider(web3authProvider);
-  };
 
-  const logout = async () => {
-    if (!web3auth) {
-      alert("web3auth not initialized yet");
-      return;
-    }
-    await web3auth.logout();
-    setWeb3authProvider(null);
-    setReefAccount(null);
-    reefAccountRef.current = null;
-    unsubBalance();
-  };
-
-  const authenticateUser = async () => {
-    const idToken = await web3auth!.authenticateUser();
-    console.log(idToken);
-    alert("ID Token: " + idToken.idToken);
-  };
-
-  const getUserInfo = async () => {
-    const user = await web3auth!.getUserInfo();
-    console.log(user);
-    alert("User Info: " + JSON.stringify(user));
-  };
-
-  const nativeTransfer = async () => {
-    //     const rpc = new RPC(web3authProvider!);
-    //     const txHash = await rpc.nativeTransfer(
-    //       "5EnY9eFwEDcEJ62dJWrTXhTucJ4pzGym4WZ2xcDKiT3eJecP",
-    //       1000
-    //     );
-    //     alert("Transaction Hash: " + txHash);
-  };
-
-  const signRaw = async () => {
-    //     const rpc = new RPC(web3authProvider!);
-    //     const signature = await rpc.signRaw("Hello World");
-    //     alert("Signature: " + signature);
-  };
-
-  const getReefAccount = async () => {
-    //     setReefAccountLoading(true);
-    //     const user = await web3auth!.getUserInfo();
-    //     const rpc = new RPC(web3authProvider!);
-    //     const reefAccount = await rpc.getReefAccount(user.name || '');
-    //     setReefAccount(reefAccount);
-    //     setReefAccountLoading(false);
-    //     reefAccountRef.current = reefAccount;
-    //     subscribeBalance();
-  };
-
-  const claimDefaultEvmAccount = async () => {
-    //     if (reefAccount!.balance < ethers.utils.parseEther("5").toBigInt()) {
-    //       alert("Not enough balance for claiming EVM account. Transfer at least 5 REEF to your account first.");
-    //       return;
-    //     }
-    //     const rpc = new RPC(web3authProvider!);
-    //     rpc.claimDefaultEvmAccount(handleClaimEvmAccountStatus);
-  };
-
-  const claimEvmAccount = async () => {
-    //     if (reefAccount!.balance < ethers.utils.parseEther("5").toBigInt()) {
-    //       alert("Not enough balance for claiming EVM account. Transfer at least 5 REEF to your account first.");
-    //       return;
-    //     }
-    //     // Set evm address and evm signature provided by the user
-    //     const evmAddress = "";
-    //     const signature = "";
-    //     const rpc = new RPC(web3authProvider!);
-    //     rpc.claimEvmAccount(evmAddress, signature, handleClaimEvmAccountStatus);
-  };
-
-  const handleClaimEvmAccountStatus = (status: any) => {
-    //     console.log("status =", status)
-    //     const err = captureError(status.events);
-    //     if (err) {
-    //       console.log("binding error", err);
-    //       alert("Error while claiming EVM account");
-    //     }
-    //     if (status.dispatchError) {
-    //       console.log("binding dispatch error", status.dispatchError.toString());
-    //       alert("Error while claiming EVM account");
-    //     }
-    //     if (status.status.isInBlock) {
-    //       console.log("Included at block hash", status.status.asInBlock.toHex());
-    //       const rpc = new RPC(web3authProvider!);
-    //       rpc.queryEvmAddress()
-    //         .then(({ evmAddress, isEvmClaimed }) => {
-    //           reefAccountRef.current = {
-    //             ...reefAccountRef.current!,
-    //             evmAddress,
-    //             isEvmClaimed,
-    //           };
-    //           setReefAccount({
-    //             ...reefAccountRef.current!,
-    //             evmAddress,
-    //             isEvmClaimed,
-    //           });
-    //         }).catch((err) => {
-    //           console.log("queryEvmAddress error", err);
-    //           alert("Error while claiming EVM account");
-    //         });
-    //     }
-    //     if (status.status.isFinalized) {
-    //       console.log("Finalized block hash", status.status.asFinalized.toHex());
-    //     }
-  };
-
-  let unsubBalance = () => {};
-
-  const subscribeBalance = async (): Promise<void> => {
-    //     const rpc = new RPC(web3authProvider!);
-    //     unsubBalance = await rpc.subscribeToBalance(async (balFree: bigint, address: string) => {
-    //       if (reefAccountRef.current?.address === address) {
-    //         reefAccountRef.current = {
-    //           ...reefAccountRef.current,
-    //           balance: balFree,
-    //         };
-    //         setReefAccount({
-    //           ...reefAccountRef.current,
-    //           balance: balFree,
-    //         });
-    //       }
-    //     });
-  };
-
-  const evmTransaction = async () => {
-    // const rpc = new RPC(web3authProvider!);
-    // try {
-    //   const res = await rpc.evmTransaction();
-    //   console.log(res);
-    //   alert("Transaction Hash: " + res.hash);
-    // } catch (err) {
-    //   console.log(err);
-    //   alert(`Error: ${err}`);
-    // }
+    return web3authProvider;
   };
 
   return (
     <div className="popup">
-      <h1>Reef Web3Auth Wallet</h1>
-      <button onClick={() => test()}>TEST</button>
-      {isPopup && <button onClick={() => openFullPage()}>Full page</button>}
-      {web3auth && !web3auth.connected && (
+      {process.env.NODE_ENV === "development" && (
+        <div className="absolute left-5 top-3 text-gray-400">
+          <span>DEV</span>
+        </div>
+      )}
+
+      {/* Header */}
+      <div className="flex justify-between">
+        {selectedNetwork && (
+          <div>
+            <span className="text-lg">{selectedNetwork.name}</span>
+            <button
+              className="md"
+              onClick={() =>
+                selectNetwork(
+                  selectedNetwork.id === "mainnet" ? "testnet" : "mainnet"
+                )
+              }
+            >
+              <FontAwesomeIcon icon={faShuffle as IconProp} />
+            </button>
+          </div>
+        )}
+
+        <div>
+          {isDetached && (
+            <button className="md" onClick={() => openFullPage()}>
+              <FontAwesomeIcon icon={faExpand as IconProp} />
+            </button>
+          )}
+          {state === State.ACCOUNTS && (
+            <>
+              <button
+                className="md"
+                onClick={() => setState(State.AUTH_MANAGEMENT)}
+              >
+                <FontAwesomeIcon icon={faTasks as IconProp} />
+              </button>
+              <button className="md" onClick={() => setState(State.LOGIN)}>
+                <FontAwesomeIcon icon={faCirclePlus as IconProp} />
+              </button>
+            </>
+          )}
+          {(state === State.AUTH_MANAGEMENT ||
+            state === State.LOGIN ||
+            state === State.PHISHING_DETECTED) && (
+            <button className="md" onClick={() => setState(State.ACCOUNTS)}>
+              <FontAwesomeIcon icon={faCircleXmark as IconProp} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Loading */}
+      {state === State.ACCOUNTS &&
+        (!accounts || (accounts.length > 0 && !provider)) && (
+          <div className="text-lg mt-12">Loading...</div>
+        )}
+
+      {/* No accounts */}
+      {state === State.ACCOUNTS && accounts?.length === 0 && (
         <>
-          <h2>Login</h2>
+          <div className="text-lg mt-12">No accounts available.</div>
+          <button onClick={() => setState(State.LOGIN)}>Add account</button>
+        </>
+      )}
+
+      {/* Selected account */}
+      {(state === State.ACCOUNTS || state === State.SIGN_REQUESTS) &&
+        selectedAccount &&
+        provider && (
+          <Account
+            account={selectedAccount}
+            provider={provider}
+            isSelected={true}
+          />
+        )}
+
+      {/* Other accounts */}
+      {state === State.ACCOUNTS &&
+        accounts?.length > 1 &&
+        provider &&
+        accounts
+          .filter((account) => account.address !== selectedAccount.address)
+          .map((account) => (
+            <Account
+              key={account.address}
+              account={account}
+              provider={provider}
+            />
+          ))}
+
+      {/* Pending authorization requests */}
+      {state === State.AUTH_REQUESTS && <Authorize requests={authRequests} />}
+
+      {/* Pending metadata requests */}
+      {state === State.META_REQUESTS && <Metadata requests={metaRequests} />}
+
+      {/* Pending signing requests */}
+      {state === State.SIGN_REQUESTS && (
+        <Signing requests={signRequests} getOrRefreshAuth={getOrRefreshAuth} />
+      )}
+
+      {/* Auth management */}
+      {state === State.AUTH_MANAGEMENT && <AuthManagement />}
+
+      {/* Login */}
+      {state === State.LOGIN && (
+        <div>
+          <div className="text-lg mt-8">Choose login provider</div>
           {LOGIN_PROVIDERS.map((provider) => (
             <button
               className="group"
               key={provider}
-              onClick={() => login(provider, web3auth)}
+              onClick={() => addAccount(provider, web3auth)}
             >
               <img
                 className="group-hover:hidden h-6"
@@ -317,33 +484,12 @@ const Popup = () => {
               ></img>
             </button>
           ))}
-        </>
+        </div>
       )}
-      {web3auth?.connected && (
-        <>
-          {reefAccountLoading && !reefAccount && (
-            <div className="loading">Loading account...</div>
-          )}
-          {/* { reefAccount && <Account account={reefAccount} /> } */}
-          <button onClick={getUserInfo}>Get User Info</button>
-          <button onClick={authenticateUser}>Get ID Token</button>
-          <button onClick={nativeTransfer}>Native transfer</button>
-          <button onClick={signRaw}>Sign message</button>
-          {reefAccount && !reefAccount.isEvmClaimed && (
-            <>
-              <button onClick={claimDefaultEvmAccount}>
-                Claim default EVM account
-              </button>
-              {/* <button onClick={claimEvmAccount}>Claim owned EVM account</button> */}
-            </>
-          )}
-          {reefAccount?.isEvmClaimed && (
-            <>
-              <button onClick={evmTransaction}>EVM transaction</button>
-            </>
-          )}
-          <button onClick={logout}>Logout</button>
-        </>
+
+      {/* Phishing detected */}
+      {state === State.PHISHING_DETECTED && (
+        <PhishingDetected website={phishingWebsite} />
       )}
     </div>
   );

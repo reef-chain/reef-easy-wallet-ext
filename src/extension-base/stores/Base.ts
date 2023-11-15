@@ -1,8 +1,6 @@
 // Copyright 2019-2021 @polkadot/extension-base authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import chrome from '@reef-defi/extension-inject/chrome';
-
 type StoreValue = Record<string, unknown>;
 
 const lastError = (type: string): void => {
@@ -13,51 +11,50 @@ const lastError = (type: string): void => {
   }
 };
 
-export default abstract class BaseStore <T> {
+export default abstract class BaseStore<T> {
   #prefix: string;
 
-  constructor (prefix: string | null) {
-    this.#prefix = prefix ? `${prefix}:` : '';
+  constructor(prefix: string | null) {
+    this.#prefix = prefix ? `${prefix}:` : "";
   }
 
-  public all (update: (key: string, value: T) => void): void {
+  public all(update: (key: string, value: T) => void): void {
     chrome.storage.local.get(null, (result: StoreValue): void => {
-      lastError('all');
+      lastError("all");
 
-      Object
-        .entries(result)
+      Object.entries(result)
         .filter(([key]) => key.startsWith(this.#prefix))
         .forEach(([key, value]): void => {
-          update(key.replace(this.#prefix, ''), value as T);
+          update(key.replace(this.#prefix, ""), value as T);
         });
     });
   }
 
-  public get (_key: string, update: (value: T) => void): void {
+  public get(_key: string, update: (value: T) => void): void {
     const key = `${this.#prefix}${_key}`;
 
     chrome.storage.local.get([key], (result: StoreValue): void => {
-      lastError('get');
+      lastError("get");
 
       update(result[key] as T);
     });
   }
 
-  public remove (_key: string, update?: () => void): void {
+  public remove(_key: string, update?: () => void): void {
     const key = `${this.#prefix}${_key}`;
 
     chrome.storage.local.remove(key, (): void => {
-      lastError('remove');
+      lastError("remove");
 
       update && update();
     });
   }
 
-  public set (_key: string, value: T, update?: () => void): void {
+  public set(_key: string, value: T, update?: () => void): void {
     const key = `${this.#prefix}${_key}`;
 
     chrome.storage.local.set({ [key]: value }, (): void => {
-      lastError('set');
+      lastError("set");
 
       update && update();
     });
