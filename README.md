@@ -19,4 +19,9 @@ Steps to build the extension and view your changes in a browser:
 
 ## Development
 
-You can run the extension in development mode, which will watch for changes and rebuild the extension automatically. To do so, just follow the steps of the previous section, but in step 2 run `yarn watch` instead of `yarn build`.
+You can run the extension in development mode, which will:
+
+- Watch for changes and rebuild the extension automatically.
+- Use Web3Auth testnet.
+
+Just follow the steps of the previous section, but in step 2 run `yarn watch`.
