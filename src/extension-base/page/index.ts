@@ -25,10 +25,8 @@ import Injected from "./Injected";
 //  - resolves/rejects the promise with the result (or sub data)
 
 export interface Handler {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   resolve: (data?: any) => void;
   reject: (error: Error) => void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subscriber?: (data: any) => void;
 }
 
@@ -109,7 +107,6 @@ export function handleResponse<TMessageType extends MessageTypes>(
   }
 
   if (data.subscription) {
-    // eslint-disable-next-line @typescript-eslint/ban-types
     (handler.subscriber as Function)(data.subscription);
   } else if (data.error) {
     handler.reject(new Error(data.error));

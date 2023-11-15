@@ -1,8 +1,6 @@
 // Copyright 2019-2021 @polkadot/extension authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-/* eslint-disable no-use-before-define */
-
 import type { KeyringPair, KeyringPair$Meta } from "@polkadot/keyring/types";
 import type { JsonRpcResponse } from "@polkadot/rpc-provider/types";
 import type {

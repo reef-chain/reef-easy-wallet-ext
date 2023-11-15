@@ -37,7 +37,7 @@ import {
 import { createSubscription, unsubscribe } from "./subscriptions";
 import State from "./State";
 import { InjectedAccount, MetadataDef } from "../../../extension-inject/types";
-import { AvailableNetwork } from "../../../config";
+import { AvailableNetwork, DEFAULT_REEF_NETWORK } from "../../../config";
 import { PASSWORD_EXPIRY_MS } from "../../defaults";
 
 type CachedUnlocks = Record<string, number>;
@@ -84,24 +84,26 @@ function isJsonPayload(
 
 function createNetworkIdObservable(): Observable<any> {
   return new Observable<any>((subscriber) => {
-    // TODO: use "mainnet" as default network
-    chrome.storage.local.get({ [REEF_NETWORK_KEY]: "testnet" }, (items) => {
-      subscriber.next(items[REEF_NETWORK_KEY]);
+    chrome.storage.local.get(
+      { [REEF_NETWORK_KEY]: DEFAULT_REEF_NETWORK },
+      (items) => {
+        subscriber.next(items[REEF_NETWORK_KEY]);
 
-      const listener = (
-        changes: { [key: string]: chrome.storage.StorageChange },
-        areaName: string
-      ) => {
-        if (areaName === "local" && REEF_NETWORK_KEY in changes) {
-          subscriber.next(changes[REEF_NETWORK_KEY].newValue);
-        }
-      };
-      chrome.storage.onChanged.addListener(listener);
+        const listener = (
+          changes: { [key: string]: chrome.storage.StorageChange },
+          areaName: string
+        ) => {
+          if (areaName === "local" && REEF_NETWORK_KEY in changes) {
+            subscriber.next(changes[REEF_NETWORK_KEY].newValue);
+          }
+        };
+        chrome.storage.onChanged.addListener(listener);
 
-      return () => {
-        chrome.storage.onChanged.removeListener(listener);
-      };
-    });
+        return () => {
+          chrome.storage.onChanged.removeListener(listener);
+        };
+      }
+    );
   });
 }
 

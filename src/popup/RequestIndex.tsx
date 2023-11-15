@@ -10,7 +10,6 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 interface Props {
-  className?: string;
   index: number;
   totalItems: number;
   onNextClick: () => void;

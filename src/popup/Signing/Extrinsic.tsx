@@ -20,7 +20,6 @@ interface Decoded {
 }
 
 interface Props {
-  className?: string;
   payload: ExtrinsicPayload;
   request: SignerPayloadJSON;
   url: string;

@@ -57,6 +57,8 @@ import { Authorize } from "./Authorize";
 import { AuthManagement } from "./AuthManagement";
 import { createPopupData } from "./util";
 import "./popup.css";
+import { PHISHING_PAGE_REDIRECT } from "../extension-base/defaults";
+import { PhishingDetected } from "./PhishingDetected";
 
 const enum State {
   ACCOUNTS,
@@ -65,6 +67,7 @@ const enum State {
   META_REQUESTS,
   SIGN_REQUESTS,
   AUTH_MANAGEMENT,
+  PHISHING_DETECTED,
 }
 
 const Popup = () => {
@@ -88,6 +91,7 @@ const Popup = () => {
 
   const queryParams = new URLSearchParams(window.location.search);
   const isDetached = queryParams.get("detached");
+  const phishingWebsite = queryParams.get(PHISHING_PAGE_REDIRECT);
 
   useEffect(() => {
     if (!isDefaultPopup || isDetached) {
@@ -110,7 +114,9 @@ const Popup = () => {
   }, [selectedNetwork]);
 
   useEffect(() => {
-    if (!selectedAccount) {
+    if (phishingWebsite) {
+      setState(State.PHISHING_DETECTED);
+    } else if (!selectedAccount) {
       setState(State.ACCOUNTS);
     } else if (authRequests?.length) {
       setState(State.AUTH_REQUESTS);
@@ -121,7 +127,13 @@ const Popup = () => {
     } else {
       setState(State.ACCOUNTS);
     }
-  }, [authRequests, metaRequests, signRequests, selectedAccount]);
+  }, [
+    authRequests,
+    metaRequests,
+    signRequests,
+    selectedAccount,
+    phishingWebsite,
+  ]);
 
   const isDefaultPopup = useMemo(() => {
     return window.innerWidth <= 400;
@@ -346,6 +358,12 @@ const Popup = () => {
 
   return (
     <div className="popup">
+      {process.env.NODE_ENV === "development" && (
+        <div className="absolute left-5 top-3 text-gray-400">
+          <span>DEV</span>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between">
         {selectedNetwork && (
@@ -383,7 +401,9 @@ const Popup = () => {
               </button>
             </>
           )}
-          {(state === State.AUTH_MANAGEMENT || state === State.LOGIN) && (
+          {(state === State.AUTH_MANAGEMENT ||
+            state === State.LOGIN ||
+            state === State.PHISHING_DETECTED) && (
             <button className="md" onClick={() => setState(State.ACCOUNTS)}>
               <FontAwesomeIcon icon={faCircleXmark as IconProp} />
             </button>
@@ -465,6 +485,11 @@ const Popup = () => {
             </button>
           ))}
         </div>
+      )}
+
+      {/* Phishing detected */}
+      {state === State.PHISHING_DETECTED && (
+        <PhishingDetected website={phishingWebsite} />
       )}
     </div>
   );

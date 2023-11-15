@@ -9,7 +9,6 @@ import type { ExtDef } from "@polkadot/types/extrinsic/signedExtensions/types";
 import { Provider } from "@reef-chain/evm-provider";
 import { Signer as ReefVMSigner } from "@reef-chain/evm-provider";
 
-// eslint-disable-next-line no-undef
 type This = typeof globalThis;
 
 export type Unsubcall = () => void;

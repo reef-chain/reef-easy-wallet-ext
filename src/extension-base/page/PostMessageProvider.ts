@@ -79,7 +79,6 @@ export default class PostMessageProvider implements InjectedProvider {
   /**
    * @description Manually disconnect from the connection, clearing autoconnect logic
    */
-  // eslint-disable-next-line @typescript-eslint/require-await
   public async connect(): Promise<void> {
     // FIXME This should see if the extension's state's provider can disconnect
     console.error("PostMessageProvider.disconnect() is not implemented.");
@@ -88,7 +87,6 @@ export default class PostMessageProvider implements InjectedProvider {
   /**
    * @description Manually disconnect from the connection, clearing autoconnect logic
    */
-  // eslint-disable-next-line @typescript-eslint/require-await
   public async disconnect(): Promise<void> {
     // FIXME This should see if the extension's state's provider can disconnect
     console.error("PostMessageProvider.disconnect() is not implemented.");
@@ -133,7 +131,6 @@ export default class PostMessageProvider implements InjectedProvider {
 
     const meta = await sendRequest("pub(rpc.startProvider)", key);
 
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     sendRequest("pub(rpc.subscribeConnected)", null, (connected) => {
       this.#isConnected = connected;
 

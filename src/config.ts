@@ -1,15 +1,25 @@
-import { LOGIN_PROVIDER, OPENLOGIN_NETWORK } from "@web3auth/openlogin-adapter";
+import {
+  LOGIN_PROVIDER,
+  OPENLOGIN_NETWORK,
+  OPENLOGIN_NETWORK_TYPE,
+} from "@web3auth/openlogin-adapter";
 
-export const EXTENSION_NAME = "reef-socials";
-export const EXTENSION_VERSION = "0.1.0";
-export const EXTENSION_INJECTED_EVENT = "reef-socials-injected";
+let clientId =
+  "BOvtEMV93DC-l3XtAaSTkOEzYF9N_OJQWVxsU3UqbNMDi_FiHt5j9soFVeetW6xJnIrxrJO8CxvvxhEef78DO-Y";
+let web3AuthNetwork: OPENLOGIN_NETWORK_TYPE =
+  OPENLOGIN_NETWORK.SAPPHIRE_MAINNET;
+let defaultReefNetwork = "mainnet";
 
-export const CLIENT_ID =
-  "BBzp629e5yHSqgUaIPpRVbD3vq1JnFpeqGmO_fPngDLHCrY72waMSMVsOe5v30Duuzb_pwYRMYYSxwgmV3fJtJU";
-export const WEB3_AUTH_NETWORK = OPENLOGIN_NETWORK.SAPPHIRE_DEVNET;
-// export const CLIENT_ID =
-//   "BOdXYXZns0Z29SSUPsCCJmBvMnzb8rxpa9N0upcXfVjJypJ4GRKqZxX7ijEKpfTEWvCnLJahuAZJQ1A_Bwg7d-8";
-// export const WEB3_AUTH_NETWORK = OPENLOGIN_NETWORK.TESTNET;
+if (process.env.NODE_ENV === "development") {
+  clientId =
+    "BBzp629e5yHSqgUaIPpRVbD3vq1JnFpeqGmO_fPngDLHCrY72waMSMVsOe5v30Duuzb_pwYRMYYSxwgmV3fJtJU";
+  web3AuthNetwork = OPENLOGIN_NETWORK.SAPPHIRE_DEVNET;
+  defaultReefNetwork = "testnet";
+}
+
+export const CLIENT_ID = clientId;
+export const WEB3_AUTH_NETWORK = web3AuthNetwork;
+export const DEFAULT_REEF_NETWORK = defaultReefNetwork;
 
 export const REEF_LOGO =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAMAAABF0y+mAAAAjVBMVEX////y7f/CrP+cd/+EUf+ASf+PY/+0mv/q4v+QZf9WAP9cAP+if//Swv9dAP9jDf+6ov/8+v+nh//ZzP9oFv9xL//69/+vkv/v6f/p4P+sjf/Aqv/Kuf/h1v+ffP9rIP+KWv/d0f96P/+Vbf/Pvv9EAP/cxPR5AOHIasu2I7q0ALXt0u71yN/nIIzsf7frsc8CAAAAzUlEQVR4Ac2Q1aHCQBBFL8Rnw2zcXZ/Sf3e4kwI4P+OKj2W1VlRNN8ylkEUnBNlvsY1g6Ziua3rMykvMpyCMzmrM9NI5CCjBGVPw+imWkvAAZHTUBed4QrEBFKSe25Z4I2JRAAlLDe9UXANpIHn1HjNJ2r5CIlyIoZGBFCQdLNBSEErLxyKd1B3ul2OD4GJF4vylwgSS5B6sA3ZhcXXU1+OAaZ5v0ZxlBSQk4nLTjArw9f3ze59Iq9OPBBEdv/f3v8WVmAccKZXeifDB7AHedww4cWs3gQAAAABJRU5ErkJggg==";

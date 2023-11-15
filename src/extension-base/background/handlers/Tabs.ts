@@ -157,7 +157,6 @@ export default class Tabs {
     return this.#state.authorizeUrl(url, request);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private accountsList(): InjectedAccount[] {
     return transformAccounts(accountsObservable.subject.getValue());
   }
@@ -216,7 +215,6 @@ export default class Tabs {
     return this.#state.injectMetadata(url, request);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private metadataList(): InjectedMetadataKnown[] {
     return this.#state.knownMetadata.map(({ genesisHash, specVersion }) => ({
       genesisHash,
@@ -296,17 +294,13 @@ export default class Tabs {
     const encodedWebsite = encodeURIComponent(nonFragment);
     const url = `${chrome.runtime.getURL(
       "index.html"
-    )}#${PHISHING_PAGE_REDIRECT}/${encodedWebsite}`;
+    )}?${PHISHING_PAGE_REDIRECT}=${encodedWebsite}`;
 
     chrome.tabs.query({ url: nonFragment }, (tabs) => {
       tabs
         .map(({ id }) => id)
         .filter((id): id is number => isNumber(id))
-        .forEach(
-          (id) =>
-            // eslint-disable-next-line no-void
-            void chrome.tabs.update(id, { url })
-        );
+        .forEach((id) => void chrome.tabs.update(id, { url }));
     });
   }
 
