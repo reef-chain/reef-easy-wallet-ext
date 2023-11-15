@@ -235,18 +235,18 @@ const Popup = () => {
           clientId: CLIENT_ID,
           network: WEB3_AUTH_NETWORK,
           uxMode: UX_MODE.POPUP,
-          whiteLabel: {
-            appName: "Reef Web3Auth Wallet",
-            appUrl: "https://reef.io/",
-            logoLight: REEF_LOGO,
-            logoDark: REEF_LOGO,
-            defaultLanguage: "en",
-            mode: "dark",
-            theme: {
-              primary: "#5d3bad",
-            },
-            useLogoLoader: true,
-          },
+          // whiteLabel: {
+          //   appName: "Reef Web3Auth Wallet",
+          //   appUrl: "https://reef.io/",
+          //   logoLight: REEF_LOGO,
+          //   logoDark: REEF_LOGO,
+          //   defaultLanguage: "en",
+          //   mode: "dark",
+          //   theme: {
+          //     primary: "#5d3bad",
+          //   },
+          //   useLogoLoader: true,
+          // },
         },
         privateKeyProvider,
       });
