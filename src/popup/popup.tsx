@@ -22,6 +22,7 @@ import {
   faShuffle,
   faTasks,
 } from "@fortawesome/free-solid-svg-icons";
+import Uik from "@reef-chain/ui-kit";
 
 import {
   AvailableNetwork,
@@ -367,9 +368,13 @@ const Popup = () => {
       {/* Header */}
       <div className="flex justify-between">
         {selectedNetwork && (
-          <div>
-            <span className="text-lg">{selectedNetwork.name}</span>
-            <button
+          <div className="flex">
+            {selectedNetwork.name=="Reef Mainnet"?<Uik.ReefLogo/>:<Uik.ReefTestnetLogo/>}
+          </div>
+        )}
+
+        <div>
+          {selectedNetwork && <button
               className="md"
               onClick={() =>
                 selectNetwork(
@@ -378,11 +383,7 @@ const Popup = () => {
               }
             >
               <FontAwesomeIcon icon={faShuffle as IconProp} />
-            </button>
-          </div>
-        )}
-
-        <div>
+            </button>}
           {isDetached && (
             <button className="md" onClick={() => openFullPage()}>
               <FontAwesomeIcon icon={faExpand as IconProp} />
@@ -421,7 +422,7 @@ const Popup = () => {
       {state === State.ACCOUNTS && accounts?.length === 0 && (
         <>
           <div className="text-lg mt-12">No accounts available.</div>
-          <button onClick={() => setState(State.LOGIN)}>Add account</button>
+          <Uik.Button onClick={() => setState(State.LOGIN)} text="Add account" icon={faCirclePlus as IconProp}/>
         </>
       )}
 

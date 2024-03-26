@@ -1,13 +1,12 @@
 .popup-container {
   height: 600px;
-  width: 400px;
+  width: 500px;
   padding: 10px;
   margin: auto;
 }
 
 .popup {
   border-radius: 20px;
-  background-color: #2e1d57;
   height: 100%;
   width: 100%;
   padding: 20px;
