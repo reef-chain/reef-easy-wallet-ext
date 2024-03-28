@@ -16,6 +16,16 @@ import { assert } from "@polkadot/util";
 import keyring from "@polkadot/ui-keyring";
 import { LocalStore } from "../extension-base/localStore";
 
+type PortExt = chrome.runtime.Port & { _timer?: NodeJS.Timeout };
+
+const forceReconnect = (port: PortExt) => {
+  if (port._timer) {
+    clearTimeout(port._timer);
+    delete port._timer;
+  }
+  port.disconnect();
+};
+
 // listen to all messages and handle appropriately
 chrome.runtime.onConnect.addListener((port): void => {
   console.log("msg connect listener before handler=", port);
@@ -24,6 +34,10 @@ chrome.runtime.onConnect.addListener((port): void => {
     [PORT_CONTENT, PORT_EXTENSION].includes(port.name),
     `Unknown connection from ${port.name}`
   );
+
+  // Trigger reconnection every < 5 minutes to maintain the communication with the volatile service worker.
+  // The "connecting ends" are adjusted to reconnect upon disconnection.
+  (port as PortExt)._timer = setTimeout(forceReconnect, 250e3, port);
 
   // message and disconnect handlers
   port.onMessage.addListener(

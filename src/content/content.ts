@@ -5,17 +5,26 @@ import type { Message } from "../extension-base/types";
 
 import { PORT_CONTENT, PORT_PAGE } from "../extension-base/defaults";
 
-// connect to the extension
-const port = chrome.runtime.connect({ name: PORT_CONTENT });
+let port: chrome.runtime.Port;
 
-// send any messages from the extension back to the page
-port.onMessage.addListener((data): void => {
-  console.log(
-    "[Content receives port.onMessage - sends window.postMessage]",
-    data
-  );
-  window.postMessage({ ...data, origin: PORT_CONTENT }, "*");
-});
+// connect to the extension
+const connect = (): chrome.runtime.Port => {
+  port = chrome.runtime.connect({ name: PORT_CONTENT });
+  port.onDisconnect.addListener(connect); // force reconnect
+
+  // send any messages from the extension back to the page
+  port.onMessage.addListener((data): void => {
+    console.log(
+      "[Content receives port.onMessage - sends window.postMessage]",
+      data
+    );
+    window.postMessage({ ...data, origin: PORT_CONTENT }, "*");
+  });
+
+  return port;
+};
+
+port = connect();
 
 // all messages from the page, pass them to the extension
 window.addEventListener("message", ({ data, source }: Message): void => {
