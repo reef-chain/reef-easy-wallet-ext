@@ -59,6 +59,8 @@ import { createPopupData } from "./util";
 import "./popup.css";
 import { PHISHING_PAGE_REDIRECT } from "../extension-base/defaults";
 import { PhishingDetected } from "./PhishingDetected";
+import { useServiceWorkerStatus } from "../hooks/useServiceWorkerStatus";
+import { restartServiceWorker } from "../background/service_worker";
 
 const enum State {
   ACCOUNTS,
@@ -112,6 +114,8 @@ const Popup = () => {
       initWeb3Auth();
     }
   }, [selectedNetwork]);
+
+  const {isRunning:isServiceWorkerRunning} = useServiceWorkerStatus();
 
   useEffect(() => {
     if (phishingWebsite) {
@@ -364,6 +368,8 @@ const Popup = () => {
         </div>
       )}
 
+      {isServiceWorkerRunning?
+      <>
       {/* Header */}
       <div className="flex justify-between">
         {selectedNetwork && (
@@ -491,6 +497,16 @@ const Popup = () => {
       {state === State.PHISHING_DETECTED && (
         <PhishingDetected website={phishingWebsite} />
       )}
+            
+      </>: <div className="flex">
+        <button onClick={restartServiceWorker}>
+          Reload
+        </button>
+        <button onClick={()=>window.close()}>
+          Close
+        </button>
+        </div>
+        }
     </div>
   );
 };

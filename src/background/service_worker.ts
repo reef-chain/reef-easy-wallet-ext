@@ -16,6 +16,34 @@ import { assert } from "@polkadot/util";
 import keyring from "@polkadot/ui-keyring";
 import { LocalStore } from "../extension-base/localStore";
 
+// returns state of service worker
+export const healthCheck=():Promise<boolean>=> {
+  return new Promise((resolve, reject) => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistration().then((registration) => {
+        if (registration) {
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      });
+    } else {
+      resolve(false);
+    }
+  });
+}
+
+// if service worker stops
+export const restartServiceWorker = ()=>{
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      registrations.forEach(registration => {
+        registration.update();
+      });
+    });
+  }
+}
+
 // listen to all messages and handle appropriately
 chrome.runtime.onConnect.addListener((port): void => {
   console.log("msg connect listener before handler=", port);
