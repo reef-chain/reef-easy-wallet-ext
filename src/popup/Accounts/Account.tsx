@@ -119,7 +119,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
   return (
     <div className="relative" >
         {isSelected && <div className="absolute top-0 right-0 selected-badge text-white px-2 py-1">Selected</div>}
-    <div className={isSelected ? "account selected" : "account"}>
+    <div className={`${isSelected ? "account selected" : "account"} cursor-pointer`} onClick={() => selectAccount(account.address)}>
       <div className="avatar">
         {account.icon ? (
           <img src={account.icon as string} className="avatar-image"></img>
@@ -146,14 +146,6 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
             />
           ) : (
             account.name
-          )}
-          {!isSelected && (
-            <button
-              className="sm"
-              onClick={() => selectAccount(account.address)}
-            >
-              Select
-            </button>
           )}
         </div>
         <div className="flex pt-1">
