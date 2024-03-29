@@ -276,7 +276,7 @@ const Popup = () => {
           acc.verifierId === userInfo.verifierId
       )
     ) {
-      alert("Account already exists");
+      Uik.notify.info("Account already exists");
       return;
     }
 
