@@ -13,6 +13,7 @@ import {
   AuthUrlInfo,
   AuthUrls,
 } from "../../extension-base/background/handlers/State";
+import UiKit from "@reef-chain/ui-kit";
 
 export const AuthManagement = (): JSX.Element => {
   const [authList, setAuthList] = useState<AuthUrls | null>(null);
@@ -38,14 +39,14 @@ export const AuthManagement = (): JSX.Element => {
   return (
     <>
       <div className="my-4">
-        <span className="text-lg">Manage Website Access</span>
+        <UiKit.Text text="Manage Website Access" />
       </div>
       <div>
         {!authList || !Object.entries(authList)?.length ? (
-          <div>No website request yet!</div>
+          <UiKit.Text text="No website request yet!" type="mini" />
         ) : (
           <>
-            <div>
+            <div className="px-2">
               {Object.entries(authList).map(
                 ([url, info]: [string, AuthUrlInfo]) => (
                   <WebsiteEntry
