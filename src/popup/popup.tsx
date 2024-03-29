@@ -383,7 +383,7 @@ const Popup = () => {
         )}
 
         <div>
-          {isDetached && (
+          {isDetached && state==State.ACCOUNTS && (
             <button className="md" onClick={() => openFullPage()}>
               <FontAwesomeIcon icon={faExpand as IconProp} />
             </button>
