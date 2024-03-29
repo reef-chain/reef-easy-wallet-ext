@@ -119,7 +119,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
   return (
     <div className="relative" >
         {isSelected && <div className="absolute top-0 right-0 selected-badge text-white px-2 py-1">Selected</div>}
-    <div className={`${isSelected ? "account selected" : "account"} cursor-pointer`} onClick={() => selectAccount(account.address)}>
+    <div className={`${isSelected ? "account selected" : "account"}`}>
       <div className="avatar">
         {account.icon ? (
           <img src={account.icon as string} className="avatar-image"></img>
@@ -162,7 +162,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
           className="hover:cursor-pointer"
           >
           <div title={account.address}>
-            <label className="font-bold">Native address:</label>
+            <label className="font-bold pr-2">Native address:</label>
             { toAddressShortDisplay(account.address)}
             <FontAwesomeIcon
               className="ml-2"
@@ -173,12 +173,13 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
               />
           </div>
         </CopyToClipboard>
+        {isEvmClaimed !== undefined && isEvmClaimed && 
         <CopyToClipboard
           text={evmAddress ? evmAddress + " (ONLY for Reef chain!)" : ""}
           className="inline-block hover:cursor-pointer"
           >
           <div title={evmAddress || ""}>
-            <label className="font-bold">EVM address:</label>
+            <label className="font-bold pr-2">EVM address:</label>
             {evmAddress ? toAddressShortDisplay(evmAddress) : "loading..."}
             <FontAwesomeIcon
               className="ml-2"
@@ -189,11 +190,17 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
               />
           </div>
         </CopyToClipboard>
+}
         </div>
+        <div className="flex px-2">
         {isEvmClaimed !== undefined && !isEvmClaimed && (
-          <Uik.Button  onClick={bindDefaultEvmAddress} text="Connect EVM" fill/>
-            
-        )}
+          <Uik.Button className="mx-2"  onClick={bindDefaultEvmAddress} text="Bind" fill/>
+          
+          )}
+          {!isSelected && 
+          <Uik.Button onClick={() => selectAccount(account.address)} text="Select" />
+          }
+        </div>
         </div>
       </div>
       <div className="relative" ref={optionsRef}>

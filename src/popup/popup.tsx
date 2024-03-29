@@ -345,16 +345,21 @@ const Popup = () => {
       await web3auth.logout();
     }
 
-    const web3authProvider = await web3auth.connectTo<OpenloginLoginParams>(
-      WALLET_ADAPTERS.OPENLOGIN,
-      { loginProvider }
-    );
-    if (!web3authProvider) {
-      alert("web3authProvider not initialized yet");
-      return null;
+    try {
+      
+      const web3authProvider = await web3auth.connectTo<OpenloginLoginParams>(
+        WALLET_ADAPTERS.OPENLOGIN,
+        { loginProvider }
+      );
+      if (!web3authProvider) {
+        alert("web3authProvider not initialized yet");
+        return null;
+      }
+  
+      return web3authProvider;
+    } catch (error) {
+        Uik.notify.danger("Can't add account, user denied access!");
     }
-
-    return web3authProvider;
   };
 
   return (
