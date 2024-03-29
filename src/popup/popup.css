@@ -12,6 +12,10 @@
   padding: 20px;
 }
 
+.uik-modal__popup{
+  max-width: 40%!important;
+}
+
 button {
   background-color: #a93185;
   color: white;
