@@ -146,7 +146,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
             </button>
           )}
         </div>
-        <div className="flex py-2">
+        <div className="flex pt-1">
           {balance!==undefined? <Uik.ReefAmount value={toReefAmount(balance)}/>:<Uik.Loading size="small"/>}
           <div className="font-light">
         {account.verifierId &&  <Uik.Text text={getShortenedVerifier(account.verifierId as string)} className="pl-3" type="mini"/>}
