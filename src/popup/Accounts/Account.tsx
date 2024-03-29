@@ -37,6 +37,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const optionsRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     unsubBalance();
@@ -109,6 +110,12 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
       });
   };
 
+  useEffect(() => {
+    if (isEditingName && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isEditingName]);
+
   return (
     <div className={isSelected ? "account selected" : "account"}>
       <div className="avatar">
@@ -125,7 +132,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
       <div className="content">
         <div className="name">
           {isEditingName ? (
-            <Uik.Input
+            <input
               className="text-sm text-primary rounded-md px-2 my-2"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -133,6 +140,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
                 editAccount(account.address, name);
                 setIsEditingName(false);
               }}
+              ref={inputRef}
             />
           ) : (
             account.name
