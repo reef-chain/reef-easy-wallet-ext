@@ -415,7 +415,7 @@ const Popup = () => {
       {/* Loading */}
       {state === State.ACCOUNTS &&
         (!accounts || (accounts.length > 0 && !provider)) && (
-          <div className="text-lg mt-12">Loading...</div>
+          <Uik.Loading className="py-32" />
         )}
 
       {/* No accounts */}

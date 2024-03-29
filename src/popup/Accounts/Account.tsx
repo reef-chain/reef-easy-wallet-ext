@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Identicon from "@polkadot/react-identicon";
 import {
   computeDefaultEvmAddress,
@@ -34,6 +34,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
   const [signer, setSigner] = useState<Signer>();
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
+  const optionsRef = useRef(null);
 
   useEffect(() => {
     unsubBalance();
@@ -53,6 +54,20 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
       setBalance(undefined);
     }
   }, [account, provider]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (optionsRef.current && !optionsRef.current.contains(event.target)) {
+        setIsOptionsOpen(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
 
   const queryEvmAddress = async (address: string, provider: Provider) => {
     const claimedAddress = await provider.api.query.evmAccounts.evmAddresses(
@@ -169,7 +184,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
           </button>
         )}
       </div>
-      <div className="relative">
+      <div className="relative" ref={optionsRef}>
         <FontAwesomeIcon
           className="hover:cursor-pointer p-2"
           onClick={() => setIsOptionsOpen(!isOptionsOpen)}
