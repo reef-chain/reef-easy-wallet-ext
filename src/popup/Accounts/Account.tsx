@@ -117,6 +117,8 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
   }, [isEditingName]);
 
   return (
+    <div className="relative" >
+        {isSelected && <div className="absolute top-0 right-0 selected-badge text-white px-2 py-1">Selected</div>}
     <div className={isSelected ? "account selected" : "account"}>
       <div className="avatar">
         {account.icon ? (
@@ -261,6 +263,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
           // </div>
         )}
       </div>
+    </div>
     </div>
   );
 };

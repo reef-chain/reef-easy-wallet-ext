@@ -57,6 +57,12 @@ button:hover {
   align-items: center;
 }
 
+.selected-badge{
+  background-color: #a93185;
+  border-bottom-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
 .account.selected {
   border: 2px solid #a93185;
 }
