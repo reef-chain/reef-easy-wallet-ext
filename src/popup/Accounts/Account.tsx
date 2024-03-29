@@ -20,6 +20,7 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCopy, faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 import SigningKey from "../../extension-base/page/Signer";
 import Uik from "@reef-chain/ui-kit";
+import { getShortenedVerifier } from "../../utils/verifierUtil";
 
 interface Props {
   account: AccountJson;
@@ -124,7 +125,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
       <div className="content">
         <div className="name">
           {isEditingName ? (
-            <input
+            <Uik.Input
               className="text-sm text-primary rounded-md px-2 my-2"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -145,9 +146,11 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
             </button>
           )}
         </div>
-        <div className="balance">
-          <img src="/icons/icon.png" className="reef-amount-logo"></img>
-          {balance !== undefined ? toReefAmount(balance) : "loading..."}
+        <div className="flex py-2">
+          {balance!==undefined? <Uik.ReefAmount value={toReefAmount(balance)}/>:<Uik.Loading size="small"/>}
+          <div className="font-light">
+        {account.verifierId &&  <Uik.Text text={getShortenedVerifier(account.verifierId as string)} className="pl-3" type="mini"/>}
+          </div>
         </div>
         <CopyToClipboard
           text={account.address}
@@ -155,12 +158,13 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
         >
           <div title={account.address}>
             <label className="font-bold">Native address:</label>
-            {toAddressShortDisplay(account.address)}
+            { toAddressShortDisplay(account.address)}
             <FontAwesomeIcon
               className="ml-2"
               icon={faCopy as IconProp}
               size="sm"
               title="Copy Reef Account Address"
+              onClick={()=>Uik.notify.info("Copied Address to clipboard")}
             />
           </div>
         </CopyToClipboard>
@@ -176,6 +180,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
               icon={faCopy as IconProp}
               size="sm"
               title="Copy EVM Address"
+              onClick={()=>Uik.notify.info("Copied EVM Address to clipboard! (ONLY for Reef chain!)")}
             />
           </div>
         </CopyToClipboard>
