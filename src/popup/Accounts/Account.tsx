@@ -106,7 +106,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
       })
       .catch((error) => {
         console.log("evm bind error", error);
-        alert("Failed to bind EVM address");
+        Uik.notify.danger("Failed to bind EVM address");
       });
   };
 
