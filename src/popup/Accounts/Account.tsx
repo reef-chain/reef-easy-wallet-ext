@@ -19,6 +19,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faCopy, faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 import SigningKey from "../../extension-base/page/Signer";
+import Uik from "@reef-chain/ui-kit";
 
 interface Props {
   account: AccountJson;
@@ -192,30 +193,59 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
           title="Account options"
         />
         {isOptionsOpen && (
-          <div className="absolute right-0 p-2 bg-white text-secondary font-bold text-left rounded-lg">
-            <div className="mb-1 pb-1 border-b border-gray-300">
-              <span className="font-normal">Verifier ID:</span>{" "}
-              {(account.verifierId || "unknown") as string}
-            </div>
-            <div
-              className="mb-1 hover:cursor-pointer hover:text-primary"
+          <Uik.Dropdown
+          isOpen={isOptionsOpen}
+          onClose={() => setIsOptionsOpen(false)}
+          position="bottomLeft"
+        >
+          <div className="p-2 flex flex-col justify-start items-start">
+            <Uik.Text type="mini"
+              text={`Verifier ID:`}
+            />
+            <Uik.Text type="mini"
+              text={`${(account.verifierId || "unknown") as string}`}
+            />
+          </div>
+            <Uik.Divider/>
+            <Uik.DropdownItem
+              text='Rename'
               onClick={() => {
                 setIsEditingName(true);
                 setIsOptionsOpen(false);
               }}
-            >
-              Rename
-            </div>
-            <div
-              className="hover:cursor-pointer hover:text-primary"
+            />
+            <Uik.DropdownItem
+              text='Forget account'
               onClick={() => {
                 forgetAccount(account.address);
                 setIsOptionsOpen(false);
               }}
-            >
-              Forget account
-            </div>
-          </div>
+            />
+        </Uik.Dropdown>
+          // <div className="absolute right-0 p-2 bg-white text-secondary font-bold text-left rounded-lg">
+          //   <div className="mb-1 pb-1 border-b border-gray-300">
+          //     <span className="font-normal">Verifier ID:</span>{" "}
+          //     {(account.verifierId || "unknown") as string}
+          //   </div>
+          //   <div
+          //     className="mb-1 hover:cursor-pointer hover:text-primary"
+          //     onClick={() => {
+          //       setIsEditingName(true);
+          //       setIsOptionsOpen(false);
+          //     }}
+          //   >
+          //     Rename
+          //   </div>
+          //   <div
+          //     className="hover:cursor-pointer hover:text-primary"
+          //     onClick={() => {
+          //       forgetAccount(account.address);
+          //       setIsOptionsOpen(false);
+          //     }}
+          //   >
+          //     Forget account
+          //   </div>
+          // </div>
         )}
       </div>
     </div>
