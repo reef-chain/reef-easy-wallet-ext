@@ -148,6 +148,9 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
             account.name
           )}
         </div>
+        <div className="flex">
+          <div>
+
         <div className="flex pt-1">
           {balance!==undefined? <Uik.ReefAmount value={toReefAmount(balance)}/>:<Uik.Loading size="small"/>}
           <div className="font-light">
@@ -157,7 +160,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
         <CopyToClipboard
           text={account.address}
           className="hover:cursor-pointer"
-        >
+          >
           <div title={account.address}>
             <label className="font-bold">Native address:</label>
             { toAddressShortDisplay(account.address)}
@@ -167,13 +170,13 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
               size="sm"
               title="Copy Reef Account Address"
               onClick={()=>Uik.notify.info("Copied Address to clipboard")}
-            />
+              />
           </div>
         </CopyToClipboard>
         <CopyToClipboard
           text={evmAddress ? evmAddress + " (ONLY for Reef chain!)" : ""}
           className="inline-block hover:cursor-pointer"
-        >
+          >
           <div title={evmAddress || ""}>
             <label className="font-bold">EVM address:</label>
             {evmAddress ? toAddressShortDisplay(evmAddress) : "loading..."}
@@ -183,14 +186,15 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
               size="sm"
               title="Copy EVM Address"
               onClick={()=>Uik.notify.info("Copied EVM Address to clipboard! (ONLY for Reef chain!)")}
-            />
+              />
           </div>
         </CopyToClipboard>
+        </div>
         {isEvmClaimed !== undefined && !isEvmClaimed && (
-          <button className="sm" onClick={bindDefaultEvmAddress}>
-            Bind
-          </button>
+          <Uik.Button  onClick={bindDefaultEvmAddress} text="Connect EVM" fill/>
+            
         )}
+        </div>
       </div>
       <div className="relative" ref={optionsRef}>
         <FontAwesomeIcon
