@@ -19,12 +19,12 @@ function Bytes({ bytes, url }: Props): React.ReactElement<Props> {
     <table className="flex">
       <tbody>
         <tr>
-          <td className="label">From</td>
-          <td className="pl-4">{url}</td>
+          <td className="font-semibold label" style={{ color: '#a93185' }}>From</td>
+          <td className="flex items-start pl-4">{url}</td>
         </tr>
         <tr>
-          <td className="label">Bytes</td>
-          <td className="pl-4">{text}</td>
+        <td className="font-semibold label" style={{ color: '#a93185' }}>Bytes</td>
+          <td className="flex items-start pl-4">{text}</td>
         </tr>
       </tbody>
     </table>

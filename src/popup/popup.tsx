@@ -22,6 +22,7 @@ import {
   faShuffle,
   faTasks,
 } from "@fortawesome/free-solid-svg-icons";
+import Uik from "@reef-chain/ui-kit";
 
 import {
   AvailableNetwork,
@@ -275,7 +276,7 @@ const Popup = () => {
           acc.verifierId === userInfo.verifierId
       )
     ) {
-      alert("Account already exists");
+      Uik.notify.info("Account already exists");
       return;
     }
 
@@ -344,16 +345,21 @@ const Popup = () => {
       await web3auth.logout();
     }
 
-    const web3authProvider = await web3auth.connectTo<OpenloginLoginParams>(
-      WALLET_ADAPTERS.OPENLOGIN,
-      { loginProvider }
-    );
-    if (!web3authProvider) {
-      alert("web3authProvider not initialized yet");
-      return null;
+    try {
+      
+      const web3authProvider = await web3auth.connectTo<OpenloginLoginParams>(
+        WALLET_ADAPTERS.OPENLOGIN,
+        { loginProvider }
+      );
+      if (!web3authProvider) {
+        alert("web3authProvider not initialized yet");
+        return null;
+      }
+  
+      return web3authProvider;
+    } catch (error) {
+        Uik.notify.danger("Can't add account, user denied access!");
     }
-
-    return web3authProvider;
   };
 
   return (
@@ -367,9 +373,13 @@ const Popup = () => {
       {/* Header */}
       <div className="flex justify-between">
         {selectedNetwork && (
-          <div>
-            <span className="text-lg">{selectedNetwork.name}</span>
-            <button
+          <div className="flex">
+            {selectedNetwork.name=="Reef Mainnet"?<Uik.ReefLogo/>:<Uik.ReefTestnetLogo/>}
+          </div>
+        )}
+
+        <div>
+          {selectedNetwork && <button
               className="md"
               onClick={() =>
                 selectNetwork(
@@ -379,8 +389,9 @@ const Popup = () => {
             >
               <FontAwesomeIcon icon={faShuffle as IconProp} />
             </button>
-          </div>
+        
         )}
+        </div>
 
         <div>
           {isDetached && state==State.ACCOUNTS && (
@@ -414,14 +425,14 @@ const Popup = () => {
       {/* Loading */}
       {state === State.ACCOUNTS &&
         (!accounts || (accounts.length > 0 && !provider)) && (
-          <div className="text-lg mt-12">Loading...</div>
+          <Uik.Loading className="py-32" />
         )}
 
       {/* No accounts */}
       {state === State.ACCOUNTS && accounts?.length === 0 && (
         <>
           <div className="text-lg mt-12">No accounts available.</div>
-          <button onClick={() => setState(State.LOGIN)}>Add account</button>
+          <Uik.Button onClick={() => setState(State.LOGIN)} text="Add account" icon={faCirclePlus as IconProp}/>
         </>
       )}
 
@@ -466,25 +477,34 @@ const Popup = () => {
 
       {/* Login */}
       {state === State.LOGIN && (
-        <div>
-          <div className="text-lg mt-8">Choose login provider</div>
-          {LOGIN_PROVIDERS.map((provider) => (
-            <button
-              className="group"
-              key={provider}
-              onClick={() => addAccount(provider, web3auth)}
-            >
-              <img
-                className="group-hover:hidden h-6"
-                src={`/icons/login_providers/login-${provider}-dark.svg`}
-              ></img>
-              <img
-                className="hidden group-hover:block h-6"
-                src={`/icons/login_providers/login-${provider}-active.svg`}
-              ></img>
-            </button>
-          ))}
-        </div>
+       <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch" }}>
+       <Uik.Text className="text-lg my-4" text="Choose login provider"/>
+       <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch" }}>
+         {LOGIN_PROVIDERS.map((provider) => (
+           <button
+             className="group relative overflow-hidden"
+             key={provider}
+             onClick={() => addAccount(provider, web3auth)}
+             style={{ flex: "1", position: "relative", backgroundColor: "transparent", display: "flex", alignItems: "center", justifyContent: "center",width: '400px',border:'1px solid #5f636863' }}
+           >
+             <div className="flex min-w-max">
+               <span
+                 className="absolute inset-0 filter blur-md"
+                 style={{ zIndex: "-1", backgroundImage: `url(/icons/login_providers/login-${provider}-active.svg)`, backgroundSize: "cover", backgroundPosition: "center", opacity: "0.7" }}
+               />
+               <img
+                 className="group-hover:block h-6"
+                 src={`/icons/login_providers/login-${provider}-active.svg`}
+                 alt={`${provider} icon`}
+               />
+               <Uik.Text text={provider.toUpperCase()} className="pl-2"/>
+             </div>
+           </button>
+         ))}
+       </div>
+     </div>
+     
+     
       )}
 
       {/* Phishing detected */}

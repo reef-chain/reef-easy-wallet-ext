@@ -46,6 +46,7 @@ export function metadataExpand(
   }
 
   registry.setChainProperties(
+    //@ts-ignore
     registry.createType("ChainProperties", {
       ss58Format,
       tokenDecimals,
