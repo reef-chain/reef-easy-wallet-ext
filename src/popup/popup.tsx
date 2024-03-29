@@ -467,25 +467,34 @@ const Popup = () => {
 
       {/* Login */}
       {state === State.LOGIN && (
-        <div>
-          <div className="text-lg mt-8">Choose login provider</div>
-          {LOGIN_PROVIDERS.map((provider) => (
-            <button
-              className="group"
-              key={provider}
-              onClick={() => addAccount(provider, web3auth)}
-            >
-              <img
-                className="group-hover:hidden h-6"
-                src={`/icons/login_providers/login-${provider}-dark.svg`}
-              ></img>
-              <img
-                className="hidden group-hover:block h-6"
-                src={`/icons/login_providers/login-${provider}-active.svg`}
-              ></img>
-            </button>
-          ))}
-        </div>
+       <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch" }}>
+       <Uik.Text className="text-lg my-4" text="Choose login provider"/>
+       <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch" }}>
+         {LOGIN_PROVIDERS.map((provider) => (
+           <button
+             className="group relative overflow-hidden"
+             key={provider}
+             onClick={() => addAccount(provider, web3auth)}
+             style={{ flex: "1", position: "relative", backgroundColor: "transparent", display: "flex", alignItems: "center", justifyContent: "center",width: '400px',border:'1px solid #5f636863' }}
+           >
+             <div className="flex min-w-max">
+               <span
+                 className="absolute inset-0 filter blur-md"
+                 style={{ zIndex: "-1", backgroundImage: `url(/icons/login_providers/login-${provider}-active.svg)`, backgroundSize: "cover", backgroundPosition: "center", opacity: "0.7" }}
+               />
+               <img
+                 className="group-hover:block h-6"
+                 src={`/icons/login_providers/login-${provider}-active.svg`}
+                 alt={`${provider} icon`}
+               />
+               <Uik.Text text={provider.toUpperCase()} className="pl-2"/>
+             </div>
+           </button>
+         ))}
+       </div>
+     </div>
+     
+     
       )}
 
       {/* Phishing detected */}
