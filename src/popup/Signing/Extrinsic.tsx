@@ -71,8 +71,8 @@ function renderMethod(
       <table className="flex">
         <tbody>
           <tr>
-            <td>Method data</td>
-            <td className="pl-4">{data}</td>
+            <td className="font-semibold" style={{ color: '#a93185' }}>Method data</td>
+            <td className="flex items-start">{data}</td>
           </tr>
         </tbody>
       </table>
@@ -83,8 +83,8 @@ function renderMethod(
     <table className="flex">
       <tbody>
         <tr>
-          <td>Method</td>
-          <td className="pl-4">
+          <td className="font-semibold" style={{ color: '#a93185' }}>Method</td>
+          <td className="flex items-start">
             <details>
               <summary>
                 {method.section}.{method.method}
@@ -98,8 +98,8 @@ function renderMethod(
         </tr>
         {method.meta && (
           <tr>
-            <td>Info</td>
-            <td className="pl-4">
+            <td className="font-semibold" style={{ color: '#a93185' }}>Info</td>
+            <td className="flex items-start">
               <details>
                 <summary>
                   {method.meta.docs.map((d) => d.toString().trim()).join(" ")}
@@ -142,34 +142,34 @@ function Extrinsic({
   );
 
   return (
-    <table className="flex">
+    <table className="flex justify-start items-start">
       <tbody>
         <tr>
-          <td>From</td>
-          <td className="pl-4">{url}</td>
+          <td className="font-semibold" style={{ color: '#a93185' }}>From</td>
+          <td className="flex items-start">{url}</td>
         </tr>
         <tr>
-          <td>{chain ? "Chain" : "Genesis"}</td>
-          <td className="pl-4">{chain ? chain.name : genesisHash}</td>
+          <td className="font-semibold" style={{ color: '#a93185' }}>{chain ? "Chain" : "Genesis"}</td>
+          <td className="flex items-start">{chain ? chain.name : genesisHash}</td>
         </tr>
         <tr>
-          <td>Version</td>
-          <td className="pl-4">{specVersion.toNumber()}</td>
+          <td className="font-semibold" style={{ color: '#a93185' }}>Version</td>
+          <td className="flex items-start">{specVersion.toNumber()}</td>
         </tr>
         <tr>
-          <td>Nonce</td>
-          <td className="pl-4">{formatNumber(nonce)}</td>
+          <td className="font-semibold" style={{ color: '#a93185' }}>Nonce</td>
+          <td className="flex items-start">{formatNumber(nonce)}</td>
         </tr>
         {!tip.isEmpty && (
           <tr>
-            <td>Tip</td>
-            <td className="pl-4">{formatNumber(tip)}</td>
+            <td className="font-semibold" style={{ color: '#a93185' }}>Tip</td>
+            <td className="flex items-start">{formatNumber(tip)}</td>
           </tr>
         )}
         {renderMethod(method, decoded)}
         <tr>
-          <td>Lifetime</td>
-          <td className="pl-4">{mortalityAsString(era, blockNumber)}</td>
+          <td className="font-semibold" style={{ color: '#a93185' }}>Lifetime</td>
+          <td className="flex items-start">{mortalityAsString(era, blockNumber)}</td>
         </tr>
       </tbody>
     </table>
