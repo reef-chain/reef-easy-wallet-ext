@@ -22,6 +22,7 @@ import {
   isSignLocked,
 } from "../messaging";
 import { PASSWORD_EXPIRY_MIN } from "../../extension-base/defaults";
+import Uik from "@reef-chain/ui-kit";
 
 interface Props {
   account: AccountJson;
@@ -132,6 +133,7 @@ export default function Request({
 
   return (
     <>
+    <div className="account selected">
       {payload !== null ? (
         <Extrinsic
           payload={payload}
@@ -141,6 +143,7 @@ export default function Request({
       ) : hexBytes !== null ? (
         <Bytes bytes={hexBytes} url={url} />
       ) : null}
+    </div>
       <div>
         {isFirst && isLocked && (
           <div className="mt-2">
@@ -156,14 +159,13 @@ export default function Request({
             </span>
           </div>
         )}
+        <div className="flex">
         {isFirst && (
-          <button onClick={_onSign} disabled={isBusy}>
-            {buttonText}
-          </button>
+          <Uik.Button onClick={_onSign} disabled={isBusy} text={buttonText} fill/>
         )}
-        <button onClick={_onCancel} disabled={isBusy}>
-          Cancel
-        </button>
+        <Uik.Button onClick={_onCancel} disabled={isBusy} text="Cancel"/>
+          
+        </div>
       </div>
     </>
   );

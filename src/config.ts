@@ -12,7 +12,7 @@ let defaultReefNetwork = "mainnet";
 
 if (process.env.NODE_ENV === "development") {
   clientId =
-    "BBzp629e5yHSqgUaIPpRVbD3vq1JnFpeqGmO_fPngDLHCrY72waMSMVsOe5v30Duuzb_pwYRMYYSxwgmV3fJtJU";
+    "BOvtEMV93DC-l3XtAaSTkOEzYF9N_OJQWVxsU3UqbNMDi_FiHt5j9soFVeetW6xJnIrxrJO8CxvvxhEef78DO-Y";
   web3AuthNetwork = OPENLOGIN_NETWORK.SAPPHIRE_DEVNET;
   defaultReefNetwork = "testnet";
 }

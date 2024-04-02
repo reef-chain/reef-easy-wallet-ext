@@ -1,16 +1,19 @@
 .popup-container {
   height: 600px;
-  width: 400px;
+  width: 580px;
   padding: 10px;
   margin: auto;
 }
 
 .popup {
   border-radius: 20px;
-  background-color: #2e1d57;
   height: 100%;
   width: 100%;
   padding: 20px;
+}
+
+.uik-modal__popup{
+  max-width: 40%!important;
 }
 
 button {
@@ -50,7 +53,7 @@ button:hover {
 
 .account {
   display: flex;
-  background-color: #513f79;
+  background-color: #a931854e;
   border-radius: 8px;
   padding: 8px 16px 12px 16px;
   max-width: 650px;
@@ -58,8 +61,14 @@ button:hover {
   align-items: center;
 }
 
+.selected-badge{
+  background-color: #a93185;
+  border-bottom-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
 .account.selected {
-  border: 2px solid white;
+  border: 2px solid #a93185;
 }
 
 .account .content {
