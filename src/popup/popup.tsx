@@ -379,7 +379,7 @@ const Popup = () => {
         )}
 
         <div>
-          {selectedNetwork && <button
+        {selectedNetwork && <button
               className="md"
               onClick={() =>
                 selectNetwork(
@@ -388,8 +388,9 @@ const Popup = () => {
               }
             >
               <FontAwesomeIcon icon={faShuffle as IconProp} />
-            </button>}
-          {isDetached && (
+            </button>
+        }
+          {isDetached && state==State.ACCOUNTS && (
             <button className="md" onClick={() => openFullPage()}>
               <FontAwesomeIcon icon={faExpand as IconProp} />
             </button>
