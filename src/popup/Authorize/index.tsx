@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import RequestIndex from "../RequestIndex";
 import Request from "./Request";
 import { AuthorizeRequest } from "../../extension-base/background/types";
+import Uik from "@reef-chain/ui-kit";
 
 interface Props {
   requests: AuthorizeRequest[];
@@ -33,7 +34,7 @@ export const Authorize = ({ requests }: Props): JSX.Element => {
   return requests.length && requests[requestIndex] ? (
     <>
       <div className="my-4">
-        <span className="text-lg">Authorize</span>
+        <Uik.Text text="Authorize" type="title"/>
         {requests.length > 1 && (
           <RequestIndex
             index={requestIndex}
