@@ -21,6 +21,7 @@
     "@polkadot/util-crypto": "^12.5.1",
     "@reef-chain/evm-provider": "^2.0.0-alpha6",
     "@reef-chain/ui-kit": "^2.0.4",
+    "@reef-chain/util-lib": "^2.4.14",
     "@web3auth/base": "^7.0.1",
     "@web3auth/no-modal": "^7.0.1",
     "@web3auth/openlogin-adapter": "^7.0.1",

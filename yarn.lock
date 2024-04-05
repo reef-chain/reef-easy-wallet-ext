@@ -3137,7 +3137,7 @@
     react-syntax-highlighter "^15.5.0"
     react-transition-group "^4.4.2"
 
-"@reef-chain/util-lib@^2.4.4":
+"@reef-chain/util-lib@^2.4.14", "@reef-chain/util-lib@^2.4.4":
   version "2.4.14"
   resolved "https://registry.yarnpkg.com/@reef-chain/util-lib/-/util-lib-2.4.14.tgz#c00349079dfb51ec5af371da173bd1a72f21520e"
   integrity sha512-PysesQaVczdb//VHCKbKSe3Z2BMDMcB7Ch2vq2H5gJ8RN3eb+6ii9HKCX0BU007yV5ZeGLO38Qh6YbTr9B0f2Q==

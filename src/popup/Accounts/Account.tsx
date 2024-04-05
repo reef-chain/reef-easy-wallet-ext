@@ -21,6 +21,7 @@ import { faCopy, faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 import SigningKey from "../../extension-base/page/Signer";
 import Uik from "@reef-chain/ui-kit";
 import { getShortenedVerifier } from "../../utils/verifierUtil";
+import {addressUtils} from "@reef-chain/util-lib";
 
 interface Props {
   account: AccountJson;
@@ -179,7 +180,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
               </CopyToClipboard>
               {isEvmClaimed !== undefined && isEvmClaimed &&
                 <CopyToClipboard
-                  text={evmAddress ? evmAddress + " (ONLY for Reef chain!)" : ""}
+                  text={addressUtils.addReefSpecificStringFromAddress(evmAddress)}
                   className="inline-block hover:cursor-pointer"
                 >
                   <div title={evmAddress || ""}>
@@ -190,7 +191,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
                       icon={faCopy as IconProp}
                       size="sm"
                       title="Copy EVM Address"
-                      onClick={() => Uik.notify.info("Copied EVM Address to clipboard! (ONLY for Reef chain!)")}
+                      onClick={() => Uik.notify.info("Copied EVM Address to clipboard!")}
                     />
                   </div>
                 </CopyToClipboard>
