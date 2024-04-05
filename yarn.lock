@@ -2,11 +2,6 @@
 # yarn lockfile v1
 
 
-"18@^0.0.0":
-  version "0.0.0"
-  resolved "https://registry.yarnpkg.com/18/-/18-0.0.0.tgz#a3d0f4a3716c60c77f4158d8b53262049c6c2082"
-  integrity sha512-2SPMA/ciHy16yY4uVXDrW8q7nLwb2F2Vrt8Qz5OiVo9cyC8Wo8/rwC2hDzbqlTXhIwzt2Y4yJRLem6XMNbT/3A==
-
 "@aashutoshrathi/word-wrap@^1.2.3":
   version "1.2.6"
   resolved "https://registry.yarnpkg.com/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz#bd9154aec9983f77b3a034ecaa015c2e4201f6cf"
@@ -3142,7 +3137,7 @@
     react-syntax-highlighter "^15.5.0"
     react-transition-group "^4.4.2"
 
-"@reef-chain/util-lib@^2.4.4":
+"@reef-chain/util-lib@^2.4.14", "@reef-chain/util-lib@^2.4.4":
   version "2.4.14"
   resolved "https://registry.yarnpkg.com/@reef-chain/util-lib/-/util-lib-2.4.14.tgz#c00349079dfb51ec5af371da173bd1a72f21520e"
   integrity sha512-PysesQaVczdb//VHCKbKSe3Z2BMDMcB7Ch2vq2H5gJ8RN3eb+6ii9HKCX0BU007yV5ZeGLO38Qh6YbTr9B0f2Q==
