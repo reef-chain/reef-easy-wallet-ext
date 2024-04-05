@@ -120,3 +120,8 @@ button:hover {
   background-color: white;
   padding: 2px;
 }
+
+.uik-modal .uik-modal__container .uik-modal__popup {
+    max-height: 100vh;
+    min-width: 60vw;
+}
