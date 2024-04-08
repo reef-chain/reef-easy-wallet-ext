@@ -37,6 +37,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
   const [signer, setSigner] = useState<Signer>();
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
+  const [isForgetAccountOpen, setIsForgetAccountOpen] = useState(false);
   const optionsRef = useRef(null);
   const inputRef = useRef(null);
   const [isOpen, setOpen] = useState(false)
@@ -259,11 +260,12 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
               <Uik.DropdownItem
                 text='Forget account'
                 onClick={() => {
-                  forgetAccount(account.address);
+                  setIsForgetAccountOpen(true);
                   setIsOptionsOpen(false);
                 }}
               />
             </Uik.Dropdown>
+            
             // <div className="absolute right-0 p-2 bg-white text-secondary font-bold text-left rounded-lg">
             //   <div className="mb-1 pb-1 border-b border-gray-300">
             //     <span className="font-normal">Verifier ID:</span>{" "}
@@ -289,12 +291,50 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
             //   </div>
             // </div>
           )}
+
+           <Uik.Modal
+            title='Forget Account'
+            isOpen={isForgetAccountOpen}
+            onClose={() => setIsForgetAccountOpen(false)}
+            footer={
+              <>
+                <Uik.Button text='Close' onClick={() => setIsForgetAccountOpen(false)}/>
+                <Uik.Button text='Delete Account' danger onClick={() => {
+                  forgetAccount(account.address);
+                  setIsForgetAccountOpen(false);
+                  Uik.notify.success(`Removed ${account.name!} successfully!`)
+                  }} />
+              </>
+            }
+          >
+            <div >
+            <Uik.Text>Account will be removed from extension and you could loose access to funds it holds.</Uik.Text>
+            </div>
+          </Uik.Modal>
           <Uik.Modal
             title='Share Address'
             isOpen={isOpen}
             onClose={() => setOpen(false)}
           >
+            <div>
               <Uik.QRCode value={qrvalue} />
+              <CopyToClipboard
+                text={qrvalue}
+                className="hover:cursor-pointer flex align-middle justify-center items-center"
+              >
+                <div className="flex">
+                  <div className="text-sm font-extralight mt-4 text-gray-400">{toAddressShortDisplay(qrvalue)}</div>
+                  <FontAwesomeIcon
+                    className="ml-2 text-gray-400 mt-4"
+                    icon={faCopy as IconProp}
+                 
+                    size="sm"
+                    title="Copy Reef Account Address"
+                    onClick={() => Uik.notify.info("Copied Address to clipboard")}
+                  />
+                </div>
+              </CopyToClipboard>
+            </div>
           </Uik.Modal>
         </div>
       </div>
