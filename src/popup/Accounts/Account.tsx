@@ -138,7 +138,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
           <div className="name">
             {isEditingName ? (
               <input
-                className="text-sm text-primary rounded-md px-2 my-2"
+                className="text-sm text-primary rounded-md px-2 my-2 py-2"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => {
@@ -146,6 +146,10 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
                     editAccount(account.address, name);
                     setIsEditingName(false);
                   }
+                }}
+                onBlur={() => {
+                  editAccount(account.address, name);
+                  setIsEditingName(false);
                 }}
                 ref={inputRef}
               />
