@@ -1,11 +1,11 @@
 {
-  "name": "Reef Socials Wallet Chrome Extension",
-  "description": "Reef wallet Chrome extension using Web3Auth for account management",
+  "name": "Reef Easy Social Account Extension",
+  "description": "Reef wallet using Web3Auth social login for account management",
   "version": "0.1.0",
   "manifest_version": 3,
   "action": {
     "default_popup": "index.html",
-    "default_title": "Reef Socials Wallet Chrome Extension",
+    "default_title": "Reef Easy Social Account Extension",
     "default_icon": "icons/icon.png"
   },
   "permissions": ["storage", "tabs", "offscreen"],
