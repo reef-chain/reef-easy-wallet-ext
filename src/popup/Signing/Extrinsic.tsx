@@ -71,8 +71,8 @@ function renderMethod(
       <table className="flex">
         <tbody>
           <tr>
-            <td className="font-semibold" style={{ color: '#a93185' }}>Method data</td>
-            <td className="flex items-start pl-4">{data}</td>
+            <td className="font-semibold" style={{ color: '#681cff ' }}>Method data</td>
+            <td className="flex items-start pl-4"> {data.slice(0,52)}...</td>
           </tr>
         </tbody>
       </table>
@@ -83,7 +83,7 @@ function renderMethod(
     <table className="flex">
       <tbody>
         <tr>
-          <td className="font-semibold" style={{ color: '#a93185' }}>Method</td>
+          <td className="font-semibold" style={{ color: '#681cff ' }}>Method</td>
           <td className="flex items-start pl-4">
             <details>
               <summary>
@@ -98,7 +98,7 @@ function renderMethod(
         </tr>
         {method.meta && (
           <tr>
-            <td className="font-semibold" style={{ color: '#a93185' }}>Info</td>
+            <td className="font-semibold" style={{ color: '#681cff ' }}>Info</td>
             <td className="flex items-start pl-4">
               <details>
                 <summary>
@@ -145,30 +145,30 @@ function Extrinsic({
     <table className="flex justify-start items-start pl-4">
       <tbody>
         <tr>
-          <td className="font-semibold" style={{ color: '#a93185' }}>From</td>
+          <td className="font-semibold" style={{ color: '#681cff ' }}>From</td>
           <td className="flex items-start pl-4">{url}</td>
         </tr>
         <tr>
-          <td className="font-semibold" style={{ color: '#a93185' }}>{chain ? "Chain" : "Genesis"}</td>
+          <td className="font-semibold" style={{ color: '#681cff ' }}>{chain ? "Chain" : "Genesis"}</td>
           <td className="flex items-start pl-4" style={{overflow: 'hidden'}}>{chain ? chain.name : genesisHash.slice(0,52)+"..."}</td>
         </tr>
         <tr>
-          <td className="font-semibold" style={{ color: '#a93185' }}>Version</td>
+          <td className="font-semibold" style={{ color: '#681cff ' }}>Version</td>
           <td className="flex items-start pl-4">{specVersion.toNumber()}</td>
         </tr>
         <tr>
-          <td className="font-semibold" style={{ color: '#a93185' }}>Nonce</td>
+          <td className="font-semibold" style={{ color: '#681cff ' }}>Nonce</td>
           <td className="flex items-start pl-4">{formatNumber(nonce)}</td>
         </tr>
         {!tip.isEmpty && (
           <tr>
-            <td className="font-semibold" style={{ color: '#a93185' }}>Tip</td>
+            <td className="font-semibold" style={{ color: '#681cff ' }}>Tip</td>
             <td className="flex items-start pl-4">{formatNumber(tip)}</td>
           </tr>
         )}
         {renderMethod(method, decoded)}
         <tr>
-          <td className="font-semibold" style={{ color: '#a93185' }}>Lifetime</td>
+          <td className="font-semibold" style={{ color: '#681cff ' }}>Lifetime</td>
           <td className="flex items-start pl-4">{mortalityAsString(era, blockNumber)}</td>
         </tr>
       </tbody>

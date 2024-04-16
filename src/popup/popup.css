@@ -17,7 +17,7 @@
 }
 
 button {
-  background-color: #a93185;
+  background-color: #681cff ;
   color: white;
   border-radius: 8px;
   display: block;
@@ -43,7 +43,7 @@ button.sm {
 }
 
 button:hover {
-  background-color: #a931859b;
+  background-color: #681cff 9b;
 }
 
 .loading {
@@ -53,7 +53,7 @@ button:hover {
 
 .account {
   display: flex;
-  background-color: #a931854e;
+  background-color: #681cff 4e;
   border-radius: 8px;
   padding: 8px 16px 12px 16px;
   max-width: 650px;
@@ -62,13 +62,13 @@ button:hover {
 }
 
 .selected-badge{
-  background-color: #a93185;
+  background-color: #681cff ;
   border-bottom-left-radius: 8px;
   border-top-right-radius: 8px;
 }
 
 .account.selected {
-  border: 2px solid #a93185;
+  border: 2px solid #681cff ;
 }
 
 .account .content {
