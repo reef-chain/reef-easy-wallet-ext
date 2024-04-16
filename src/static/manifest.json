@@ -8,7 +8,7 @@
     "default_title": "Reef Easy Social Account Extension",
     "default_icon": "icons/icon.png"
   },
-  "permissions": ["storage", "tabs", "offscreen"],
+  "permissions": ["storage", "tabs"],
   "icons": {
     "16": "icons/icon.png",
     "48": "icons/icon.png",

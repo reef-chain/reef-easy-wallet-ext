@@ -3,6 +3,9 @@
   width: 580px;
   padding: 10px;
   margin: auto;
+  display: flex;
+  flex-direction: column;
+  max-width: 100vw;
 }
 
 .popup {
@@ -23,7 +26,7 @@ button {
   display: block;
   padding: 10px 20px;
   margin: 10px auto;
-  font-size: 1rem;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
