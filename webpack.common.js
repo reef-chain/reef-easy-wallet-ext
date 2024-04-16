@@ -78,7 +78,7 @@ module.exports = {
       Buffer: ["buffer", "Buffer"],
     }),
     new HtmlPlugin({
-      title: "Reef Socials Wallet Chrome Extension",
+      title: "Reef Easy Social Account Extension",
       filename: "index.html",
       chunks: ["popup"],
     }),

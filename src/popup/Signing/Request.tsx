@@ -112,10 +112,11 @@ export default function Request({
       password = await getOrRefreshAuth();
       if (!password) {
         setIsBusy(false);
-        alert("Wrong auth");
+        Uik.notify.danger("Unable to authenticate")
         return;
       }
     }
+
 
     return approveSignRequest(signId, savePass, password)
       .then((): void => {

@@ -1,4 +1,4 @@
-# Reef Socials Wallet Chrome Extension
+# Reef Easy Social Account Chrome Extension
 
 A Chrome extension for the Reef Chain that uses [Web3Auth](https://web3auth.io/) to create and authenticate to Reef accounts using different social media platforms.
 
