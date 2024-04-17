@@ -75,7 +75,6 @@ const Popup = () => {
   const [web3auth, setWeb3auth] = useState<Web3AuthNoModal | null>(null);
   const [state, setState] = useState<State>(State.ACCOUNTS);
   const [accounts, setAccounts] = useState<null | AccountJson[]>(null);
-  const [init,setInit] = useState(true);
   const [selectedAccount, setSelectedAccount] = useState<null | AccountJson>(
     null
   );
