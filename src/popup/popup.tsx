@@ -385,7 +385,7 @@ const Popup = () => {
             <>
               <Uik.Button text='Add Accounts' icon={faCirclePlus as IconProp} onClick={() => setState(State.LOGIN)} neomorph/>
 
-              <Uik.Button icon={faGear as IconProp} onClick={() => setIsSettingsOpen(true)} neomorph className="mx-2"/>
+              <Uik.Button icon={faGear as IconProp} onClick={() => setIsSettingsOpen(true)} neomorph className="mx-2 rounded-3xl"/>
 
               <div style={{
   position:'relative',
@@ -431,9 +431,7 @@ const Popup = () => {
           {(state === State.AUTH_MANAGEMENT ||
             state === State.LOGIN ||
             state === State.PHISHING_DETECTED) && (
-            <button className="md" onClick={() => setState(State.ACCOUNTS)}>
-              <FontAwesomeIcon icon={faCircleXmark as IconProp} />
-            </button>
+            <Uik.Button icon={faCircleXmark} onClick={() => setState(State.ACCOUNTS)} neomorph/>
           )}
         </div>
       </div>

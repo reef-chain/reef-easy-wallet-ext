@@ -147,3 +147,14 @@ button:hover {
 .reef-icon .reef-icon__circle {
   fill: #681cff !important;
 }
+
+.reef-logo .reef-logo__reef {
+  fill: #681cff !important;
+}
+
+.uik-button--fill {
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(135deg, #681cff, #742cb2);
+  box-shadow: 0 5px 20px -10px #742cb2;
+}
