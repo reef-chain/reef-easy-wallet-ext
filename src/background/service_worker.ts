@@ -15,6 +15,7 @@ import { assert } from "@polkadot/util";
 
 import keyring from "@polkadot/ui-keyring";
 import { LocalStore } from "../extension-base/localStore";
+import { startHeartbeat } from "./heartbeat";
 
 type PortExt = chrome.runtime.Port & { _timer?: NodeJS.Timeout };
 
@@ -59,6 +60,7 @@ cryptoWaitReady()
     // load all the keyring data
     keyring.loadAll({ store: new LocalStore(), type: "sr25519" });
     console.log("KEYRING LOADED ALL=", keyring.getAccounts().length);
+    startHeartbeat()
     console.log("initialization completed");
   })
   .catch((error): void => {
