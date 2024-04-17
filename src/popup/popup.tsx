@@ -19,6 +19,7 @@ import {
   faCirclePlus,
   faCircleXmark,
   faExpand,
+  faGear,
   faShuffle,
   faTasks,
 } from "@fortawesome/free-solid-svg-icons";
@@ -89,6 +90,7 @@ const Popup = () => {
   );
   const [selectedNetwork, setSelectedNetwork] = useState<ReefNetwork>();
   const [provider, setProvider] = useState<Provider>();
+  const [isSettingsOpen,setIsSettingsOpen] = useState<boolean>(false);
 
   const queryParams = new URLSearchParams(window.location.search);
   const isDetached = queryParams.get("detached");
@@ -378,34 +380,52 @@ const Popup = () => {
           </div>
         )}
 
-        <div>
-        {selectedNetwork && <button
-              className="md"
-              onClick={() =>
-                selectNetwork(
-                  selectedNetwork.id === "mainnet" ? "testnet" : "mainnet"
-                )
-              }
-            >
-              <FontAwesomeIcon icon={faShuffle as IconProp} />
-            </button>
-        }
-          {isDetached && state==State.ACCOUNTS && (
-            <button className="md" onClick={() => openFullPage()}>
-              <FontAwesomeIcon icon={faExpand as IconProp} />
-            </button>
-          )}
+        <div className="flex">
           {state === State.ACCOUNTS && (
             <>
-              <button
-                className="md"
-                onClick={() => setState(State.AUTH_MANAGEMENT)}
-              >
-                <FontAwesomeIcon icon={faTasks as IconProp} />
-              </button>
-              <button className="md" onClick={() => setState(State.LOGIN)}>
-                <FontAwesomeIcon icon={faCirclePlus as IconProp} />
-              </button>
+              <Uik.Button text='Add Accounts' icon={faCirclePlus as IconProp} onClick={() => setState(State.LOGIN)} neomorph/>
+
+              <Uik.Button icon={faGear as IconProp} onClick={() => setIsSettingsOpen(true)} neomorph className="mx-2"/>
+
+              <div style={{
+  position:'relative',
+  top:'48px',
+  right:'6px'
+}}>
+<Uik.Dropdown
+    isOpen={isSettingsOpen}
+    onClose={() => setIsSettingsOpen(false)}
+    position="bottomLeft"
+  >
+      {selectedNetwork && 
+             <Uik.DropdownItem
+             icon={faShuffle}
+             text='Toggle Network'
+             onClick={() =>
+              selectNetwork(
+                selectedNetwork.id === "mainnet" ? "testnet" : "mainnet"
+              )
+            }
+           />
+        }
+    <Uik.Divider/>
+      <Uik.DropdownItem
+        icon={faTasks}
+        text='Manage Website Access'
+        onClick={() => setState(State.AUTH_MANAGEMENT)}
+      />
+      {isDetached && state==State.ACCOUNTS && (
+            <Uik.DropdownItem
+            icon={faExpand}
+            text='Open extension in new window'
+            onClick={() => openFullPage()}
+          />
+          )}
+      
+      
+  </Uik.Dropdown>
+</div>
+            
             </>
           )}
           {(state === State.AUTH_MANAGEMENT ||
@@ -423,7 +443,6 @@ const Popup = () => {
         (!accounts || (accounts.length > 0 && !provider)) && (
           <Uik.Loading className="py-32" />
         )}
-
       {/* No accounts */}
       {state === State.ACCOUNTS && accounts?.length === 0 && (
         <>
