@@ -19,6 +19,7 @@ import {
   faCirclePlus,
   faCircleXmark,
   faExpand,
+  faGear,
   faShuffle,
   faTasks,
 } from "@fortawesome/free-solid-svg-icons";
@@ -60,6 +61,8 @@ import { createPopupData } from "./util";
 import "./popup.css";
 import { PHISHING_PAGE_REDIRECT } from "../extension-base/defaults";
 import { PhishingDetected } from "./PhishingDetected";
+import { useServiceWorkerStatus } from "../hooks/useServiceWorkerStatus";
+import { restartServiceWorker } from "../background/service_worker";
 
 const enum State {
   ACCOUNTS,
@@ -89,6 +92,7 @@ const Popup = () => {
   );
   const [selectedNetwork, setSelectedNetwork] = useState<ReefNetwork>();
   const [provider, setProvider] = useState<Provider>();
+  const [isSettingsOpen,setIsSettingsOpen] = useState<boolean>(false);
 
   const queryParams = new URLSearchParams(window.location.search);
   const isDetached = queryParams.get("detached");
@@ -113,6 +117,8 @@ const Popup = () => {
       initWeb3Auth();
     }
   }, [selectedNetwork]);
+
+  const {isRunning:isServiceWorkerRunning} = useServiceWorkerStatus();
 
   useEffect(() => {
     if (phishingWebsite) {
@@ -370,6 +376,8 @@ const Popup = () => {
         </div>
       )}
 
+      {isServiceWorkerRunning?
+      <>
       {/* Header */}
       <div className="flex justify-between">
         {selectedNetwork && (
@@ -378,42 +386,58 @@ const Popup = () => {
           </div>
         )}
 
-        <div>
-        {selectedNetwork && <button
-              className="md"
-              onClick={() =>
-                selectNetwork(
-                  selectedNetwork.id === "mainnet" ? "testnet" : "mainnet"
-                )
-              }
-            >
-              <FontAwesomeIcon icon={faShuffle as IconProp} />
-            </button>
-        }
-          {isDetached && state==State.ACCOUNTS && (
-            <button className="md" onClick={() => openFullPage()}>
-              <FontAwesomeIcon icon={faExpand as IconProp} />
-            </button>
-          )}
+        <div className="flex">
           {state === State.ACCOUNTS && (
             <>
-              <button
-                className="md"
-                onClick={() => setState(State.AUTH_MANAGEMENT)}
-              >
-                <FontAwesomeIcon icon={faTasks as IconProp} />
-              </button>
-              <button className="md" onClick={() => setState(State.LOGIN)}>
-                <FontAwesomeIcon icon={faCirclePlus as IconProp} />
-              </button>
+              <Uik.Button text='Add Accounts' icon={faCirclePlus as IconProp} onClick={() => setState(State.LOGIN)} neomorph/>
+
+              <Uik.Button icon={faGear as IconProp} onClick={() => setIsSettingsOpen(true)} neomorph className="mx-2 rounded-3xl"/>
+
+              <div style={{
+  position:'relative',
+  top:'48px',
+  right:'6px'
+}}>
+<Uik.Dropdown
+    isOpen={isSettingsOpen}
+    onClose={() => setIsSettingsOpen(false)}
+    position="bottomLeft"
+  >
+      {selectedNetwork && 
+             <Uik.DropdownItem
+             icon={faShuffle}
+             text='Toggle Network'
+             onClick={() =>
+              selectNetwork(
+                selectedNetwork.id === "mainnet" ? "testnet" : "mainnet"
+              )
+            }
+           />
+        }
+    <Uik.Divider/>
+      <Uik.DropdownItem
+        icon={faTasks}
+        text='Manage Website Access'
+        onClick={() => setState(State.AUTH_MANAGEMENT)}
+      />
+      {isDetached && state==State.ACCOUNTS && (
+            <Uik.DropdownItem
+            icon={faExpand}
+            text='Open extension in new window'
+            onClick={() => openFullPage()}
+          />
+          )}
+      
+      
+  </Uik.Dropdown>
+</div>
+            
             </>
           )}
           {(state === State.AUTH_MANAGEMENT ||
             state === State.LOGIN ||
             state === State.PHISHING_DETECTED) && (
-            <button className="md" onClick={() => setState(State.ACCOUNTS)}>
-              <FontAwesomeIcon icon={faCircleXmark as IconProp} />
-            </button>
+            <Uik.Button icon={faCircleXmark} onClick={() => setState(State.ACCOUNTS)} neomorph/>
           )}
         </div>
       </div>
@@ -423,7 +447,6 @@ const Popup = () => {
         (!accounts || (accounts.length > 0 && !provider)) && (
           <Uik.Loading className="py-32" />
         )}
-
       {/* No accounts */}
       {state === State.ACCOUNTS && accounts?.length === 0 && (
         <>
@@ -507,6 +530,16 @@ const Popup = () => {
       {state === State.PHISHING_DETECTED && (
         <PhishingDetected website={phishingWebsite} />
       )}
+            
+      </>: <div className="flex">
+        <button onClick={restartServiceWorker}>
+          Reload
+        </button>
+        <button onClick={()=>window.close()}>
+          Close
+        </button>
+        </div>
+        }
     </div>
   );
 };

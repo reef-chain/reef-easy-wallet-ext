@@ -128,3 +128,33 @@ button:hover {
     max-height: 100vh;
     min-width: 60vw;
 }
+
+.uik-button--neomorph {
+  box-shadow: var(--neomorph-out);
+  color: #681cff !important;
+}
+
+.uik-reef-amount .uik-reef-amount__value {
+  font-size: 1rem;
+  transform: translateY(.063rem);
+  line-height: 1;
+  font-weight: 900;
+  background: -webkit-linear-gradient(0deg, #681cff, var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.reef-icon .reef-icon__circle {
+  fill: #681cff !important;
+}
+
+.reef-logo .reef-logo__reef {
+  fill: #681cff !important;
+}
+
+.uik-button--fill {
+  font-weight: 500;
+  color: #fff;
+  background: linear-gradient(135deg, #681cff, #742cb2);
+  box-shadow: 0 5px 20px -10px #742cb2;
+}
