@@ -5,14 +5,14 @@ import {
 } from "@web3auth/openlogin-adapter";
 
 let clientId =
-  "BEuXj5bKlno3l2MwPRjNgtVmePBOHQ_VClO1h_lxKPU_NoV8cOJe7JsjpU1PDaZ5wjhlQQjm0avfRUaSe-fw_dQ";
+  "BOvtEMV93DC-l3XtAaSTkOEzYF9N_OJQWVxsU3UqbNMDi_FiHt5j9soFVeetW6xJnIrxrJO8CxvvxhEef78DO-Y";
 let web3AuthNetwork: OPENLOGIN_NETWORK_TYPE =
   OPENLOGIN_NETWORK.SAPPHIRE_MAINNET;
 let defaultReefNetwork = "mainnet";
 
 if (process.env.NODE_ENV === "development") {
   clientId =
-    "BEuXj5bKlno3l2MwPRjNgtVmePBOHQ_VClO1h_lxKPU_NoV8cOJe7JsjpU1PDaZ5wjhlQQjm0avfRUaSe-fw_dQ";
+    "BOvtEMV93DC-l3XtAaSTkOEzYF9N_OJQWVxsU3UqbNMDi_FiHt5j9soFVeetW6xJnIrxrJO8CxvvxhEef78DO-Y";
   web3AuthNetwork = OPENLOGIN_NETWORK.SAPPHIRE_DEVNET;
   defaultReefNetwork = "testnet";
 }
