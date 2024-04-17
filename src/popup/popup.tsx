@@ -95,31 +95,13 @@ const Popup = () => {
   const isDetached = queryParams.get("detached");
   const phishingWebsite = queryParams.get(PHISHING_PAGE_REDIRECT);
 
-  const setSignRequestsCallback = async(val:any)=>{
-    const storedSignRequests = await chrome.storage.local.get('signRequests');
-    if(val.length == 0){
-      if(storedSignRequests.signRequests.length>0 && init){
-        setSignRequests(storedSignRequests.signRequests);
-        setInit(false);
-      }else if(storedSignRequests.signRequests.length>0 && !init){
-        setSignRequests(val);
-      }else{
-        setSignRequests(val);
-        await chrome.storage.local.set({signRequests:val});
-      }
-    }else{
-      setSignRequests(val);
-      await chrome.storage.local.set({signRequests:val});
-    }
-  }
-
   useEffect(() => {
     if (!isDefaultPopup || isDetached) {
       Promise.all([
         subscribeAccounts(onAccountsChange),
         subscribeAuthorizeRequests(setAuthRequests),
         subscribeMetadataRequests(setMetaRequests),
-        subscribeSigningRequests(setSignRequestsCallback),
+        subscribeSigningRequests(setSignRequests),
         subscribeNetwork(onNetworkChange),
       ]).catch(console.error);
     } else {
