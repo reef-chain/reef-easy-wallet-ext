@@ -126,7 +126,9 @@ button:hover {
 
 .uik-modal .uik-modal__container .uik-modal__popup {
     max-height: 100vh;
-    min-width: 60vw;
+    min-width: fit-content;
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
 .uik-button--neomorph {
@@ -157,4 +159,9 @@ button:hover {
   color: #fff;
   background: linear-gradient(135deg, #681cff, #742cb2);
   box-shadow: 0 5px 20px -10px #742cb2;
+}
+
+.uik-modal .uik-modal__container .uik-modal__popup .uik-modal__body+.uik-modal__footer {
+  display: flex;
+  flex-wrap: wrap;
 }
