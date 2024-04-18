@@ -158,3 +158,9 @@ button:hover {
   background: linear-gradient(135deg, #681cff, #742cb2);
   box-shadow: 0 5px 20px -10px #742cb2;
 }
+
+.signature-table{
+  white-space: nowrap;
+  overflow: hidden;
+  width: fit-content;
+}

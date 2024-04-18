@@ -32,7 +32,7 @@ export default function Request({
   }, [metaId]);
 
   return (
-    <table className="flex">
+    <table className="flex signature-table">
       <tbody>
         <tr>
           <td>From</td>

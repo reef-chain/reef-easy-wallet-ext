@@ -16,7 +16,7 @@ function Bytes({ bytes, url }: Props): React.ReactElement<Props> {
   );
 
   return (
-    <table className="flex">
+    <table className="flex signature-table">
       <tbody>
         <tr>
           <td className="font-semibold label" style={{ color: '#681cff ' }}>From</td>
