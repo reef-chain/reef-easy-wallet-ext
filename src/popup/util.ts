@@ -2,6 +2,7 @@ import { blake2AsU8a, decodeAddress } from "@polkadot/util-crypto";
 import { u8aConcat, u8aEq, u8aToHex } from "@polkadot/util";
 import { getAddress } from "@ethersproject/address";
 import { formatFixed } from "@ethersproject/bignumber";
+import { addressUtils } from "@reef-chain/util-lib";
 
 export const computeDefaultEvmAddress = (address: string): string => {
   const publicKey = decodeAddress(address);
@@ -18,6 +19,9 @@ export const computeDefaultEvmAddress = (address: string): string => {
 };
 
 export const toAddressShortDisplay = (address: string, size = 12): string => {
+  if(address.startsWith("0x") && address.includes("(ONLY for Reef chain!)")){
+    return addressUtils.addReefSpecificStringFromAddress(toAddressShortDisplay(addressUtils.removeReefSpecificStringFromAddress(address)))
+  }
   return address.length < size
     ? address
     : `${address.slice(0, size - 5)}...${address.slice(address.length - 5)}`;
