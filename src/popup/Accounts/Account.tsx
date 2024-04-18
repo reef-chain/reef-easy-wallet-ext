@@ -253,7 +253,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
                 text='Share EVM Address'
                 onClick={() => {
                   setOpen(true);
-                  setQrValue(evmAddress)
+                  setQrValue(addressUtils.addReefSpecificStringFromAddress(evmAddress))
                 }}
               />}
               
