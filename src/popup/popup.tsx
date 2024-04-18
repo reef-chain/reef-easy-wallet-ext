@@ -14,7 +14,6 @@ import { CommonPrivateKeyProvider } from "@web3auth/base-provider";
 import { Provider } from "@reef-chain/evm-provider";
 import { Keyring, WsProvider } from "@polkadot/api";
 import { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCirclePlus,
   faCircleXmark,

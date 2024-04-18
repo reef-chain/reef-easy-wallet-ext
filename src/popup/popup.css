@@ -62,6 +62,8 @@ button:hover {
   max-width: 650px;
   margin: 20px auto;
   align-items: center;
+  background-color: #681cff1a;
+  box-shadow: 10px 10px 20px -5px hsl( 256.3636363636deg, 37.9310344828%, calc(94.3137254902% - 10%) ), -10px -10px 15px -10px hsl( 256.3636363636deg, 37.9310344828%, calc(94.3137254902% + 10%) );
 }
 
 .selected-badge{
