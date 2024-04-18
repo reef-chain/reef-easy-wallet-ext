@@ -66,6 +66,10 @@ button:hover {
   box-shadow: 10px 10px 20px -5px hsl( 256.3636363636deg, 37.9310344828%, calc(94.3137254902% - 10%) ), -10px -10px 15px -10px hsl( 256.3636363636deg, 37.9310344828%, calc(94.3137254902% + 10%) );
 }
 
+.account:hover{
+
+}
+
 .selected-badge{
   background-color: #681cff ;
   border-bottom-left-radius: 8px;
