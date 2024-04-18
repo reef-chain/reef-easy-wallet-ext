@@ -97,6 +97,7 @@ const Popup = () => {
   const queryParams = new URLSearchParams(window.location.search);
   const isDetached = queryParams.get("detached");
   const phishingWebsite = queryParams.get(PHISHING_PAGE_REDIRECT);
+  const [nwToggleEnableClicks,setNwToggleEnableClicks] = useState<number>(0);
 
   useEffect(() => {
     if (!isDefaultPopup || isDetached) {
@@ -381,7 +382,16 @@ const Popup = () => {
       {/* Header */}
       <div className="flex justify-between">
         {selectedNetwork && (
-          <div className="flex">
+          <div className="flex hover:cursor-pointer" onClick={()=>{
+            if(nwToggleEnableClicks<7)
+            setNwToggleEnableClicks(nwToggleEnableClicks+1)
+          if(nwToggleEnableClicks+1==7){
+            Uik.notify.success("Enabled Network Toggle Successfully!")
+          }else{
+            Uik.notify.info(`Click ${7-1-nwToggleEnableClicks} more ${7-1-nwToggleEnableClicks>1?"times":"time"} to enable Network Toggle`)
+          }
+          }
+          }>
             {selectedNetwork.name=="Reef Mainnet"?<Uik.ReefLogo/>:<Uik.ReefTestnetLogo/>}
           </div>
         )}
@@ -403,18 +413,23 @@ const Popup = () => {
     onClose={() => setIsSettingsOpen(false)}
     position="bottomLeft"
   >
-      {selectedNetwork && 
-             <Uik.DropdownItem
-             icon={faShuffle}
-             text='Toggle Network'
-             onClick={() =>
-              selectNetwork(
-                selectedNetwork.id === "mainnet" ? "testnet" : "mainnet"
-              )
-            }
-           />
+      {selectedNetwork && nwToggleEnableClicks==7 && 
+      <>
+      
+      <Uik.DropdownItem
+      icon={faShuffle}
+      text='Toggle Network'
+      onClick={() =>
+       selectNetwork(
+         selectedNetwork.id === "mainnet" ? "testnet" : "mainnet"
+       )
+     }
+     
+    />
+        <Uik.Divider/>
+      </>
         }
-    <Uik.Divider/>
+
       <Uik.DropdownItem
         icon={faTasks}
         text='Manage Website Access'
