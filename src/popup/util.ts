@@ -19,7 +19,7 @@ export const computeDefaultEvmAddress = (address: string): string => {
 };
 
 export const toAddressShortDisplay = (address: string, size = 12): string => {
-  if(address.startsWith("0x") && address.includes("(ONLY for Reef chain!)")){
+  if(address.startsWith("0x") && address!=addressUtils.removeReefSpecificStringFromAddress(address)){
     return addressUtils.addReefSpecificStringFromAddress(toAddressShortDisplay(addressUtils.removeReefSpecificStringFromAddress(address)))
   }
   return address.length < size
