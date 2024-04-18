@@ -383,13 +383,14 @@ const Popup = () => {
       <div className="flex justify-between">
         {selectedNetwork && (
           <div className="flex hover:cursor-pointer" onClick={()=>{
-            if(nwToggleEnableClicks<7)
-            setNwToggleEnableClicks(nwToggleEnableClicks+1)
-          if(nwToggleEnableClicks+1==7){
-            Uik.notify.success("Enabled Network Toggle Successfully!")
-          }else{
-            Uik.notify.info(`Click ${7-1-nwToggleEnableClicks} more ${7-1-nwToggleEnableClicks>1?"times":"time"} to enable Network Toggle`)
-          }
+            if(nwToggleEnableClicks<7){
+              setNwToggleEnableClicks(nwToggleEnableClicks+1)
+            if(nwToggleEnableClicks+1==7){
+              Uik.notify.success("Enabled Network Toggle Successfully!")
+            }else{
+              Uik.notify.info(`Click ${7-1-nwToggleEnableClicks} more ${7-1-nwToggleEnableClicks>1?"times":"time"} to enable Network Toggle`)
+            }
+            }
           }
           }>
             {selectedNetwork.name=="Reef Mainnet"?<Uik.ReefLogo/>:<Uik.ReefTestnetLogo/>}
