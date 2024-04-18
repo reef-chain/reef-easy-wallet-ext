@@ -496,7 +496,7 @@ const Popup = () => {
 
       {/* Login */}
       {state === State.LOGIN && (
-       <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch" }}>
+       <div style={{ display: "flex",maxWidth:'100%', flexDirection: "column", alignItems: "stretch" }}>
        <Uik.Text className="text-lg my-4" text="Choose login provider"/>
        <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch" }}>
          {LOGIN_PROVIDERS.map((provider) => (
@@ -504,7 +504,7 @@ const Popup = () => {
              className="group relative overflow-hidden"
              key={provider}
              onClick={() => addAccount(provider, web3auth)}
-             style={{ flex: "1", position: "relative", backgroundColor: "transparent", display: "flex", alignItems: "center", justifyContent: "center",width: '400px',border:'1px solid #5f636863' }}
+             style={{ flex: "1", position: "relative", backgroundColor: "transparent", display: "flex", alignItems: "center", justifyContent: "center",width: '100%',border:'1px solid #5f636863' }}
            >
              <div className="flex min-w-max">
                <span
