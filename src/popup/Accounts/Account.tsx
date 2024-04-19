@@ -215,10 +215,12 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
         </div>
         <div className="relative" ref={optionsRef}>
           <FontAwesomeIcon
-            className="hover:cursor-pointer p-2"
+            className="hover:cursor-pointer p-2 hover:text-blue-700"
             onClick={() => setIsOptionsOpen(!isOptionsOpen)}
             icon={faEllipsisVertical as IconProp}
             title="Account options"
+            fontSize={"1.4rem"}
+            color="grey"
           />
           {isOptionsOpen && (
             <Uik.Dropdown
@@ -226,7 +228,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
               onClose={() => setIsOptionsOpen(false)}
               position="bottomLeft"
             >
-              <div className="p-2 flex flex-col justify-start items-start">
+              <div className="flex flex-col justify-start items-start">
                 <Uik.Text type="mini"
                   text={`Verifier ID:`}
                 />

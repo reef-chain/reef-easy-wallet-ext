@@ -62,7 +62,17 @@ button:hover {
   max-width: 650px;
   margin: 20px auto;
   align-items: center;
-  flex-wrap: wrap;
+    flex-wrap: wrap;
+  background-color: #681cff1a;
+  box-shadow: 10px 10px 20px -5px hsl( 256.3636363636deg, 37.9310344828%, calc(94.3137254902% - 10%) ), -10px -10px 15px -10px hsl( 256.3636363636deg, 37.9310344828%, calc(94.3137254902% + 10%) );
+}
+
+.account:hover{
+  box-shadow: var(--neomorph-out-light),
+  inset 7.5px 7.5px 15px -3.75px hsl(var(--bg--h),
+  var(--bg--s),calc(var(--bg--l) - 7.5%)),
+  inset -7.5px -7.5px 15px -3.75px hsl(var(--bg--h),var(--bg--s),
+  calc(var(--bg--l) + 7.5%));
 }
 
 .selected-badge{
@@ -161,6 +171,7 @@ button:hover {
   background: linear-gradient(135deg, #681cff, #742cb2);
   box-shadow: 0 5px 20px -10px #742cb2;
 }
+
 
 .signature-table{
   white-space: nowrap;
