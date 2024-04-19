@@ -161,6 +161,11 @@ button:hover {
   box-shadow: 0 5px 20px -10px #742cb2;
 }
 
+.signature-table{
+  white-space: nowrap;
+  overflow: hidden;
+  width: fit-content;
+}
 .uik-modal .uik-modal__container .uik-modal__popup .uik-modal__body+.uik-modal__footer {
   display: flex;
   flex-wrap: wrap;

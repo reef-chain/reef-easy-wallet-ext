@@ -68,7 +68,7 @@ function renderMethod(
 ): React.ReactNode {
   if (!args || !method) {
     return (
-      <table className="flex">
+      <table className="flex signature-table">
         <tbody>
           <tr>
             <td className="font-semibold" style={{ color: '#681cff ' }}>Method data</td>
@@ -80,7 +80,7 @@ function renderMethod(
   }
 
   return (
-    <table className="flex">
+    <table className="flex signature-table">
       <tbody>
         <tr>
           <td className="font-semibold" style={{ color: '#681cff ' }}>Method</td>
@@ -142,7 +142,7 @@ function Extrinsic({
   );
 
   return (
-    <table className="flex justify-start items-start pl-4">
+    <table className="flex justify-start items-start pl-4 signature-table">
       <tbody>
         <tr>
           <td className="font-semibold" style={{ color: '#681cff ' }}>From</td>
