@@ -17,10 +17,10 @@ import { IconProp } from "@fortawesome/fontawesome-svg-core";
 import {
   faCirclePlus,
   faCircleXmark,
-  faExpand,
+  faExpand, faExternalLinkAlt,
   faGear,
   faShuffle,
-  faTasks,
+  faTasks
 } from "@fortawesome/free-solid-svg-icons";
 import Uik from "@reef-chain/ui-kit";
 
@@ -390,9 +390,8 @@ const Popup = () => {
         <div className="flex buttons-w">
           {state === State.ACCOUNTS && (
             <>
-              <Uik.Button text='Add Accounts' icon={faCirclePlus as IconProp} onClick={() => setState(State.LOGIN)} neomorph/>
-
-              <Uik.Button icon={faGear as IconProp} onClick={() => setIsSettingsOpen(true)} neomorph className="mx-2 rounded-3xl"/>
+              <Uik.Button text='Account' icon={faCirclePlus as IconProp} onClick={() => setState(State.LOGIN)} neomorph/>
+              <Uik.Button icon={faGear as IconProp} onClick={() => setIsSettingsOpen(true)} neomorph className="mx-2 rounded-3xl last"/>
 
               <div style={{
   position:'relative',
@@ -404,6 +403,11 @@ const Popup = () => {
     onClose={() => setIsSettingsOpen(false)}
     position="bottomLeft"
   >
+  <Uik.DropdownItem
+    icon={faExternalLinkAlt as IconProp}
+    text='Open Reef App'
+    onClick={() => window.open('https://app.reef.io/', '_blank')}
+  />
       {selectedNetwork && nwToggleEnableClicks==7 &&
       <>
 
@@ -443,7 +447,7 @@ const Popup = () => {
           {(state === State.AUTH_MANAGEMENT ||
             state === State.LOGIN ||
             state === State.PHISHING_DETECTED) && (
-            <Uik.Button icon={faCircleXmark} onClick={() => setState(State.ACCOUNTS)} neomorph/>
+            <Uik.Button icon={faCircleXmark} onClick={() => setState(State.ACCOUNTS)} neomorph />
           )}
         </div>
       </div>
@@ -504,13 +508,13 @@ const Popup = () => {
       {state === State.LOGIN && (
        <div style={{ display: "flex",maxWidth:'100%', flexDirection: "column", alignItems: "stretch" }}>
        <Uik.Text className="text-lg my-4" text="Choose login provider"/>
-       <div style={{ display: "flex", flexDirection: "column", alignItems: "stretch" }}>
+       <div className="login-providers" >
          {LOGIN_PROVIDERS.map((provider) => (
            <button
              className="group relative overflow-hidden"
              key={provider}
              onClick={() => addAccount(provider, web3auth)}
-             style={{ flex: "1", position: "relative", backgroundColor: "transparent", display: "flex", alignItems: "center", justifyContent: "center",width: '100%',border:'1px solid #5f636863' }}
+             style={{  }}
            >
              <div className="flex min-w-max">
                <span

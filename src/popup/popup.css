@@ -1,138 +1,138 @@
 .popup-container {
-  height: 600px;
-  width: 580px;
-  padding: 10px;
-  margin: auto;
-  display: flex;
-  flex-direction: column;
-  max-width: 100vw;
+    height: 600px;
+    width: 580px;
+    padding: 10px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    max-width: 100vw;
 }
 
 .popup {
-  border-radius: 20px;
-  height: 100%;
-  width: 100%;
-  padding: 0 20px;
+    border-radius: 20px;
+    height: 100%;
+    width: 100%;
+    padding: 0 20px;
 }
 
-.uik-modal__popup{
-  max-width: 40%!important;
+.uik-modal__popup {
+    max-width: 40% !important;
 }
 
 button {
-  background-color: #681cff ;
-  color: white;
-  border-radius: 8px;
-  display: block;
-  padding: 10px 20px;
-  margin: 10px auto;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+    background-color: #681cff;
+    color: white;
+    border-radius: 8px;
+    display: block;
+    padding: 10px 20px;
+    margin: 10px auto;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 button.md {
-  font-size: 0.8rem;
-  display: inline-block;
-  padding: 4px 8px;
-  margin: 0 0 0 8px;
+    font-size: 0.8rem;
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 0 0 0 8px;
 }
 
 button.sm {
-  font-size: 0.7rem;
-  display: inline-block;
-  padding: 0 6px;
-  margin: 0 0 0 8px;
+    font-size: 0.7rem;
+    display: inline-block;
+    padding: 0 6px;
+    margin: 0 0 0 8px;
 }
 
 button:hover {
-  background-color: #681cff 9b;
+    background-color: #681cff 9b;
 }
 
 .loading {
-  font-size: 1.2rem;
-  margin: 86px 0;
+    font-size: 1.2rem;
+    margin: 86px 0;
 }
 
 .account {
-  display: flex;
-  background-color: #681cff4e;
-  border-radius: 8px;
-  padding: 8px 16px 12px 16px;
-  max-width: 650px;
-  margin: 20px auto;
-  align-items: center;
+    display: flex;
+    background-color: #681cff4e;
+    border-radius: 8px;
+    padding: 8px 16px 12px 16px;
+    max-width: 650px;
+    margin: 20px auto;
+    align-items: center;
     flex-wrap: wrap;
-  background-color: #681cff1a;
-  box-shadow: 10px 10px 20px -5px hsl( 256.3636363636deg, 37.9310344828%, calc(94.3137254902% - 10%) ), -10px -10px 15px -10px hsl( 256.3636363636deg, 37.9310344828%, calc(94.3137254902% + 10%) );
+    background-color: #681cff1a;
+    box-shadow: 10px 10px 20px -5px hsl(256.3636363636deg, 37.9310344828%, calc(94.3137254902% - 10%)), -10px -10px 15px -10px hsl(256.3636363636deg, 37.9310344828%, calc(94.3137254902% + 10%));
 }
 
-.account:hover{
-  box-shadow: var(--neomorph-out-light),
-  inset 7.5px 7.5px 15px -3.75px hsl(var(--bg--h),
-  var(--bg--s),calc(var(--bg--l) - 7.5%)),
-  inset -7.5px -7.5px 15px -3.75px hsl(var(--bg--h),var(--bg--s),
-  calc(var(--bg--l) + 7.5%));
+.account:hover {
+    box-shadow: var(--neomorph-out-light),
+    inset 7.5px 7.5px 15px -3.75px hsl(var(--bg--h),
+            var(--bg--s), calc(var(--bg--l) - 7.5%)),
+    inset -7.5px -7.5px 15px -3.75px hsl(var(--bg--h), var(--bg--s),
+            calc(var(--bg--l) + 7.5%));
 }
 
-.selected-badge{
-  background-color: #681cff ;
-  border-bottom-left-radius: 8px;
-  border-top-right-radius: 8px;
+.selected-badge {
+    background-color: #681cff;
+    border-bottom-left-radius: 8px;
+    border-top-right-radius: 8px;
 }
 
 .account.selected {
-  border: 2px solid #681cff ;
+    border: 2px solid #681cff;
 }
 
 .account .content {
-  text-align: left;
-  flex: 1 1 auto;
+    text-align: left;
+    flex: 1 1 auto;
 }
 
 .account .content .name {
-  font-size: 1.3rem;
-  font-weight: bold;
+    font-size: 1.3rem;
+    font-weight: bold;
 }
 
 .account .reef-amount-logo {
-  height: 16px;
-  display: inline-block;
-  margin-right: 5px;
+    height: 16px;
+    display: inline-block;
+    margin-right: 5px;
 }
 
 .account .balance {
-  font-weight: bold;
+    font-weight: bold;
 }
 
 .avatar {
-  position: relative;
-  margin-right: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 55px;
-  width: 55px;
-  border-radius: 50%;
-  background-color: white;
+    position: relative;
+    margin-right: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 55px;
+    width: 55px;
+    border-radius: 50%;
+    background-color: white;
 }
 
 .avatar .avatar-image {
-  height: 100%;
-  width: 100%;
-  border-radius: 50%;
-  border: 1px solid white;
+    height: 100%;
+    width: 100%;
+    border-radius: 50%;
+    border: 1px solid white;
 }
 
 .avatar .login-provider {
-  position: absolute;
-  bottom: -3px;
-  left: -3px;
-  height: 20px;
-  width: 20px;
-  border-radius: 50%;
-  background-color: white;
-  padding: 2px;
+    position: absolute;
+    bottom: -3px;
+    left: -3px;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background-color: white;
+    padding: 2px;
 }
 
 .uik-modal .uik-modal__container .uik-modal__popup {
@@ -142,51 +142,80 @@ button:hover {
     margin-right: 20px;
 }
 
+.uik-button {
+    color: #681cff !important;
+}
 .uik-button--neomorph {
-  box-shadow: var(--neomorph-out);
-  color: #681cff !important;
+    box-shadow: var(--neomorph-out);
+    color: #681cff !important;
 }
 
 .uik-reef-amount .uik-reef-amount__value {
-  font-size: 1rem;
-  transform: translateY(.063rem);
-  line-height: 1;
-  font-weight: 900;
-  background: -webkit-linear-gradient(0deg, #681cff, var(--secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+    font-size: 1rem;
+    transform: translateY(.063rem);
+    line-height: 1;
+    font-weight: 900;
+    background: -webkit-linear-gradient(0deg, #681cff, var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .reef-icon .reef-icon__circle {
-  fill: #681cff !important;
+    fill: #681cff !important;
 }
 
 .reef-logo .reef-logo__reef {
-  fill: #681cff !important;
+    fill: #681cff !important;
 }
 
 .uik-button--fill {
-  font-weight: 500;
-  color: #fff;
-  background: linear-gradient(135deg, #681cff, #742cb2);
-  box-shadow: 0 5px 20px -10px #742cb2;
+    font-weight: 500;
+    color: #fff;
+    background: linear-gradient(135deg, #681cff, #742cb2);
+    box-shadow: 0 5px 20px -10px #742cb2;
 }
 
 
-.signature-table{
-  white-space: nowrap;
-  overflow: hidden;
-  width: fit-content;
+.signature-table {
+    white-space: nowrap;
+    overflow: hidden;
+    width: fit-content;
 }
-.uik-modal .uik-modal__container .uik-modal__popup .uik-modal__body+.uik-modal__footer {
-  display: flex;
-  flex-wrap: wrap;
+
+.uik-modal .uik-modal__container .uik-modal__popup .uik-modal__body + .uik-modal__footer {
+    display: flex;
+    flex-wrap: wrap;
 }
 
 .header .logo-w {
-  padding-top: 4px;
+    padding-top: 4px;
 }
 
 .header .buttons-w {
-  margin-top: -6px;
+    margin-top: -6px;
+}
+
+.header .buttons-w button.uik-button.last {
+    margin-right: 0;
+}
+
+.login-providers {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.login-providers button {
+    flex: 1;
+    position: relative;
+    background-color: aliceblue;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    border: 1px solid #5f636863;
+}
+
+.login-providers button .uik-text {
+    /*color: aliceblue;*/
 }
