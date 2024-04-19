@@ -353,7 +353,7 @@ const Popup = () => {
     }
 
     try {
-      
+
       const web3authProvider = await web3auth.connectTo<OpenloginLoginParams>(
         WALLET_ADAPTERS.OPENLOGIN,
         { loginProvider }
@@ -362,7 +362,7 @@ const Popup = () => {
         alert("web3authProvider not initialized yet");
         return null;
       }
-  
+
       return web3authProvider;
     } catch (error) {
         Uik.notify.danger("Can't add account, user denied access!");
@@ -380,14 +380,14 @@ const Popup = () => {
       {isServiceWorkerRunning?
       <>
       {/* Header */}
-      <div className="flex justify-between">
+      <div className="flex justify-between header">
         {selectedNetwork && (
-          <div className="flex hover:cursor-pointer" onClick={()=>enableNetworkToggleOption(nwToggleEnableClicks,setNwToggleEnableClicks)}>
+          <div className="flex hover:cursor-pointer logo-w" onClick={()=>enableNetworkToggleOption(nwToggleEnableClicks,setNwToggleEnableClicks)}>
             {selectedNetwork.name=="Reef Mainnet"?<Uik.ReefLogo/>:<Uik.ReefTestnetLogo/>}
           </div>
         )}
 
-        <div className="flex">
+        <div className="flex buttons-w">
           {state === State.ACCOUNTS && (
             <>
               <Uik.Button text='Add Accounts' icon={faCirclePlus as IconProp} onClick={() => setState(State.LOGIN)} neomorph/>
@@ -404,9 +404,9 @@ const Popup = () => {
     onClose={() => setIsSettingsOpen(false)}
     position="bottomLeft"
   >
-      {selectedNetwork && nwToggleEnableClicks==7 && 
+      {selectedNetwork && nwToggleEnableClicks==7 &&
       <>
-      
+
       <Uik.DropdownItem
       icon={faShuffle}
       text='Toggle Network'
@@ -415,7 +415,7 @@ const Popup = () => {
          selectedNetwork.id === "mainnet" ? "testnet" : "mainnet"
        )
      }
-     
+
     />
         <Uik.Divider/>
       </>
@@ -433,11 +433,11 @@ const Popup = () => {
             onClick={() => openFullPage()}
           />
           )}
-      
-      
+
+
   </Uik.Dropdown>
 </div>
-            
+
             </>
           )}
           {(state === State.AUTH_MANAGEMENT ||
@@ -528,15 +528,15 @@ const Popup = () => {
          ))}
        </div>
      </div>
-     
-     
+
+
       )}
 
       {/* Phishing detected */}
       {state === State.PHISHING_DETECTED && (
         <PhishingDetected website={phishingWebsite} />
       )}
-            
+
       </>: <div className="flex">
         <button onClick={restartServiceWorker}>
           Reload
