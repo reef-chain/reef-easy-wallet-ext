@@ -56,12 +56,13 @@ button:hover {
 
 .account {
   display: flex;
-  background-color: #681cff 4e;
+  background-color: #681cff4e;
   border-radius: 8px;
   padding: 8px 16px 12px 16px;
   max-width: 650px;
   margin: 20px auto;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .selected-badge{
