@@ -327,12 +327,12 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
                 <div className="flex">
                   <div className="text-sm font-extralight mt-4 text-gray-400">{toAddressShortDisplay(qrvalue)}</div>
                   <FontAwesomeIcon
-                    className="ml-2 text-gray-400 mt-4"
+                    className="ml-2 text-gray-400 mt-4 hover:text-blue-600"
                     icon={faCopy as IconProp}
                  
                     size="sm"
                     title="Copy Reef Account Address"
-                    onClick={() => Uik.notify.info("Copied Address to clipboard")}
+                    onClick={() => Uik.notify.success(`Copied ${qrvalue}  to clipboard`)}
                   />
                 </div>
               </CopyToClipboard>

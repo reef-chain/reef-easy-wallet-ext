@@ -56,12 +56,13 @@ button:hover {
 
 .account {
   display: flex;
-  background-color: #681cff 4e;
+  background-color: #681cff4e;
   border-radius: 8px;
   padding: 8px 16px 12px 16px;
   max-width: 650px;
   margin: 20px auto;
   align-items: center;
+    flex-wrap: wrap;
   background-color: #681cff1a;
   box-shadow: 10px 10px 20px -5px hsl( 256.3636363636deg, 37.9310344828%, calc(94.3137254902% - 10%) ), -10px -10px 15px -10px hsl( 256.3636363636deg, 37.9310344828%, calc(94.3137254902% + 10%) );
 }
@@ -136,7 +137,9 @@ button:hover {
 
 .uik-modal .uik-modal__container .uik-modal__popup {
     max-height: 100vh;
-    min-width: 60vw;
+    min-width: fit-content;
+    margin-left: 20px;
+    margin-right: 20px;
 }
 
 .uik-button--neomorph {
@@ -167,4 +170,15 @@ button:hover {
   color: #fff;
   background: linear-gradient(135deg, #681cff, #742cb2);
   box-shadow: 0 5px 20px -10px #742cb2;
+}
+
+
+.signature-table{
+  white-space: nowrap;
+  overflow: hidden;
+  width: fit-content;
+}
+.uik-modal .uik-modal__container .uik-modal__popup .uik-modal__body+.uik-modal__footer {
+  display: flex;
+  flex-wrap: wrap;
 }
