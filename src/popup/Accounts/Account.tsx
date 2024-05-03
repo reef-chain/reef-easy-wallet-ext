@@ -267,31 +267,6 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
                 }}
               />
             </Uik.Dropdown>
-            
-            // <div className="absolute right-0 p-2 bg-white text-secondary font-bold text-left rounded-lg">
-            //   <div className="mb-1 pb-1 border-b border-gray-300">
-            //     <span className="font-normal">Verifier ID:</span>{" "}
-            //     {(account.verifierId || "unknown") as string}
-            //   </div>
-            //   <div
-            //     className="mb-1 hover:cursor-pointer hover:text-primary"
-            //     onClick={() => {
-            //       setIsEditingName(true);
-            //       setIsOptionsOpen(false);
-            //     }}
-            //   >
-            //     Rename
-            //   </div>
-            //   <div
-            //     className="hover:cursor-pointer hover:text-primary"
-            //     onClick={() => {
-            //       forgetAccount(account.address);
-            //       setIsOptionsOpen(false);
-            //     }}
-            //   >
-            //     Forget account
-            //   </div>
-            // </div>
           )}
 
            <Uik.Modal
