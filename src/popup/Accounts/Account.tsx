@@ -123,97 +123,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
   return (
     <div className="relative" >
       {isSelected && <div className="absolute top-0 right-0 selected-badge text-white px-2 py-1">Selected</div>}
-      <div className={`${isSelected ? "account selected" : "account"}`}>
-        <div className="avatar">
-          {account.icon ? (
-            <img src={account.icon as string} className="avatar-image"></img>
-          ) : (
-            <Identicon value={account.address} size={44} theme="substrate" />
-          )}
-          <img
-            src={`/icons/login_providers/login-${account.loginProvider}-active.svg`}
-            className="login-provider"
-          ></img>
-        </div>
-        <div className="content">
-          <div className="name">
-            {isEditingName ? (
-              <input
-                className="text-sm text-primary rounded-md px-2 my-2 py-2"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    editAccount(account.address, name);
-                    setIsEditingName(false);
-                  }
-                }}
-                onBlur={() => {
-                  editAccount(account.address, name);
-                  setIsEditingName(false);
-                }}
-                ref={inputRef}
-              />
-            ) : (
-              account.name
-            )}
-          </div>
-          <div className="flex">
-            <div>
-
-              <div className="flex pt-1">
-                {balance !== undefined ? <Uik.ReefAmount value={toReefAmount(balance)} /> : <Uik.Loading size="small" />}
-                <div className="font-light">
-                  {account.verifierId && <Uik.Text text={getShortenedVerifier(account.verifierId as string)} className="pl-3" type="mini" />}
-                </div>
-              </div>
-              <CopyToClipboard
-                text={account.address}
-                className="hover:cursor-pointer"
-              >
-                <div title={account.address}>
-                  <label className="font-bold pr-2">Native address:</label>
-                  {toAddressShortDisplay(account.address)}
-                  <FontAwesomeIcon
-                    className="ml-2"
-                    icon={faCopy as IconProp}
-                    size="sm"
-                    title="Copy Reef Account Address"
-                    onClick={() => Uik.notify.info("Copied Address to clipboard")}
-                  />
-                </div>
-              </CopyToClipboard>
-              {isEvmClaimed !== undefined && isEvmClaimed &&
-                <CopyToClipboard
-                  text={addressUtils.addReefSpecificStringFromAddress(evmAddress)}
-                  className="inline-block hover:cursor-pointer"
-                >
-                  <div title={evmAddress || ""}>
-                    <label className="font-bold pr-2">EVM address:</label>
-                    {evmAddress ? toAddressShortDisplay(evmAddress) : "loading..."}
-                    <FontAwesomeIcon
-                      className="ml-2"
-                      icon={faCopy as IconProp}
-                      size="sm"
-                      title="Copy EVM Address"
-                      onClick={() => Uik.notify.info("Copied EVM Address to clipboard!")}
-                    />
-                  </div>
-                </CopyToClipboard>
-              }
-            </div>
-            <div className="flex px-2">
-              {isEvmClaimed !== undefined && !isEvmClaimed && (
-                <Uik.Button className="mx-2" onClick={bindDefaultEvmAddress} text="Bind" fill />
-
-              )}
-              {!isSelected &&
-                <Uik.Button onClick={() => selectAccount(account.address)} text="Select" />
-              }
-            </div>
-          </div>
-        </div>
-        <div className="relative" ref={optionsRef}>
+      <div className="absolute top-10 right-0  px-2 py-1" ref={optionsRef}>
           <FontAwesomeIcon
             className="hover:cursor-pointer p-2 hover:text-blue-700"
             onClick={() => setIsOptionsOpen(!isOptionsOpen)}
@@ -314,6 +224,97 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
             </div>
           </Uik.Modal>
         </div>
+      <div className={`${isSelected ? "account selected" : "account"}`}>
+        <div className="avatar">
+          {account.icon ? (
+            <img src={account.icon as string} className="avatar-image"></img>
+          ) : (
+            <Identicon value={account.address} size={44} theme="substrate" />
+          )}
+          <img
+            src={`/icons/login_providers/login-${account.loginProvider}-active.svg`}
+            className="login-provider"
+          ></img>
+        </div>
+        <div className="content">
+          <div className="name">
+            {isEditingName ? (
+              <input
+                className="text-sm text-primary rounded-md px-2 my-2 py-2"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    editAccount(account.address, name);
+                    setIsEditingName(false);
+                  }
+                }}
+                onBlur={() => {
+                  editAccount(account.address, name);
+                  setIsEditingName(false);
+                }}
+                ref={inputRef}
+              />
+            ) : (
+              account.name
+            )}
+          </div>
+          <div className="flex">
+            <div>
+
+              <div className="flex pt-1">
+                {balance !== undefined ? <Uik.ReefAmount value={toReefAmount(balance)} /> : <Uik.Loading size="small" />}
+                <div className="font-light">
+                  {account.verifierId && <Uik.Text text={getShortenedVerifier(account.verifierId as string)} className="pl-3" type="mini" />}
+                </div>
+              </div>
+              <CopyToClipboard
+                text={account.address}
+                className="hover:cursor-pointer"
+              >
+                <div title={account.address}>
+                  <label className="font-bold pr-2">Native address:</label>
+                  {toAddressShortDisplay(account.address)}
+                  <FontAwesomeIcon
+                    className="ml-2"
+                    icon={faCopy as IconProp}
+                    size="sm"
+                    title="Copy Reef Account Address"
+                    onClick={() => Uik.notify.info("Copied Address to clipboard")}
+                  />
+                </div>
+              </CopyToClipboard>
+              {isEvmClaimed !== undefined && isEvmClaimed &&
+                <CopyToClipboard
+                  text={addressUtils.addReefSpecificStringFromAddress(evmAddress)}
+                  className="inline-block hover:cursor-pointer"
+                >
+                  <div title={evmAddress || ""}>
+                    <label className="font-bold pr-2">EVM address:</label>
+                    {evmAddress ? toAddressShortDisplay(evmAddress) : "loading..."}
+                    <FontAwesomeIcon
+                      className="ml-2"
+                      icon={faCopy as IconProp}
+                      size="sm"
+                      title="Copy EVM Address"
+                      onClick={() => Uik.notify.info("Copied EVM Address to clipboard!")}
+                    />
+                  </div>
+                </CopyToClipboard>
+              }
+            </div>
+            <div className="flex px-2">
+              {isEvmClaimed !== undefined && !isEvmClaimed && (
+                <Uik.Button className="mx-2" onClick={bindDefaultEvmAddress} text="Bind" fill />
+
+              )}
+              {!isSelected &&
+                <Uik.Button onClick={() => selectAccount(account.address)} text="Select" />
+              }
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
