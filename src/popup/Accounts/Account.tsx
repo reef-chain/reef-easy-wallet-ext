@@ -123,6 +123,107 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
   return (
     <div className="relative" >
       {isSelected && <div className="absolute top-0 right-0 selected-badge text-white px-2 py-1">Selected</div>}
+      <div className="absolute top-10 right-0  px-2 py-1" ref={optionsRef}>
+          <FontAwesomeIcon
+            className="hover:cursor-pointer p-2 hover:text-blue-700"
+            onClick={() => setIsOptionsOpen(!isOptionsOpen)}
+            icon={faEllipsisVertical as IconProp}
+            title="Account options"
+            fontSize={"1.4rem"}
+            color="grey"
+          />
+          {isOptionsOpen && (
+            <Uik.Dropdown
+              isOpen={isOptionsOpen}
+              onClose={() => setIsOptionsOpen(false)}
+              position="bottomLeft"
+            >
+              <div className="flex flex-col justify-start items-start">
+                <Uik.Text type="mini"
+                  text={`Verifier ID:`}
+                />
+                <Uik.Text type="mini"
+                  text={`${(account.verifierId || "unknown") as string}`}
+                />
+              </div>
+              <Uik.Divider />
+              <Uik.DropdownItem
+                text='Rename'
+                onClick={() => {
+                  setIsEditingName(true);
+                  setIsOptionsOpen(false);
+                }}
+              />
+              <Uik.DropdownItem
+                text='Share Native Address'
+                onClick={() => {
+                  setOpen(true);
+                  setQrValue(account.address)
+                }}
+              />
+              {isEvmClaimed!==undefined && isEvmClaimed && <Uik.DropdownItem
+                text='Share EVM Address'
+                onClick={() => {
+                  setOpen(true);
+                  setQrValue(addressUtils.addReefSpecificStringFromAddress(evmAddress))
+                }}
+              />}
+              
+              <Uik.DropdownItem
+                text='Forget account'
+                onClick={() => {
+                  setIsForgetAccountOpen(true);
+                  setIsOptionsOpen(false);
+                }}
+              />
+            </Uik.Dropdown>
+          )}
+
+           <Uik.Modal
+            title='Forget Account'
+            isOpen={isForgetAccountOpen}
+            onClose={() => setIsForgetAccountOpen(false)}
+            footer={
+              <>
+                <Uik.Button text='Close' onClick={() => setIsForgetAccountOpen(false)}/>
+                <Uik.Button text='Delete Account' danger onClick={() => {
+                  forgetAccount(account.address);
+                  setIsForgetAccountOpen(false);
+                  Uik.notify.success(`Removed ${account.name!} successfully!`)
+                  }} />
+              </>
+            }
+          >
+            <div >
+            <Uik.Text>Account will be removed from extension and you could loose access to funds it holds.</Uik.Text>
+            </div>
+          </Uik.Modal>
+          <Uik.Modal
+            title='Share Address'
+            isOpen={isOpen}
+            onClose={() => setOpen(false)}
+          >
+            <div>
+              <Uik.QRCode value={qrvalue} />
+              <CopyToClipboard
+                text={qrvalue}
+                className="hover:cursor-pointer flex align-middle justify-center items-center"
+              >
+                <div className="flex">
+                  <div className="text-sm font-extralight mt-4 text-gray-400">{toAddressShortDisplay(qrvalue)}</div>
+                  <FontAwesomeIcon
+                    className="ml-2 text-gray-400 mt-4 hover:text-blue-600"
+                    icon={faCopy as IconProp}
+                 
+                    size="sm"
+                    title="Copy Reef Account Address"
+                    onClick={() => Uik.notify.success(`Copied ${qrvalue}  to clipboard`)}
+                  />
+                </div>
+              </CopyToClipboard>
+            </div>
+          </Uik.Modal>
+        </div>
       <div className={`${isSelected ? "account selected" : "account"}`}>
         <div className="avatar">
           {account.icon ? (
@@ -213,132 +314,7 @@ const Account = ({ account, provider, isSelected }: Props): JSX.Element => {
             </div>
           </div>
         </div>
-        <div className="relative" ref={optionsRef}>
-          <FontAwesomeIcon
-            className="hover:cursor-pointer p-2 hover:text-blue-700"
-            onClick={() => setIsOptionsOpen(!isOptionsOpen)}
-            icon={faEllipsisVertical as IconProp}
-            title="Account options"
-            fontSize={"1.4rem"}
-            color="grey"
-          />
-          {isOptionsOpen && (
-            <Uik.Dropdown
-              isOpen={isOptionsOpen}
-              onClose={() => setIsOptionsOpen(false)}
-              position="bottomLeft"
-            >
-              <div className="flex flex-col justify-start items-start">
-                <Uik.Text type="mini"
-                  text={`Verifier ID:`}
-                />
-                <Uik.Text type="mini"
-                  text={`${(account.verifierId || "unknown") as string}`}
-                />
-              </div>
-              <Uik.Divider />
-              <Uik.DropdownItem
-                text='Rename'
-                onClick={() => {
-                  setIsEditingName(true);
-                  setIsOptionsOpen(false);
-                }}
-              />
-              <Uik.DropdownItem
-                text='Share Native Address'
-                onClick={() => {
-                  setOpen(true);
-                  setQrValue(account.address)
-                }}
-              />
-              {isEvmClaimed!==undefined && isEvmClaimed && <Uik.DropdownItem
-                text='Share EVM Address'
-                onClick={() => {
-                  setOpen(true);
-                  setQrValue(addressUtils.addReefSpecificStringFromAddress(evmAddress))
-                }}
-              />}
-              
-              <Uik.DropdownItem
-                text='Forget account'
-                onClick={() => {
-                  setIsForgetAccountOpen(true);
-                  setIsOptionsOpen(false);
-                }}
-              />
-            </Uik.Dropdown>
-            
-            // <div className="absolute right-0 p-2 bg-white text-secondary font-bold text-left rounded-lg">
-            //   <div className="mb-1 pb-1 border-b border-gray-300">
-            //     <span className="font-normal">Verifier ID:</span>{" "}
-            //     {(account.verifierId || "unknown") as string}
-            //   </div>
-            //   <div
-            //     className="mb-1 hover:cursor-pointer hover:text-primary"
-            //     onClick={() => {
-            //       setIsEditingName(true);
-            //       setIsOptionsOpen(false);
-            //     }}
-            //   >
-            //     Rename
-            //   </div>
-            //   <div
-            //     className="hover:cursor-pointer hover:text-primary"
-            //     onClick={() => {
-            //       forgetAccount(account.address);
-            //       setIsOptionsOpen(false);
-            //     }}
-            //   >
-            //     Forget account
-            //   </div>
-            // </div>
-          )}
 
-           <Uik.Modal
-            title='Forget Account'
-            isOpen={isForgetAccountOpen}
-            onClose={() => setIsForgetAccountOpen(false)}
-            footer={
-              <>
-                <Uik.Button text='Close' onClick={() => setIsForgetAccountOpen(false)}/>
-                <Uik.Button text='Delete Account' danger onClick={() => {
-                  forgetAccount(account.address);
-                  setIsForgetAccountOpen(false);
-                  Uik.notify.success(`Removed ${account.name!} successfully!`)
-                  }} />
-              </>
-            }
-          >
-            <div >
-            <Uik.Text>Account will be removed from extension and you could loose access to funds it holds.</Uik.Text>
-            </div>
-          </Uik.Modal>
-          <Uik.Modal
-            title='Share Address'
-            isOpen={isOpen}
-            onClose={() => setOpen(false)}
-          >
-            <div>
-              <Uik.QRCode value={qrvalue} />
-              <CopyToClipboard
-                text={qrvalue}
-                className="hover:cursor-pointer flex align-middle justify-center items-center"
-              >
-                <div className="flex">
-                  <div className="text-sm font-extralight mt-4 text-gray-400">{toAddressShortDisplay(qrvalue)}</div>
-                  <FontAwesomeIcon
-                    className="ml-2 text-gray-400 mt-4 hover:text-blue-600"
-                    icon={faCopy as IconProp}
-                 
-                    size="sm"
-                    title="Copy Reef Account Address"
-                    onClick={() => Uik.notify.success(`Copied ${qrvalue}  to clipboard`)}
-                  />
-                </div>
-              </CopyToClipboard>
-            </div>
-          </Uik.Modal>
-        </div>
       </div>
     </div>
   );
