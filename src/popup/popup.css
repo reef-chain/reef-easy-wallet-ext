@@ -83,6 +83,7 @@ button:hover {
 
 .account.selected {
     border: 2px solid #681cff;
+    overflow: auto;
 }
 
 .account .content {
@@ -178,7 +179,7 @@ button:hover {
 
 .signature-table {
     white-space: nowrap;
-    overflow: hidden;
+    overflow: auto;
     width: fit-content;
 }
 
@@ -218,4 +219,8 @@ button:hover {
 
 .login-providers button .uik-text {
     /*color: aliceblue;*/
+}
+
+.uik-button--fill {
+    color: white!important;
 }
