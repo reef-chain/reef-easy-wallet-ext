@@ -1,7 +1,7 @@
 // Copyright 2019-2021 @polkadot/extension-ui authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useMemo, useRef } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import type {
   Call,
   ExtrinsicEra,
@@ -13,6 +13,9 @@ import BN from "bn.js";
 
 import { Chain } from "../../extension-chains/types";
 import useMetadata from "../hooks/useMetadata";
+import { ReefProviderContext } from "../../context/ReefProviderContext";
+import { signatureUtils } from "@reef-chain/util-lib";
+import { Provider } from "@reef-chain/evm-provider";
 
 interface Decoded {
   args: AnyJson | null;
@@ -62,6 +65,7 @@ function decodeMethod(data: string, chain: Chain, specVersion: BN): Decoded {
   return { args, method };
 }
 
+
 function renderMethod(
   data: string,
   { args, method }: Decoded
@@ -72,7 +76,7 @@ function renderMethod(
         <tbody>
           <tr>
             <td className="font-semibold" style={{ color: '#681cff ' }}>Method data</td>
-            <td className="flex items-start pl-4"> {data.slice(0,52)}...</td>
+            <td className="flex items-start pl-4"> {data}</td>
           </tr>
         </tbody>
       </table>
@@ -131,6 +135,34 @@ function Extrinsic({
   request: { blockNumber, genesisHash, method, specVersion: hexSpec },
   url,
 }: Props): React.ReactElement<Props> {
+  const {provider} = useContext(ReefProviderContext);
+  const [resolvedMethodData,setResolvedMethodData] = useState(undefined);
+
+  useEffect(()=>{
+    const resolveTxMethod = async(provider:Provider,methodData:string)=>{
+      const _resolvedMethodData = await signatureUtils.decodePayloadMethod(provider,methodData);
+      setResolvedMethodData(_resolvedMethodData);
+    }
+    if(provider)resolveTxMethod(provider,method)
+  },[provider])
+
+  const renderResolvedTxData = (inputObj:any) => {
+    if(inputObj){
+      return Object.entries(inputObj).map(([key, value]) => {
+        if(typeof value !='object'){
+          return (
+        <tr key={key}>
+          <td className="font-semibold" style={{ color: '#681cff' }}>{key}</td>
+          <td className="flex items-start pl-4">{value.toString()}</td>
+        </tr>
+          )
+        }else{
+          return renderResolvedTxData(value);
+        }
+    });
+    }
+  };
+
   const chain = useMetadata(genesisHash);
   const specVersion = useRef(bnToBn(hexSpec)).current;
   const decoded = useMemo(
@@ -150,7 +182,7 @@ function Extrinsic({
         </tr>
         <tr>
           <td className="font-semibold" style={{ color: '#681cff ' }}>{chain ? "Chain" : "Genesis"}</td>
-          <td className="flex items-start pl-4" style={{overflow: 'hidden'}}>{chain ? chain.name : genesisHash.slice(0,52)+"..."}</td>
+          <td className="flex items-start pl-4" style={{overflow: 'hidden'}}>{chain ? chain.name : genesisHash}</td>
         </tr>
         <tr>
           <td className="font-semibold" style={{ color: '#681cff ' }}>Version</td>
@@ -171,6 +203,7 @@ function Extrinsic({
           <td className="font-semibold" style={{ color: '#681cff ' }}>Lifetime</td>
           <td className="flex items-start pl-4">{mortalityAsString(era, blockNumber)}</td>
         </tr>
+        {renderResolvedTxData(resolvedMethodData)}
       </tbody>
     </table>
   );

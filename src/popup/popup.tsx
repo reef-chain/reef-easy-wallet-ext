@@ -63,6 +63,7 @@ import { PhishingDetected } from "./PhishingDetected";
 import { useServiceWorkerStatus } from "../hooks/useServiceWorkerStatus";
 import { restartServiceWorker } from "../background/service_worker";
 import { enableNetworkToggleOption } from "../utils/abstractFuncs";
+import { ReefProviderContext } from "../context/ReefProviderContext";
 
 const enum State {
   ACCOUNTS,
@@ -370,6 +371,7 @@ const Popup = () => {
   };
 
   return (
+    <ReefProviderContext.Provider value={{provider}} >
     <div className="popup">
       {process.env.NODE_ENV === "development" && (
         <div className="absolute left-5 top-3 text-gray-400">
@@ -388,6 +390,12 @@ const Popup = () => {
         )}
 
         <div className="flex buttons-w">
+        <Uik.Button
+    icon={faExternalLinkAlt as IconProp}
+    text='Open App'
+    onClick={() => window.open('https://app.reef.io/', '_blank')}
+    className="mr-2"
+  />
           {state === State.ACCOUNTS && (
             <>
               <Uik.Button text='Account' icon={faCirclePlus as IconProp} onClick={() => setState(State.LOGIN)} neomorph/>
@@ -403,11 +411,6 @@ const Popup = () => {
     onClose={() => setIsSettingsOpen(false)}
     position="bottomLeft"
   >
-  <Uik.DropdownItem
-    icon={faExternalLinkAlt as IconProp}
-    text='Open Reef App'
-    onClick={() => window.open('https://app.reef.io/', '_blank')}
-  />
       {selectedNetwork && nwToggleEnableClicks==7 &&
       <>
 
@@ -457,6 +460,7 @@ const Popup = () => {
         (!accounts || (accounts.length > 0 && !provider)) && (
           <Uik.Loading className="py-32" />
         )}
+          
       {/* No accounts */}
       {state === State.ACCOUNTS && accounts?.length === 0 && (
         <>
@@ -551,6 +555,7 @@ const Popup = () => {
         </div>
         }
     </div>
+    </ReefProviderContext.Provider>
   );
 };
 
