@@ -392,7 +392,7 @@ const Popup = () => {
         <div className="flex buttons-w">
         <Uik.Button
     icon={faExternalLinkAlt as IconProp}
-    text='Open App'
+    text='App'
     onClick={() => window.open('https://app.reef.io/', '_blank')}
     className="mr-2"
   />
@@ -460,7 +460,7 @@ const Popup = () => {
         (!accounts || (accounts.length > 0 && !provider)) && (
           <Uik.Loading className="py-32" />
         )}
-          
+
       {/* No accounts */}
       {state === State.ACCOUNTS && accounts?.length === 0 && (
         <>
